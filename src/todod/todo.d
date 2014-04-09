@@ -10,12 +10,9 @@ import std.file;
 
 struct Todo {
 	string title;
-	size_t id;
 
 	bool opEquals(const Todo t) const { 
-		if (id == id)
-			return title == t.title;
-		return id == id;
+		return title == t.title;
 	}
 }
 
@@ -49,14 +46,20 @@ unittest {
 
 alias Todo[] Todos;
 
-unittest {
-	Todo t1;
-	t1.title = "Todo 1";
-	Todo t2;
-	t2.title = "Bla";
-	Todos mytodos = [t1, t2];
+version(unittest) {
+	Todos generate_some_todos() {
+		Todo t1;
+		t1.title = "Todo 1";
+		Todo t2;
+		t2.title = "Bla";
+		Todos mytodos = [t1, t2];
+		return mytodos;
+	}
+}
 
-	assert(	mytodos[0] == t1 );
+unittest {
+	auto mytodos = generate_some_todos();
+	assert(	mytodos[0].title == "Todo 1" );
 }
 
 Todos search_title( const Todos ts, string search ) {
@@ -69,22 +72,18 @@ Todos search_title( const Todos ts, string search ) {
 }
 
 unittest {
-	Todo t1;
-	t1.title = "Todo 1";
-	Todo t2;
-	t2.title = "Bla";
-	Todos mytodos = [t1, t2];
-
+	auto mytodos = generate_some_todos();
 	auto s = search_title( mytodos, "Bla" );
 
 	assert(	s.length == 1 );
-	assert(	s[0] == t2 );
+	assert(	s[0] == mytodos[1] );
 
 	s = search_title( mytodos, "bla" );
 
 	assert(	s.length == 1 );
-	assert(	s[0] == t2 );
+	assert(	s[0] == mytodos[1] );
 }
+
 
 JSONValue toJSON( const Todos ts ) {
 	JSONValue[] jsonTODOS;
@@ -103,12 +102,8 @@ Todos toTodos( const JSONValue json ) {
 }
 
 unittest {
-	Todo t1;
-	t1.title = "Todo 1";
-	Todo t2;
-	t2.title = "Bla";
-	Todos mytodos = [t1, t2];
-	assert(	toJSON(mytodos).toTodos[0].title == "Todo 1" );
+	auto mytodos = generate_some_todos();
+	assert(	toJSON(mytodos).toTodos[0] == mytodos[0] );
 }
 
 Todos loadTodos() {
