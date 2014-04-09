@@ -7,5 +7,6 @@
 	"targetPath": "bin",
 	"mainSourceFile": "todo.d",
 	"dependencies": {
+		"tested": "~master"
 	}
 }
