@@ -5,7 +5,7 @@
 	"authors": ["edwin"],
 	"targetType": "executable",
 	"targetPath": "bin",
-	"mainSourceFile": "todod.d",
+	"mainSourceFile": "todo.d",
 	"dependencies": {
 	}
 }
