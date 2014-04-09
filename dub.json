@@ -1,0 +1,11 @@
+{
+	"name": "todod",
+	"description": "A minimal D todo list.",
+	"copyright": "Copyright © 2014, edwin",
+	"authors": ["edwin"],
+	"targetType": "executable",
+	"targetPath": "bin",
+	"mainSourceFile": "todod.d",
+	"dependencies": {
+	}
+}
