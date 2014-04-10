@@ -17,9 +17,7 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 			size_t count = 0;
 			foreach ( ref t; ts ) {
 				bool breakout = false;
-				writeln( t.title );
 				if (count == id) {
-					writeln( "Deleting: ", t.title );
 					t.deleted = true;
 					breakout = true;
 				}
@@ -27,6 +25,12 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 				if (breakout)
 					break;
 			}
+			break;
+		case "search":
+			if ( parameter == "" )
+				ts.filters = default_filters;
+			else
+				ts.filters = filter_on_title( ts.filters, parameter );
 			break;
 		case "show":
 			write( toString( ts ) );

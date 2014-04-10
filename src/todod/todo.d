@@ -14,6 +14,8 @@ struct Todo {
 
 	bool deleted = false;
 
+	this( string tle ) { title = tle; }
+
 	bool opEquals(const Todo t) const { 
 		return title == t.title;
 	}
@@ -51,6 +53,8 @@ unittest {
 	Working on list of todos
 	*/
 class Todos {
+
+	Filters filters;
 
 	this() {
 		resetFilter();
@@ -108,9 +112,14 @@ class Todos {
 		filters ~= dg;
 	}
 
+	Todos applyFilters( Filters fltrs ) {
+		filters ~= fltrs;
+		return this;
+	}
+
+
 	void resetFilter() {
-		filters = [];
-		applyFilter( t => !t.deleted );
+		filters = default_filters;
 	}
 
 	size_t walkLength() {
@@ -122,9 +131,20 @@ class Todos {
 
 	private:
 		Todo[] myTodos;
-		bool delegate( const Todo )[] filters;
 }
 
+alias bool delegate( const Todo )[] Filters;
+
+Filters default_filters() {
+	Filters fltrs;
+	fltrs ~= t => !t.deleted;
+	return fltrs;
+}
+
+Filters filter_on_title( Filters fltrs, string title ) {
+	fltrs ~= t => !matchFirst( t.title.toLower, title.toLower ).empty;
+	return fltrs;
+}
 
 version(unittest) {
 	Todos generate_some_todos() {
@@ -144,8 +164,13 @@ unittest {
 
 	// Filter on title
 	auto todos = generate_some_todos();
-	todos.applyFilter( t => !matchFirst( t.title.toLower, "Bla".toLower ).empty );
+	todos.applyFilters( filter_on_title( default_filters, "Bla" ) );
 	assert( todos.array.length == 1 );
+	todos.addTodo( Todo( "Blaat" ) );
+	assert( todos.array.length == 2 );
+	todos.filters = filter_on_title( todos.filters, "Blaat" );
+	assert( todos.array.length == 1 );
+
 
 	// Test for deleted
 	Todo deleted_t;
@@ -199,7 +224,10 @@ Todos loadTodos() {
 	return ts;
 }
 
-void writeTodos( const Todos ts ) {
+void writeTodos( Todos ts ) {
 	File file = File( ".todod.yaml", "w" );
-	file.write( toJSON(ts).toString );
+	auto applied_filters = ts.filters;
+	ts.resetFilter;
+	file.write( toJSON( ts ).toString );
+	ts.applyFilters( applied_filters );
 }
