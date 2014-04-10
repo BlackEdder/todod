@@ -40,6 +40,9 @@ void main( string[] args ) {
 	while (!quit) {
 		write( "> " );
 		auto commands = readln().chomp().findSplit( " " );
-		ts = handle_message( commands[0], commands[2], ts );
+		if (commands[0] == "quit")
+			quit = true;
+		else 
+			ts = handle_message( commands[0], commands[2], ts );
 	}
 }
