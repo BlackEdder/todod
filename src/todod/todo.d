@@ -7,6 +7,7 @@ import std.json;
 
 import std.stdio;
 import std.file;
+import std.conv;
 
 struct Todo {
 	string title;
@@ -20,6 +21,10 @@ unittest {
 	Todo t1;
 	t1.title = "Todo 1";
 	assert( t1.title == "Todo 1" );
+}
+
+string toString( const Todo t ) {
+	return t.title;
 }
 
 JSONValue toJSON( const Todo t ) {
@@ -60,6 +65,16 @@ version(unittest) {
 unittest {
 	auto mytodos = generate_some_todos();
 	assert(	mytodos[0].title == "Todo 1" );
+}
+
+string toString( const Todos ts ) {
+	string str;
+	size_t id = 0;
+	foreach( t; ts ) {
+		str = str ~ to!string( id ) ~ " " ~ toString( t ) ~ "\n";
+		id++;
+	}
+	return str;
 }
 
 Todos search_title( const Todos ts, string search ) {

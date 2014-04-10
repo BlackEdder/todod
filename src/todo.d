@@ -17,5 +17,7 @@ void main( string[] args ) {
 				writeln( "Unknown option" );
 				break;
 		}
+	} else {
+		writeln( toString( ts ) );
 	}
 }
