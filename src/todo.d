@@ -1,4 +1,5 @@
 import std.stdio;
+import std.conv;
 
 import todod.todo;
 
@@ -13,11 +14,19 @@ void main( string[] args ) {
 				t.title = args[2];
 				ts ~= t;
 				break;
+			case "del":
+				size_t id = to!size_t(args[2]);
+				if (id < ts.length)
+					ts = ts[0..id] ~ ts[id+1..$];
+				break;
 			default:
 				writeln( "Unknown option" );
 				break;
 		}
 	} else {
-		writeln( toString( ts ) );
+		if (ts.length == 0)
+			writeln( "No todos yet. Add them using todod add [TODO]" );
+		else
+			write( toString( ts ) );
 	}
 }
