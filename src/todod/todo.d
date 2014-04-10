@@ -51,16 +51,18 @@ unittest {
 	Working on list of todos
 	*/
 class Todos {
+
 	this() {
 		resetFilter();
 	};
+
 	this( Todo[] ts ) {
 		myTodos = ts;
 		resetFilter();
 	}
 
-	void add( Todo todo ) {
-		myTodos ~= todo;
+	void addTodo( Todo t ) {
+		myTodos ~= t;
 	}
 
 	public int opApply(int delegate(ref Todo) dg) {
@@ -150,6 +152,11 @@ unittest {
 	deleted_t.deleted = true;
 	mytodos = new Todos([deleted_t]).array;
 	assert( mytodos.length == 0 );
+	Todo t;
+	mytodos = new Todos([t, deleted_t]).array;
+	assert( mytodos.length == 1 );
+	mytodos = new Todos([deleted_t, t]).array;
+	assert( mytodos.length == 1 );
 }
 
 string toString( const Todos ts ) {
@@ -172,19 +179,19 @@ JSONValue toJSON( const Todos ts ) {
 }
 
 Todos toTodos( const JSONValue json ) {
-	Todos ts;
+	Todos ts = new Todos;
 	foreach ( js; json["todos"].array )
-		ts.add( toTodo( js ) );
+		ts.addTodo( toTodo( js ) );
 	return ts;
 }
 
-/*unittest {
+unittest {
 	auto mytodos = generate_some_todos();
-	assert(	toJSON(mytodos).toTodos.array[0] == mytodos.array[0] );
-}*/
+	assert(	toJSON( mytodos ).toTodos.array[0] == mytodos.array[0] );
+}
 
 Todos loadTodos() {
-	Todos ts;
+	Todos ts = new Todos;
 	if (exists(".todod.yaml" )) {
 		File file = File( ".todod.yaml", "r" );
 		ts = toTodos( parseJSON( file.readln() ) );
