@@ -11,12 +11,13 @@ import std.conv;
 
 struct Todo {
 	string title;
+	string[] tags;
 
 	bool deleted = false;
 
 	this( string tle ) { title = tle; }
 
-	bool opEquals(const Todo t) const { 
+	bool opEquals(const Todo t) const {
 		return title == t.title;
 	}
 }
@@ -34,18 +35,22 @@ string toString( const Todo t ) {
 JSONValue toJSON( const Todo t ) {
 	JSONValue[string] jsonTODO;
 	jsonTODO["title"] = t.title;
+	jsonTODO["tags"] = t.tags;
 	return JSONValue( jsonTODO );	
 }
 
 Todo toTodo( const JSONValue json ) {
 	Todo t;
 	t.title = json["title"].str;
+	foreach ( tag; json["tags"].array )
+		t.tags ~= tag.str;
 	return t;
 }
 
 unittest {
 	Todo t1;
 	t1.title = "Todo 1";
+	t1.tags = ["tag"];
 	assert( toJSON( t1 ).toTodo == t1 );
 }
 
@@ -215,17 +220,17 @@ unittest {
 	assert(	toJSON( mytodos ).toTodos.array[0] == mytodos.array[0] );
 }
 
-Todos loadTodos() {
+Todos loadTodos( string fileName ) {
 	Todos ts = new Todos;
-	if (exists(".todod.yaml" )) {
-		File file = File( ".todod.yaml", "r" );
+	if (exists( fileName )) {
+		File file = File( fileName, "r" );
 		ts = toTodos( parseJSON( file.readln() ) );
 	}
 	return ts;
 }
 
-void writeTodos( Todos ts ) {
-	File file = File( ".todod.yaml", "w" );
+void writeTodos( Todos ts, string fileName ) {
+	File file = File( fileName, "w" );
 	auto applied_filters = ts.filters;
 	ts.resetFilter;
 	file.write( toJSON( ts ).toString );

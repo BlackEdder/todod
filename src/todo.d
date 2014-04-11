@@ -1,6 +1,10 @@
 import std.stdio;
-import std.conv;
+
+import std.path;
+
 import std.string;
+
+import std.conv;
 import std.algorithm;
 
 import todod.todo;
@@ -43,8 +47,9 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 }
 
 void main( string[] args ) {
-	scope( exit ) { writeTodos( ts ); }
-	auto ts = loadTodos();
+	auto fileName = expandTilde( "~/.config/todod/todos.yaml" );
+	scope( exit ) { writeTodos( ts, fileName ); }
+	auto ts = loadTodos( fileName );
 
 	bool quit = false;
 	while (!quit) {
