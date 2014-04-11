@@ -8,6 +8,7 @@ import std.conv;
 import std.algorithm;
 
 import todod.todo;
+import todod.shell;
 
 Todos handle_message( string command, string parameter, Todos ts ) {
 	switch (command) {
