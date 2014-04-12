@@ -9,6 +9,7 @@ while :
 do
 	#file=`inotifywait -q -e CREATE bin/ --format %f`
 	file=`inotifywait -q -e ATTRIB src/todod/ --format %f`
+	sleep 1
 	dub test
 done
 }
