@@ -5,6 +5,8 @@ import std.regex;
 import std.container;
 import std.algorithm;
 
+import todod.todo;
+
 struct TagDelta {
 	string[] add_tags;
 	string[] delete_tags;
@@ -52,4 +54,24 @@ unittest {
 	td = parseTags( "+tag1 -tag2" );
 	assert( std.algorithm.equal(td.delete_tags, ["tag2"]) );
 	assert( std.algorithm.equal(td.add_tags, ["tag1"]) ); 
+}
+
+Todo apply_tags( Todo td, TagDelta delta ) {
+	td.tags ~= delta.add_tags;
+	sort( td.tags );
+	auto unique = uniq( sort(td.tags) );
+	td.tags = [];
+	foreach ( t; unique )
+		td.tags ~= t;
+	return td;
+}
+
+unittest {
+	TagDelta delta;
+	delta.add_tags = ["tag2", "tag1"];
+	Todo td;
+	td = apply_tags( td, delta );
+	assert( equal( td.tags, ["tag1", "tag2"] ) );
+	td = apply_tags( td, delta );
+	assert( equal( td.tags, ["tag1", "tag2"] ) );
 }
