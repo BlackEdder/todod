@@ -3,12 +3,27 @@ import std.stdio;
 import std.path;
 
 import std.string;
+import std.regex;
 
 import std.conv;
 import std.algorithm;
 
+import core.stdc.string, core.stdc.stdlib, std.stdio;
+import deimos.linenoise;
+
 import todod.todo;
 import todod.shell;
+
+Todos ts; // Defined global to give C access to it in tab completion
+
+extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
+	string[] commands = ["add", "del", "quit", "search", "tag", "show"];
+	auto regex_buf = "^" ~ to!string( buf );
+	auto matching_commands = filter!( a => match( a, regex_buf ))( commands );
+	foreach ( com; matching_commands ) {
+		linenoiseAddCompletion(lc,std.string.toStringz(com));
+	}
+}
 
 Todos handle_message( string command, string parameter, Todos ts ) {
 	switch (command) {
@@ -76,15 +91,31 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 void main( string[] args ) {
 	auto fileName = expandTilde( "~/.config/todod/todos.yaml" );
 	scope( exit ) { writeTodos( ts, fileName ); }
-	auto ts = loadTodos( fileName );
+	
+	ts = loadTodos( fileName );
 
 	bool quit = false;
-	while (!quit) {
-		write( "> " );
-		auto commands = readln().chomp().findSplit( " " );
-		if (commands[0] == "quit")
-			quit = true;
-		else 
-			ts = handle_message( commands[0], commands[2], ts );
+
+ 	// LineNoise setup
+	string historyFile = expandTilde( "~/.config/todod/history.txt" );
+	linenoiseSetCompletionCallback( &completion );
+  linenoiseHistoryLoad(std.string.toStringz(historyFile)); /* Load the history at startup */
+
+	char *line;
+
+	while(!quit && (line = linenoise("todod> ")) !is null) {
+		/* Do something with the string. */
+		if (line[0] != '\0') {
+			if ( !strncmp(line,"quit",4) ) {
+				writeln( "Setting quit" );
+				quit = true;
+			} else {
+				auto commands = to!string( line ).chomp().findSplit( " " );
+				ts = handle_message( commands[0], commands[2], ts );
+			}
+			linenoiseHistoryAdd(line); /* Add to the history. */
+			linenoiseHistorySave(std.string.toStringz(historyFile)); /* Save the history on disk. */
+		}
+		free(line);
 	}
 }
