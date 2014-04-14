@@ -37,6 +37,32 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 			else
 				ts.filters = filter_on_title( ts.filters, parameter );
 			break;
+		case "tag":
+			auto targets = parseTarget( parameter );
+			if (targets.empty)
+				writeln( "Please provide a list of todos (1,3,..) or all" );
+			else {
+				auto td = parseTags( parameter );
+				size_t count = 0;
+				auto first = targets.front;
+				targets.popFront;
+				foreach ( ref t; ts ) {
+					bool breakout = false;
+					if (count == first) {
+						t = applyTags( t, td );
+						if ( targets.empty )
+							breakout = true;
+						else {
+							first = targets.front;
+							targets.popFront;
+						}
+					}
+					++count;
+					if (breakout)
+						break;
+				}
+			}
+			break;
 		case "show":
 			write( toString( ts ) );
 			break;
