@@ -29,7 +29,7 @@ unittest {
 }
 
 string toString( const Todo t ) {
-	return t.title;
+	return t.title ~ " " ~ to!string( t.tags );
 }
 
 JSONValue toJSON( const Todo t ) {

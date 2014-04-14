@@ -4,6 +4,7 @@ import std.stdio;
 import std.regex;
 import std.container;
 import std.algorithm;
+import std.conv;
 
 import todod.todo;
 
@@ -63,6 +64,10 @@ Todo apply_tags( Todo td, TagDelta delta ) {
 	td.tags = [];
 	foreach ( t; unique )
 		td.tags ~= t;
+	auto filtered = td.tags.filter!( tag => !canFind( delta.delete_tags, tag ) );
+	td.tags = [];
+	foreach ( t; filtered )
+		td.tags ~= t;
 	return td;
 }
 
@@ -74,4 +79,13 @@ unittest {
 	assert( equal( td.tags, ["tag1", "tag2"] ) );
 	td = apply_tags( td, delta );
 	assert( equal( td.tags, ["tag1", "tag2"] ) );
+	delta.delete_tags = ["tag3", "tag1"];
+	td = apply_tags( td, delta );
+	assert( equal( td.tags, ["tag2"] ) );
+}
+
+/// Convert all or 1,.. into a list of targets
+auto parseTarget( string target ) {
+	// All could become infinite array?
+	return [];
 }
