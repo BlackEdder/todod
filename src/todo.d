@@ -107,7 +107,6 @@ void main( string[] args ) {
 		/* Do something with the string. */
 		if (line[0] != '\0') {
 			if ( !strncmp(line,"quit",4) ) {
-				writeln( "Setting quit" );
 				quit = true;
 			} else {
 				auto commands = to!string( line ).chomp().findSplit( " " );
