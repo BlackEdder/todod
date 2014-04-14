@@ -5,7 +5,8 @@
 	"authors": ["Edwin van Leeuwen"],
 	"license": "GPL-3.0",
 	"dependencies": {
-		"tested": "~master"
+		"tested": "~master",
+		"linenoise": "~master"
 	},
 	"configurations": [
 	{
