@@ -81,7 +81,10 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 			}
 			break;
 		case "show":
-			write( toString( ts ) );
+			if (parameter == "tags")
+				writeln( prettyStringTags( ts.allTags ) );
+			else
+				write( prettyStringTodos( ts ) );
 			break;
 		default:
 			writeln( "Unknown option" );

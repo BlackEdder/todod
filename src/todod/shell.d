@@ -3,6 +3,8 @@ module todod.shell;
 import std.stdio;
 import std.array;
 import std.range;
+
+import std.string;
 import std.regex;
 import std.container;
 import std.algorithm;
@@ -97,6 +99,34 @@ string[] parseSearchForTags( string str ) {
 unittest {
 	auto tags = parseSearchForTags( " bbla tag:tag1 tg tag:tag2" );
 	assert( equal( tags, ["tag1","tag2"] ) );
+}
+
+string prettyStringTags( const string[] tags ) {
+	string line = "\033[1;31m";
+	foreach( tag; tags ) {
+		line ~= tag ~ " ";
+	}
+	line ~= "\033[0m";
+	return line;
+}
+
+string prettyStringTodo( const Todo t ) {
+	size_t titleWidth = 65;
+	if (t.title.length > titleWidth) {
+		return t.title[0..titleWidth] ~ "\t" ~ prettyStringTags( t.tags ) ~ "\n  " ~
+			t.title[titleWidth..$];
+	} else 
+		return t.title.leftJustify( titleWidth ) ~ "\t" ~ prettyStringTags( t.tags );
+}
+
+string prettyStringTodos( const Todos ts ) {
+	string str;
+	size_t id = 0;
+	foreach( t; ts ) {
+		str = str ~ to!string( id ) ~ " " ~ prettyStringTodo( t ) ~ "\n";
+		id++;
+	}
+	return str;
 }
 
 /// Range that either returns elements from the array targets or returns infinitively increasing range (when all is set)

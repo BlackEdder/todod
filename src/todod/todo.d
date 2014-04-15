@@ -10,6 +10,8 @@ import std.file;
 import std.conv;
 
 import std.algorithm;
+import std.range;
+import std.array;
 
 struct Todo {
 	string title;
@@ -160,23 +162,25 @@ Filters filterOnTags( Filters fltrs, string[] tags ) {
 }
 
 version(unittest) {
-	Todos generate_some_todos() {
+	Todos generateSomeTodos() {
 		Todo t1;
 		t1.title = "Todo 1";
+		t1.tags = ["tag1", "tag2", "tag3"];
 		Todo t2;
 		t2.title = "Bla";
+		t2.tags = ["tag2", "tag4"];
 		Todos mytodos = new Todos( [t1, t2] );
 		return mytodos;
 	}
 }
 
 unittest {
-	auto mytodos = generate_some_todos().array;
+	auto mytodos = generateSomeTodos().array;
 	assert(	mytodos[0].title == "Todo 1" );
 	assert(	mytodos[1].title == "Bla" );
 
 	// Filter on title
-	auto todos = generate_some_todos();
+	auto todos = generateSomeTodos();
 	todos.applyFilters( filterOnTitle( default_filters, "Bla" ) );
 	assert( todos.array.length == 1 );
 	todos.addTodo( Todo( "Blaat" ) );
@@ -196,6 +200,27 @@ unittest {
 	mytodos = new Todos([deleted_t, t]).array;
 	assert( mytodos.length == 1 );
 }
+
+/// Return all existing tags
+string[] allTags( Todos ts ) {
+	string[] tags;
+	auto filters = ts.filters;
+	scope(exit) { ts.filters = filters; }
+	ts.filters = default_filters;
+	foreach( t; ts )
+		tags ~= t.tags;
+
+	sort( tags );
+	tags = array( uniq( tags ) );
+
+	return tags;
+}
+
+unittest {
+	auto ts = generateSomeTodos();
+	assert( equal( ts.allTags(), ["tag1", "tag2", "tag3", "tag4"] ) );
+}
+
 
 string toString( const Todos ts ) {
 	string str;
@@ -224,7 +249,7 @@ Todos toTodos( const JSONValue json ) {
 }
 
 unittest {
-	auto mytodos = generate_some_todos();
+	auto mytodos = generateSomeTodos();
 	assert(	toJSON( mytodos ).toTodos.array[0] == mytodos.array[0] );
 }
 
