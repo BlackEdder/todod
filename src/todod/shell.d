@@ -113,10 +113,12 @@ string prettyStringTags( const string[] tags ) {
 string prettyStringTodo( const Todo t ) {
 	size_t titleWidth = 65;
 	if (t.title.length > titleWidth) {
-		return t.title[0..titleWidth] ~ "\t" ~ prettyStringTags( t.tags ) ~ "\n  " ~
+		return t.title[0..titleWidth] ~ "\t" ~ prettyStringTags( t.tags ) ~ " " 
+			~ to!string( t.progress ) ~ "\n  " ~
 			t.title[titleWidth..$];
 	} else 
-		return t.title.leftJustify( titleWidth ) ~ "\t" ~ prettyStringTags( t.tags );
+		return t.title.leftJustify( titleWidth ) ~ "\t" ~ prettyStringTags( t.tags )
+			~ " " ~ to!string( t.progress );
 }
 
 string prettyStringTodos( const Todos ts ) {

@@ -16,6 +16,7 @@ import std.array;
 struct Todo {
 	string title;
 	string[] tags;
+	long progress = 0; /// Keep track of how long/often we've worked on this
 
 	bool deleted = false;
 
@@ -40,6 +41,7 @@ JSONValue toJSON( const Todo t ) {
 	JSONValue[string] jsonTODO;
 	jsonTODO["title"] = t.title;
 	jsonTODO["tags"] = t.tags;
+	jsonTODO["progress"] = t.progress;
 	return JSONValue( jsonTODO );	
 }
 
@@ -48,6 +50,7 @@ Todo toTodo( const JSONValue json ) {
 	t.title = json["title"].str;
 	foreach ( tag; json["tags"].array )
 		t.tags ~= tag.str;
+	t.progress = json["progress"].integer;
 	return t;
 }
 
@@ -257,7 +260,9 @@ Todos loadTodos( string fileName ) {
 	Todos ts = new Todos;
 	if (exists( fileName )) {
 		File file = File( fileName, "r" );
-		ts = toTodos( parseJSON( file.readln() ) );
+		auto content = file.readln();
+		if (content != "")
+			ts = toTodos( parseJSON( content ) );
 	}
 	return ts;
 }

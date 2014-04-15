@@ -46,6 +46,20 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 					break;
 			}
 			break;
+		case "progress":
+			size_t id = to!size_t(parameter);
+			size_t count = 0;
+			foreach ( ref t; ts ) {
+				bool breakout = false;
+				if (count == id) {
+					t.progress++;
+					breakout = true;
+				}
+				count++;
+				if (breakout)
+					break;
+			}
+			break;
 		case "search":
 			if ( parameter == "" )
 				ts.filters = default_filters;
