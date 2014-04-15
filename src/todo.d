@@ -49,8 +49,10 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 		case "search":
 			if ( parameter == "" )
 				ts.filters = default_filters;
+			/*else
+				ts.filters = filter_on_title( ts.filters, parameter );*/
 			else
-				ts.filters = filter_on_title( ts.filters, parameter );
+				ts.filters = filterOnTags( ts.filters, parseSearchForTags( parameter ) );
 			break;
 		case "tag":
 			auto targets = parseTarget( parameter );

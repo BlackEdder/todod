@@ -86,6 +86,19 @@ unittest {
 	assert( equal( td.tags, ["tag2"] ) );
 }
 
+string[] parseSearchForTags( string str ) {
+	string[] tags;
+	auto matches = matchAll( str, r"tag:([A-z0-9]+)(?:$|\s)" );
+	foreach ( hit; matches )
+		tags ~= hit[1];
+	return tags;
+}
+
+unittest {
+	auto tags = parseSearchForTags( " bbla tag:tag1 tg tag:tag2" );
+	assert( equal( tags, ["tag1","tag2"] ) );
+}
+
 /// Range that either returns elements from the array targets or returns infinitively increasing range (when all is set)
 struct Targets {
 	bool all = false;

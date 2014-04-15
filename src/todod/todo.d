@@ -9,6 +9,8 @@ import std.stdio;
 import std.file;
 import std.conv;
 
+import std.algorithm;
+
 struct Todo {
 	string title;
 	string[] tags;
@@ -146,8 +148,14 @@ Filters default_filters() {
 	return fltrs;
 }
 
-Filters filter_on_title( Filters fltrs, string title ) {
+Filters filterOnTitle( Filters fltrs, string title ) {
 	fltrs ~= t => !matchFirst( t.title.toLower, title.toLower ).empty;
+	return fltrs;
+}
+
+Filters filterOnTags( Filters fltrs, string[] tags ) {
+	foreach ( tag; tags )
+		fltrs ~= t => canFind( t.tags, tag );
 	return fltrs;
 }
 
@@ -169,11 +177,11 @@ unittest {
 
 	// Filter on title
 	auto todos = generate_some_todos();
-	todos.applyFilters( filter_on_title( default_filters, "Bla" ) );
+	todos.applyFilters( filterOnTitle( default_filters, "Bla" ) );
 	assert( todos.array.length == 1 );
 	todos.addTodo( Todo( "Blaat" ) );
 	assert( todos.array.length == 2 );
-	todos.filters = filter_on_title( todos.filters, "Blaat" );
+	todos.filters = filterOnTitle( todos.filters, "Blaat" );
 	assert( todos.array.length == 1 );
 
 
