@@ -32,7 +32,7 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 			t.title = parameter;
 			ts.addTodo( t );
 			break;
-		case "del":
+		case "del", "done":
 			size_t id = to!size_t(parameter);
 			size_t count = 0;
 			foreach ( ref t; ts ) {
