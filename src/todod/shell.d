@@ -12,9 +12,22 @@ import std.conv;
 
 import todod.todo;
 
-struct TagDelta {
-	string[] add_tags;
-	string[] delete_tags;
+auto parseAndRemoveTags( string str ) {
+	TagDelta td;
+	auto m = matchAll( str, r"(?:^|\s)\+(\w+)" );
+	foreach ( hits ; m ) {
+		td.add_tags ~=  hits[1];
+	}
+	m = matchAll( str, r"(?:^|\s)\-(\w+)" );
+	foreach ( hits ; m ) {
+		td.delete_tags ~=  hits[1];
+	}
+
+	// Should be possible to do matching 
+	// and replacing with one call to replaceAll!( dg ) but didn't
+	// work for me
+	str = replaceAll( str, regex(r"(?:^|\s)[+-](\w+)"), "" );  	
+	return tuple(td, str);
 }
 
 TagDelta parseTags( string str ) {
@@ -88,19 +101,6 @@ unittest {
 	assert( equal( td.tags, ["tag2"] ) );
 }
 
-string[] parseSearchForTags( string str ) {
-	string[] tags;
-	auto matches = matchAll( str, r"tag:([A-z0-9]+)(?:$|\s)" );
-	foreach ( hit; matches )
-		tags ~= hit[1];
-	return tags;
-}
-
-unittest {
-	auto tags = parseSearchForTags( " bbla tag:tag1 tg tag:tag2" );
-	assert( equal( tags, ["tag1","tag2"] ) );
-}
-
 string prettyStringTags( const string[] tags ) {
 	string line = "\033[1;31m";
 	foreach( tag; tags ) {
@@ -111,7 +111,7 @@ string prettyStringTags( const string[] tags ) {
 }
 
 string prettyStringTodo( const Todo t ) {
-	size_t titleWidth = 65;
+	size_t titleWidth = 50;
 	if (t.title.length > titleWidth) {
 		return t.title[0..titleWidth] ~ "\t" ~ prettyStringTags( t.tags ) ~ " " 
 			~ to!string( t.progress ) ~ "\n  " ~

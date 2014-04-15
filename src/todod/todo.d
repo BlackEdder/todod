@@ -13,6 +13,8 @@ import std.algorithm;
 import std.range;
 import std.array;
 
+import todod.shell;
+
 struct Todo {
 	string title;
 	string[] tags;
@@ -20,7 +22,11 @@ struct Todo {
 
 	bool deleted = false;
 
-	this( string tle ) { title = tle; }
+	this( string tle ) { 
+		auto tup = parseAndRemoveTags( tle );
+		tags = tup[0].add_tags;
+		title = tup[1]; 
+	}
 
 	bool opEquals(const Todo t) const {
 		return title == t.title;
@@ -31,6 +37,10 @@ unittest {
 	Todo t1;
 	t1.title = "Todo 1";
 	assert( t1.title == "Todo 1" );
+
+	Todo t2 = Todo( "Bla +tag1 -tag2" );
+	assert( t2.title == "Bla" );
+	assert( t2.tags[0] == "tag1" );
 }
 
 string toString( const Todo t ) {
@@ -158,9 +168,16 @@ Filters filterOnTitle( Filters fltrs, string title ) {
 	return fltrs;
 }
 
-Filters filterOnTags( Filters fltrs, string[] tags ) {
-	foreach ( tag; tags )
+struct TagDelta {
+	string[] add_tags;
+	string[] delete_tags;
+}
+
+Filters filterOnTags( Filters fltrs, TagDelta tagDelta ) {
+	foreach ( tag; tagDelta.add_tags )
 		fltrs ~= t => canFind( t.tags, tag );
+	foreach ( tag; tagDelta.delete_tags )
+		fltrs ~= t => !canFind( t.tags, tag );
 	return fltrs;
 }
 

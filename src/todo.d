@@ -28,9 +28,7 @@ extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 Todos handle_message( string command, string parameter, Todos ts ) {
 	switch (command) {
 		case "add":
-			Todo t;
-			t.title = parameter;
-			ts.addTodo( t );
+			ts.addTodo( Todo( parameter ) );
 			break;
 		case "del", "done":
 			size_t id = to!size_t(parameter);
@@ -66,7 +64,7 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 			/*else
 				ts.filters = filter_on_title( ts.filters, parameter );*/
 			else
-				ts.filters = filterOnTags( ts.filters, parseSearchForTags( parameter ) );
+				ts.filters = filterOnTags( ts.filters, parseTags( parameter ) );
 			break;
 		case "tag":
 			auto targets = parseTarget( parameter );
@@ -95,10 +93,14 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 			}
 			break;
 		case "show":
+			linenoiseClearScreen();
 			if (parameter == "tags")
 				writeln( prettyStringTags( ts.allTags ) );
 			else
 				write( prettyStringTodos( ts ) );
+			break;
+		case "clear":
+			linenoiseClearScreen();
 			break;
 		default:
 			writeln( "Unknown option" );
