@@ -176,6 +176,38 @@ class Todos {
 		return l;
 	}
 
+	/// Apply a delegate to all todos specified by targets
+	void apply( void delegate( ref Todo ) dg, Targets targets ) {
+		auto first = targets.front;
+		targets.popFront;
+		foreach ( count, ref t; this ) {
+			if (count == first) {
+				dg( t );
+				if ( targets.empty )
+					break;
+				else {
+					first = targets.front;
+					targets.popFront;
+				}
+			}
+		}
+	}
+
+	unittest {
+		auto targets = parseTarget( "1" );
+		auto ts = generateSomeTodos;
+		ts.apply( delegate( ref Todo t ) { t.deleted = true; }, targets );
+		assert( ts.walkLength == 1 );
+		ts = generateSomeTodos;
+		assert( ts.walkLength == 2 );
+		targets = parseTarget( "all" );
+		ts.apply( delegate( ref Todo t ) { t.deleted = true; }, targets );
+		assert( ts.walkLength == 0 );
+	}
+
+	/// Access by id. 
+	/// Performance: starts at the beginning every time, so if you need to access multiple then
+	/// using apply might be more performant 
 	ref Todo opIndex(size_t id) {
 		foreach ( count, ref t; this ) {
 			if (count == id) {
