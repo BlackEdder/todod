@@ -13,6 +13,8 @@ import std.algorithm;
 import std.range;
 import std.array;
 
+import std.random;
+
 import todod.shell;
 
 struct Todo {
@@ -21,6 +23,8 @@ struct Todo {
 	long progress = 0; /// Keep track of how long/often we've worked on this
 
 	bool deleted = false;
+
+	bool random = true;
 
 	this( string tle ) { 
 		auto tup = parseAndRemoveTags( tle );
@@ -256,6 +260,34 @@ Filters filterOnTags( Filters fltrs, TagDelta tagDelta ) {
 	foreach ( tag; tagDelta.delete_tags )
 		fltrs ~= t => !canFind( t.tags, tag );
 	return fltrs;
+}
+
+Filters filterOnRandom( Filters fltrs ) {
+	fltrs ~= t => t.random;
+	return fltrs;
+}
+
+Todos random( Todos ts, size_t no = 5 ) {
+	// Clear all old randoms
+	foreach ( ref t; ts )
+		t.random = true;
+
+	ts.filters = filterOnRandom( ts.filters );
+
+	size_t dim = ts.walkLength;
+	while ( dim > no) {
+		auto accept = 1.0-to!double(no)/dim;
+		foreach( ref t; ts ) {
+			auto rnd = uniform( 0.0, 1.0 );
+			if (rnd<accept) {
+				t.random = false;
+				--dim;
+				if (dim <= no)
+					break;
+			}
+		}
+	}
+	return ts;
 }
 
 version(unittest) {

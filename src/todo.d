@@ -45,31 +45,44 @@ void init_commands() {
 	commands = [
 		"add": delegate( Todos ts, string parameter ) {
 			ts.addTodo( Todo( parameter ) );
+			ts[0].random = false;
+			ts = commands["show"]( ts, "" );
 			return ts;
 		},
 		"del": delegate( Todos ts, string parameter ) {
 			size_t id = to!size_t(parameter);
 			ts[id].deleted = true;
+			ts = commands["show"]( ts, "" );
 			return ts;
 		},
 		"done": delegate( Todos ts, string parameter ) {
 			ts = commands["del"]( ts, parameter );
+			ts = commands["show"]( ts, "" );
 			return ts;
 		},
 		"progress": delegate( Todos ts, string parameter ) {
 			size_t id = to!size_t(parameter);
 			ts[id].progress++;
+			ts = commands["show"]( ts, "" );
 			return ts;
 		},
 		"search": delegate( Todos ts, string parameter ) {
 			if ( parameter == "" )
 				ts.filters = default_filters;
-			//else
-			//	ts.filters = filter_on_title( ts.filters, parameter );
-			else
+			else {
+				ts.filters = ts.filters[0..$-1]; // Undo random
 				ts.filters = filterOnTags( ts.filters, parseTags( parameter ) );
+			}
+			ts = random( ts );
+			ts = commands["show"]( ts, "" );
 			return ts;
-		}, 
+		},
+		"reroll": delegate( Todos ts, string parameter ) {
+			ts.filters = ts.filters[0..$-1]; // Undo random
+			ts = random( ts );
+			ts = commands["show"]( ts, "" );
+			return ts;
+		},
 		"tag": delegate( Todos ts, string parameter ) {
 			auto targets = parseTarget( parameter );
 			if (targets.empty)
@@ -78,6 +91,7 @@ void init_commands() {
 				auto td = parseTags( parameter );
 				ts.apply( delegate( ref Todo t ) { applyTags( t, td ); }, targets );
 			}
+			ts = commands["show"]( ts, "" );
 			return ts;
 		},
 		"show": delegate( Todos ts, string parameter ) {
@@ -85,11 +99,14 @@ void init_commands() {
 			if (parameter == "tags")
 				writeln( prettyStringTags( ts.allTags ) );
 			else {
+				auto filters = ts.filters;
+				ts.filters = ts.filters[0..$-1];
 				auto tags = ts.tagsWithCount();
 				foreach( tag, count; tags ) {
 					writeln( tagColor(tag).leftJustify( 20 ), "\t", count );
 				}
 				writeln();
+				ts.filters = filters;
 				write( prettyStringTodos( ts ) );
 			}
 			return ts;
@@ -117,6 +134,7 @@ void main( string[] args ) {
 	scope( exit ) { writeTodos( ts, fileName ); }
 	
 	ts = loadTodos( fileName );
+	ts = random( ts );
 
 	bool quit = false;
 
