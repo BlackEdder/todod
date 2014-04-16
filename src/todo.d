@@ -135,6 +135,7 @@ void main( string[] args ) {
 	
 	ts = loadTodos( fileName );
 	ts = random( ts );
+	commands["show"]( ts, "" );
 
 	bool quit = false;
 
