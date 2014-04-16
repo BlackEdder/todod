@@ -25,12 +25,19 @@ extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 	}
 }
 
-Todos handle_message( string command, string parameter, Todos ts ) {
-	switch (command) {
-		case "add":
+void add( Todos ts, string parameter ) {
+	ts.addTodo( Todo( parameter ) );
+}
+
+Todos delegate( Todos, string)[string] commands;
+
+void init_commands() {
+	commands = [
+		"add": delegate( Todos ts, string parameter ) {
 			ts.addTodo( Todo( parameter ) );
-			break;
-		case "del", "done":
+			return ts;
+		},
+		"del": delegate( Todos ts, string parameter ) {
 			size_t id = to!size_t(parameter);
 			size_t count = 0;
 			foreach ( ref t; ts ) {
@@ -43,8 +50,13 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 				if (breakout)
 					break;
 			}
-			break;
-		case "progress":
+			return ts;
+		},
+		"done": delegate( Todos ts, string parameter ) {
+			ts = commands["del"]( ts, parameter );
+			return ts;
+		},
+		"progress": delegate( Todos ts, string parameter ) {
 			size_t id = to!size_t(parameter);
 			size_t count = 0;
 			foreach ( ref t; ts ) {
@@ -57,16 +69,18 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 				if (breakout)
 					break;
 			}
-			break;
-		case "search":
+			return ts;
+		},
+		"search": delegate( Todos ts, string parameter ) {
 			if ( parameter == "" )
 				ts.filters = default_filters;
-			/*else
-				ts.filters = filter_on_title( ts.filters, parameter );*/
+			//else
+			//	ts.filters = filter_on_title( ts.filters, parameter );
 			else
 				ts.filters = filterOnTags( ts.filters, parseTags( parameter ) );
-			break;
-		case "tag":
+			return ts;
+		}, 
+		"tag": delegate( Todos ts, string parameter ) {
 			auto targets = parseTarget( parameter );
 			if (targets.empty)
 				writeln( "Please provide a list of todos (1,3,..) or all" );
@@ -91,25 +105,35 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 						break;
 				}
 			}
-			break;
-		case "show":
+			return ts;
+		},
+		"show": delegate( Todos ts, string parameter ) {
 			linenoiseClearScreen();
 			if (parameter == "tags")
 				writeln( prettyStringTags( ts.allTags ) );
 			else
 				write( prettyStringTodos( ts ) );
-			break;
-		case "clear":
+			return ts;
+		},
+		"clear": delegate( Todos ts, string parameter ) {
 			linenoiseClearScreen();
-			break;
-		default:
-			writeln( "Unknown option" );
-			break;
+			return ts;
+		}
+	];
+}
+
+Todos handle_message( string command, string parameter, Todos ts ) {
+	if ( command in commands ) {
+		ts = commands[command]( ts, parameter );
+	} else {
+		writeln( "Unknown option" );
 	}
 	return ts;
 }
 
 void main( string[] args ) {
+
+	init_commands;
 	auto fileName = expandTilde( "~/.config/todod/todos.yaml" );
 	scope( exit ) { writeTodos( ts, fileName ); }
 	
