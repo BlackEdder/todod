@@ -38,9 +38,13 @@ unittest {
 	t1.title = "Todo 1";
 	assert( t1.title == "Todo 1" );
 
-	Todo t2 = Todo( "Bla +tag1 -tag2" );
-	assert( t2.title == "Bla" );
+	Todo t2 = Todo( "Bla 1 +tag1 -tag2" );
+	assert( t2.title == "Bla 1" );
 	assert( t2.tags[0] == "tag1" );
+
+	Todo t3 = Todo( "+tag1 Bla 1 -tag2" );
+	assert( t3.title == "Bla 1" );
+	assert( t3.tags[0] == "tag1" );
 }
 
 string toString( const Todo t ) {
@@ -314,6 +318,24 @@ unittest {
 	assert( equal( ts.allTags(), ["tag1", "tag2", "tag3", "tag4"] ) );
 }
 
+size_t[string] tagsWithCount( Todos ts ) {
+	size_t[string] tags;
+	foreach( t; ts ) {
+		foreach( tag; t.tags ) {
+			tags[tag]++;
+		}
+		if (t.tags.empty)
+			tags["untagged"]++;
+	}
+	return tags;
+}
+
+unittest {
+	auto ts = generateSomeTodos();
+	auto expected = ["tag2":2, "tag3":1, "tag4":1, "tag1":1];
+	foreach( k, v; ts.tagsWithCount() )
+		assert( v == expected[k] );
+}
 
 string toString( const Todos ts ) {
 	string str;

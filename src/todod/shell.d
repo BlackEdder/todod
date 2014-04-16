@@ -48,6 +48,7 @@ auto parseAndRemoveTags( string str ) {
 	// and replacing with one call to replaceAll!( dg ) but didn't
 	// work for me
 	str = replaceAll( str, allTagRegex, "" );
+	str = replaceAll( str, regex(r"(?:^|\s) +"), "" );
 	return tuple(td, str);
 }
 
@@ -122,13 +123,16 @@ unittest {
 	assert( equal( td.tags, ["tag2"] ) );
 }
 
+string tagColor( string str ) {
+	return "\033[1;31m" ~ str ~ "\033[0m";
+}
+
 string prettyStringTags( const string[] tags ) {
-	string line = "\033[1;31m";
+	string line;
 	foreach( tag; tags ) {
 		line ~= tag ~ " ";
 	}
-	line ~= "\033[0m";
-	return line;
+	return tagColor( line );
 }
 
 string prettyStringTodo( const Todo t ) {

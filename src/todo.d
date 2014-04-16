@@ -84,8 +84,14 @@ void init_commands() {
 			linenoiseClearScreen();
 			if (parameter == "tags")
 				writeln( prettyStringTags( ts.allTags ) );
-			else
+			else {
+				auto tags = ts.tagsWithCount();
+				foreach( tag, count; tags ) {
+					writeln( tagColor(tag).leftJustify( 20 ), "\t", count );
+				}
+				writeln();
 				write( prettyStringTodos( ts ) );
+			}
 			return ts;
 		},
 		"clear": delegate( Todos ts, string parameter ) {
