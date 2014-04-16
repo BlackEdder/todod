@@ -17,9 +17,9 @@ import todod.shell;
 Todos ts; // Defined global to give C access to it in tab completion
 
 extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
-	string[] commands = ["add", "del", "quit", "search", "tag", "show"];
+	string[] command_keys = commands.keys;
 	auto regex_buf = "^" ~ to!string( buf );
-	auto matching_commands = filter!( a => match( a, regex_buf ))( commands );
+	auto matching_commands = filter!( a => match( a, regex_buf ))( command_keys );
 	foreach ( com; matching_commands ) {
 		linenoiseAddCompletion(lc,std.string.toStringz(com));
 	}
