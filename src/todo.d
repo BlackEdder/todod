@@ -49,14 +49,12 @@ void init_commands() {
 		},
 		"del": delegate( Todos ts, string parameter ) {
 			size_t id = to!size_t(parameter);
-			size_t count = 0;
-			foreach ( ref t; ts ) {
+			foreach ( count, ref t; ts ) {
 				bool breakout = false;
 				if (count == id) {
 					t.deleted = true;
 					breakout = true;
 				}
-				count++;
 				if (breakout)
 					break;
 			}
@@ -68,14 +66,12 @@ void init_commands() {
 		},
 		"progress": delegate( Todos ts, string parameter ) {
 			size_t id = to!size_t(parameter);
-			size_t count = 0;
-			foreach ( ref t; ts ) {
+			foreach ( count, ref t; ts ) {
 				bool breakout = false;
 				if (count == id) {
 					t.progress++;
 					breakout = true;
 				}
-				count++;
 				if (breakout)
 					break;
 			}
@@ -96,10 +92,9 @@ void init_commands() {
 				writeln( "Please provide a list of todos (1,3,..) or all" );
 			else {
 				auto td = parseTags( parameter );
-				size_t count = 0;
 				auto first = targets.front;
 				targets.popFront;
-				foreach ( ref t; ts ) {
+				foreach ( count, ref t; ts ) {
 					bool breakout = false;
 					if (count == first) {
 						t = applyTags( t, td );
@@ -110,7 +105,6 @@ void init_commands() {
 							targets.popFront;
 						}
 					}
-					++count;
 					if (breakout)
 						break;
 				}

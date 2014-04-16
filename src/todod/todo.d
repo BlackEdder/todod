@@ -92,6 +92,7 @@ class Todos {
 	}
 
 	public int opApply(int delegate(ref Todo) dg) {
+		int res = 0;
 		foreach( ref t; myTodos ) {
 			bool keep = true;
 			foreach ( f ; filters ) {
@@ -101,13 +102,37 @@ class Todos {
 				}
 			}
 			if (keep) {
-				dg(t);
+				res = dg(t);
+				if (res) return res;
 			}
 		}
-		return 1;
+		return res;
 	}
 
-	public int opApply(int delegate(const Todo) dg) const {
+	public int opApply(int delegate(ref int, ref const Todo) dg) const {
+		int res = 0;
+		int index = 0;
+		foreach( t; this ) {
+			res = dg(index, t);
+			if (res) return res;
+			++index;
+		}
+		return res;
+	}
+
+	public int opApply(int delegate(ref int, ref Todo) dg) {
+		int res = 0;
+		int index = 0;
+		foreach( ref t; this ) {
+			res = dg(index, t);
+			if (res) return res;
+			++index;
+		}
+		return res;
+	}
+
+	public int opApply(int delegate(ref const Todo) dg) const {
+		int res = 0;
 		foreach( t; myTodos ) {
 			bool keep = true;
 			foreach ( f ; filters ) {
@@ -117,15 +142,16 @@ class Todos {
 				}
 			}
 			if (keep) {
-				dg(t);
+				res = dg(t);
+				if (res) return res;
 			}
 		}
-		return 1;
+		return res;
 	}
 
 	Todo[] array() {
 		Todo[] result;
-		foreach( t; this )
+		foreach( ref t; this )
 			result ~= t;
 		return result;
 	}
@@ -139,7 +165,6 @@ class Todos {
 		return this;
 	}
 
-
 	void resetFilter() {
 		filters = default_filters;
 	}
@@ -149,6 +174,22 @@ class Todos {
 		foreach( t; this )
 			l++;
 		return l;
+	}
+
+	ref Todo opIndex(size_t id) {
+		foreach ( count, ref t; this ) {
+			if (count == id) {
+				return t;
+			}
+		}
+		assert( false );
+	}
+
+	unittest {
+		auto ts = generateSomeTodos;
+		assert( ts.walkLength == 2 );
+		ts[1].deleted = true;
+		assert( ts.walkLength == 1 );
 	}
 
 	private:
@@ -244,10 +285,8 @@ unittest {
 
 string toString( const Todos ts ) {
 	string str;
-	size_t id = 0;
-	foreach( t; ts ) {
+	foreach( id, t; ts ) {
 		str = str ~ to!string( id ) ~ " " ~ toString( t ) ~ "\n";
-		id++;
 	}
 	return str;
 }
