@@ -18,10 +18,24 @@ Todos ts; // Defined global to give C access to it in tab completion
 
 extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 	string[] command_keys = commands.keys;
-	auto regex_buf = "^" ~ to!string( buf );
-	auto matching_commands = filter!( a => match( a, regex_buf ))( command_keys );
-	foreach ( com; matching_commands ) {
-		linenoiseAddCompletion(lc,std.string.toStringz(com));
+	string mybuf = to!string( buf );
+	if (match( mybuf, "^[A-z]+$" )) {
+		// Main commands
+		auto regex_buf = "^" ~ mybuf;
+		auto matching_commands = filter!( a => match( a, regex_buf ))( command_keys );
+		foreach ( com; matching_commands ) {
+			linenoiseAddCompletion(lc,std.string.toStringz(com));
+		}
+	} else {
+		auto m = match( mybuf, r"^(.* )([+-])(\w*)$" );
+		if (m) {
+			auto matching_commands =
+				filter!( a => match( a, regex(m.captures[3]) ))( ts.allTags );
+			foreach ( com; matching_commands ) {
+				linenoiseAddCompletion(lc,std.string.toStringz( m.captures[1]
+							~ m.captures[2] ~ com ));
+			}
+		}
 	}
 }
 

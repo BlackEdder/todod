@@ -12,13 +12,34 @@ import std.conv;
 
 import todod.todo;
 
+auto addTagRegex = regex(r"(?:^|\s)\+(\w+)");
+auto delTagRegex = regex(r"(?:^|\s)\-(\w+)");
+auto allTagRegex = regex(r"(?:^|\s)[+-](\w+)");
+
+unittest {
+	assert( match( "+tag", addTagRegex ) );
+	assert( !match( "-tag", addTagRegex ) );
+	assert( match( "bla +tag bla", addTagRegex ) );
+	assert( !match( "bla+tag", addTagRegex ) );
+
+	assert( !match( "+tag", delTagRegex ) );
+	assert( match( "-tag", delTagRegex ) );
+	assert( match( "bla -tag blaat", delTagRegex ) );
+	assert( !match( "bla-tag", delTagRegex ) );
+
+	assert( match( "+tag", allTagRegex ) );
+	assert( match( "-tag", allTagRegex ) );
+	assert( match( "bla -tag", allTagRegex ) );
+	assert( !match( "bla-tag", allTagRegex ) );
+}
+
 auto parseAndRemoveTags( string str ) {
 	TagDelta td;
-	auto m = matchAll( str, r"(?:^|\s)\+(\w+)" );
+	auto m = matchAll( str, addTagRegex );
 	foreach ( hits ; m ) {
 		td.add_tags ~=  hits[1];
 	}
-	m = matchAll( str, r"(?:^|\s)\-(\w+)" );
+	m = matchAll( str, delTagRegex );
 	foreach ( hits ; m ) {
 		td.delete_tags ~=  hits[1];
 	}
@@ -26,17 +47,17 @@ auto parseAndRemoveTags( string str ) {
 	// Should be possible to do matching 
 	// and replacing with one call to replaceAll!( dg ) but didn't
 	// work for me
-	str = replaceAll( str, regex(r"(?:^|\s)[+-](\w+)"), "" );  	
+	str = replaceAll( str, allTagRegex, "" );
 	return tuple(td, str);
 }
 
 TagDelta parseTags( string str ) {
 	TagDelta td;
-	auto m = matchAll( str, r"(?:^|\s)\+(\w+)" );
+	auto m = matchAll( str, addTagRegex );
 	foreach ( hits ; m ) {
 		td.add_tags ~=  hits[1];
 	}
-	m = matchAll( str, r"(?:^|\s)\-(\w+)" );
+	m = matchAll( str, delTagRegex );
 	foreach ( hits ; m ) {
 		td.delete_tags ~=  hits[1];
 	}
