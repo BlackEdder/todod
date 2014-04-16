@@ -25,10 +25,6 @@ extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 	}
 }
 
-void add( Todos ts, string parameter ) {
-	ts.addTodo( Todo( parameter ) );
-}
-
 Todos delegate( Todos, string)[string] commands;
 
 void init_commands() {
