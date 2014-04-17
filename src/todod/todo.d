@@ -23,7 +23,7 @@ struct Todo {
 	Date[] progress; /// Keep track of how long/often we've worked on this
 	bool deleted = false;
 
-	bool random = false;
+	bool random = true;
 
 	string[] tags;
 
