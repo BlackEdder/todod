@@ -101,7 +101,7 @@ void init_commands() {
 			ts[id].progress ~= Date.now;
 			ts = commands["show"]( ts, "" );
 			return ts;
-		}, "Usage: progress TARGETS. Marks that you have made progress on the provided TARGETS. Targets can either be a list of numbers (2,3,4) or all for all shown Todos." );
+		}, "Usage: progress TARGETS. Marks that you have made progress on the provided TARGETS. This will lower the weight of this todo and therefore lower the likelihood of it appearing in the randomly shown subset of todos. Targets can either be a list of numbers (2,3,4) or all for all shown Todos." );
 
 		commands.add( 
 				"search", delegate( Todos ts, string parameter ) {
