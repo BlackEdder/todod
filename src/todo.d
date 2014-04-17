@@ -1,6 +1,7 @@
 import std.stdio;
 
 import std.path;
+import std.file;
 
 import std.string;
 import std.regex;
@@ -51,7 +52,8 @@ void init_commands() {
 	commands.add(
 		"add", delegate( Todos ts, string parameter ) {
 			ts.addTodo( Todo( parameter ) );
-			ts[0].random = false;
+			if (ts.walkLength >= 5)
+				ts[0].random = false;
 			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Add a new todo with provided title. One can respectively add tags with +tag and a due date with DYYYY-MM-DD" );
@@ -176,9 +178,11 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 }
 
 void main( string[] args ) {
-
 	init_commands;
-	auto fileName = expandTilde( "~/.config/todod/todos.yaml" );
+
+	auto dirName = expandTilde( "~/.config/todod/" );
+	mkdirRecurse( dirName );
+	auto fileName = dirName ~ "todos.yaml";
 	scope( exit ) { writeTodos( ts, fileName ); }
 	
 	ts = loadTodos( fileName );
@@ -188,7 +192,7 @@ void main( string[] args ) {
 	bool quit = false;
 
  	// LineNoise setup
-	string historyFile = expandTilde( "~/.config/todod/history.txt" );
+	auto historyFile = dirName ~ "history.txt";
 	linenoiseSetCompletionCallback( &completion );
   linenoiseHistoryLoad(std.string.toStringz(historyFile)); /* Load the history at startup */
 
