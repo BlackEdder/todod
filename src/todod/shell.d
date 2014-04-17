@@ -11,6 +11,7 @@ import std.algorithm;
 import std.conv;
 
 import todod.todo;
+import todod.date;
 
 auto addTagRegex = regex(r"(?:^|\s)\+(\w+)");
 auto delTagRegex = regex(r"(?:^|\s)\-(\w+)");
@@ -43,13 +44,44 @@ auto parseAndRemoveTags( string str ) {
 	foreach ( hits ; m ) {
 		td.delete_tags ~=  hits[1];
 	}
-
+	
 	// Should be possible to do matching 
 	// and replacing with one call to replaceAll!( dg ) but didn't
 	// work for me
 	str = replaceAll( str, allTagRegex, "" );
+	// Replace multiple spaces
 	str = replaceAll( str, regex(r"(?:^|\s) +"), "" );
 	return tuple(td, str);
+}
+
+/// Return tuple witch string with due date removed. Due date is something along
+/// D2014-01-12
+auto parseAndRemoveDueDate( string str ) {
+	// Due dates
+	auto date_regex = regex( r"D(\d\d\d\d-\d\d-\d\d)" );
+	Date dt;
+	auto due_m = matchFirst( str, date_regex );
+	if (due_m) {
+		dt = Date( due_m.captures[1] );
+		str = replaceAll( str, date_regex, "" );
+		// Replace multiple spaces
+		str = replaceAll( str, regex(r"(?:^|\s) +"), "" );
+	}
+	return tuple( dt, str );
+}
+
+unittest {
+	auto tup = parseAndRemoveDueDate( "D2014-01-12" );
+	assert( tup[0].substract( Date( "2014-01-08" ) ) == 4 );
+	assert( tup[1] == "" );
+
+	tup = parseAndRemoveDueDate( "Bla D2014-01-12" );
+	assert( tup[0].substract( Date( "2014-01-08" ) ) == 4 );
+	assert( tup[1] == "Bla " );
+
+	tup = parseAndRemoveDueDate( "Bla" );
+	assert( tup[0] == false );
+	assert( tup[1] == "Bla" );
 }
 
 TagDelta parseTags( string str ) {

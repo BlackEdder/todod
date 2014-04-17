@@ -32,8 +32,12 @@ struct Todo {
 	this( string tle ) { 
 		auto tup = parseAndRemoveTags( tle );
 		tags = tup[0].add_tags;
-		mytitle = tup[1];
+
+		auto date_tup = parseAndRemoveDueDate( tup[1] );
+		due_date = date_tup[0];
+
 		creation_date = Date.now;
+		mytitle = date_tup[1];
 	}
 
 	@property string title() const {
