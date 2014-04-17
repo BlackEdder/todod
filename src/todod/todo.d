@@ -16,30 +16,40 @@ import std.array;
 import std.random;
 
 import todod.shell;
+import todod.date;
 
 struct Todo {
-	string title;
-	string[] tags;
 	long progress = 0; /// Keep track of how long/often we've worked on this
-
 	bool deleted = false;
 
 	bool random = true;
 
+	string[] tags;
+
+	Date creation_date;
+	Date due_date;
+
 	this( string tle ) { 
 		auto tup = parseAndRemoveTags( tle );
 		tags = tup[0].add_tags;
-		title = tup[1]; 
+		mytitle = tup[1];
+		creation_date = Date.now;
+	}
+
+	@property string title() const {
+		return mytitle;
 	}
 
 	bool opEquals(const Todo t) const {
-		return title == t.title;
+		return mytitle == t.mytitle;
 	}
+
+	private:
+		string mytitle;
 }
 
 unittest {
-	Todo t1;
-	t1.title = "Todo 1";
+	Todo t1 = Todo( "Todo 1" );
 	assert( t1.title == "Todo 1" );
 
 	Todo t2 = Todo( "Bla 1 +tag1 -tag2" );
@@ -65,7 +75,7 @@ JSONValue toJSON( const Todo t ) {
 
 Todo toTodo( const JSONValue json ) {
 	Todo t;
-	t.title = json["title"].str;
+	t.mytitle = json["title"].str;
 	foreach ( tag; json["tags"].array )
 		t.tags ~= tag.str;
 	t.progress = json["progress"].integer;
@@ -73,9 +83,7 @@ Todo toTodo( const JSONValue json ) {
 }
 
 unittest {
-	Todo t1;
-	t1.title = "Todo 1";
-	t1.tags = ["tag"];
+	Todo t1 = Todo( "Todo 1 +tag" );
 	assert( toJSON( t1 ).toTodo == t1 );
 }
 
@@ -292,12 +300,8 @@ Todos random( Todos ts, size_t no = 5 ) {
 
 version(unittest) {
 	Todos generateSomeTodos() {
-		Todo t1;
-		t1.title = "Todo 1";
-		t1.tags = ["tag1", "tag2", "tag3"];
-		Todo t2;
-		t2.title = "Bla";
-		t2.tags = ["tag2", "tag4"];
+		Todo t1 = Todo( "Todo 1 +tag1 +tag2 +tag3" );
+		Todo t2 = Todo( "Bla +tag2 +tag4" );
 		Todos mytodos = new Todos( [t1, t2] );
 		return mytodos;
 	}
