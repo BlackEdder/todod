@@ -62,10 +62,14 @@ unittest {
 
 
 string toString( const Date dt ) {
-	if (dt.init)
+	if (dt == true)
 		return dt.mytime.toISOExtString();
 	else
 		return "-1";
+}
+
+string toStringDate( const Date dt ) {
+	return toString( dt );
 }
 
 unittest {

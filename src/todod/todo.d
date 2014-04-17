@@ -19,7 +19,7 @@ import todod.shell;
 import todod.date;
 
 struct Todo {
-	long progress = 0; /// Keep track of how long/often we've worked on this
+	Date[] progress; /// Keep track of how long/often we've worked on this
 	bool deleted = false;
 
 	bool random = true;
@@ -69,7 +69,12 @@ JSONValue toJSON( const Todo t ) {
 	JSONValue[string] jsonTODO;
 	jsonTODO["title"] = t.title;
 	jsonTODO["tags"] = t.tags;
-	jsonTODO["progress"] = t.progress;
+	string[] progress_array;
+	foreach( d; t.progress )
+		progress_array ~= d.toStringDate;
+	jsonTODO["progress"] = progress_array;
+	jsonTODO["creation_date"] = t.creation_date.toStringDate;
+	jsonTODO["due_date"] = t.due_date.toStringDate;
 	return JSONValue( jsonTODO );	
 }
 
@@ -78,7 +83,10 @@ Todo toTodo( const JSONValue json ) {
 	t.mytitle = json["title"].str;
 	foreach ( tag; json["tags"].array )
 		t.tags ~= tag.str;
-	t.progress = json["progress"].integer;
+	foreach ( js; json["progress"].array )
+		t.progress ~= Date( js.str );
+	t.creation_date = Date( json["creation_date"].str );
+	t.due_date = Date( json["due_date"].str );
 	return t;
 }
 

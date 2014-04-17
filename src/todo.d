@@ -12,6 +12,7 @@ import core.stdc.string, core.stdc.stdlib, std.stdio;
 import deimos.linenoise;
 
 import todod.todo;
+import todod.date;
 import todod.shell;
 
 Todos ts; // Defined global to give C access to it in tab completion
@@ -62,7 +63,7 @@ void init_commands() {
 		},
 		"progress": delegate( Todos ts, string parameter ) {
 			size_t id = to!size_t(parameter);
-			ts[id].progress++;
+			ts[id].progress ~= Date.now;
 			ts = commands["show"]( ts, "" );
 			return ts;
 		},
