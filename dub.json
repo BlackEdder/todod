@@ -6,7 +6,8 @@
 	"license": "GPL-3.0",
 	"dependencies": {
 		"tested": "~master",
-		"linenoise": "~master"
+		"linenoise": "~master",
+		"stochastic": "~master"
 	},
 	"configurations": [
 	{

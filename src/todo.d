@@ -107,7 +107,7 @@ void init_commands() {
 			return ts;
 		},
 		"show": delegate( Todos ts, string parameter ) {
-			linenoiseClearScreen();
+			ts = commands["clear"]( ts, "" ); 
 			if (parameter == "tags")
 				writeln( prettyStringTags( ts.allTags ) );
 			else {

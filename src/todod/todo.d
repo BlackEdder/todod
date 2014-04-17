@@ -17,12 +17,13 @@ import std.random;
 
 import todod.shell;
 import todod.date;
+import todod.random;
 
 struct Todo {
 	Date[] progress; /// Keep track of how long/often we've worked on this
 	bool deleted = false;
 
-	bool random = true;
+	bool random = false;
 
 	string[] tags;
 
@@ -297,25 +298,18 @@ Filters filterOnRandom( Filters fltrs ) {
 }
 
 Todos random( Todos ts, size_t no = 5 ) {
-	// Clear all old randoms
-	foreach ( ref t; ts )
-		t.random = true;
+	if (ts.walkLength > no) {
+		// Clear all old randoms
+		foreach ( ref t; ts )
+			t.random = false;
 
-	ts.filters = filterOnRandom( ts.filters );
+		ts = randomGillespie( ts, no );
 
-	size_t dim = ts.walkLength;
-	while ( dim > no) {
-		auto accept = 1.0-to!double(no)/dim;
-		foreach( ref t; ts ) {
-			auto rnd = uniform( 0.0, 1.0 );
-			if (rnd<accept) {
-				t.random = false;
-				--dim;
-				if (dim <= no)
-					break;
-			}
-		}
+	} else {
+		foreach ( ref t; ts )
+			t.random = true;
 	}
+	ts.filters = filterOnRandom( ts.filters );
 	return ts;
 }
 
