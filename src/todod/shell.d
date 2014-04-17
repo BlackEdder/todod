@@ -180,14 +180,19 @@ string prettyStringTags( const string[] tags ) {
 }
 
 string prettyStringTodo( const Todo t ) {
-	size_t titleWidth = 50;
-	if (t.title.length > titleWidth) {
-		return t.title[0..titleWidth] ~ "\t" ~ prettyStringTags( t.tags ) ~ " " 
-			~ to!string( t.progress.length ) ~ "\n  " ~
-			t.title[titleWidth..$];
-	} else 
-		return t.title.leftJustify( titleWidth ) ~ "\t" ~ prettyStringTags( t.tags )
-			~ " " ~ to!string( t.progress.length );
+	Date currentDate = Date.now;
+	string description = t.title ~ "\n";
+	description ~= "\tTags:       " ~ prettyStringTags( t.tags ) ~"\n";
+	description ~= "\t" ~ "Last progress    " 
+		~ tagColor(to!string( lastProgress( t ) ).rightJustify( 4 )) ~
+		" days ago\n";
+
+	if ( t.due_date == true )
+		description ~= "\t" ~ "Due in           " ~ tagColor( 
+				to!string( t.due_date.substract( currentDate ) ).rightJustify( 4 ) ) 
+			~ " days\n";
+
+	return description;
 }
 
 string prettyStringTodos( const Todos ts ) {

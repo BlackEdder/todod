@@ -99,6 +99,15 @@ unittest {
 	assert( toJSON( t1 ).toTodo == t1 );
 }
 
+/// Days since last progress. If no progress has been made then days since creation
+auto lastProgress( const Todo t ) {
+	Date currentDate = Date.now;
+	if ( t.progress.length > 0 )
+		return currentDate.substract( t.progress[$-1] );
+	else
+		return currentDate.substract( t.creation_date );
+}
+
 /**
 	Working on list of todos
 	*/
