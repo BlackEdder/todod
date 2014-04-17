@@ -54,35 +54,7 @@ auto parseAndRemoveTags( string str ) {
 	return tuple(td, str);
 }
 
-/// Return tuple witch string with due date removed. Due date is something along
-/// D2014-01-12
-auto parseAndRemoveDueDate( string str ) {
-	// Due dates
-	auto date_regex = regex( r"D(\d\d\d\d-\d\d-\d\d)" );
-	Date dt;
-	auto due_m = matchFirst( str, date_regex );
-	if (due_m) {
-		dt = Date( due_m.captures[1] );
-		str = replaceAll( str, date_regex, "" );
-		// Replace multiple spaces
-		str = replaceAll( str, regex(r"(?:^|\s) +"), "" );
-	}
-	return tuple( dt, str );
-}
 
-unittest {
-	auto tup = parseAndRemoveDueDate( "D2014-01-12" );
-	assert( tup[0].substract( Date( "2014-01-08" ) ) == 4 );
-	assert( tup[1] == "" );
-
-	tup = parseAndRemoveDueDate( "Bla D2014-01-12" );
-	assert( tup[0].substract( Date( "2014-01-08" ) ) == 4 );
-	assert( tup[1] == "Bla " );
-
-	tup = parseAndRemoveDueDate( "Bla" );
-	assert( tup[0] == false );
-	assert( tup[1] == "Bla" );
-}
 
 TagDelta parseTags( string str ) {
 	TagDelta td;
@@ -126,6 +98,46 @@ unittest {
 	td = parseTags( "+tag1 -tag2" );
 	assert( std.algorithm.equal(td.delete_tags, ["tag2"]) );
 	assert( std.algorithm.equal(td.add_tags, ["tag1"]) ); 
+}
+/// Return tuple witch string with due date removed. Due date is something along
+/// D2014-01-12
+auto parseAndRemoveDueDate( string str ) {
+	// Due dates
+	auto date_regex = regex( r"D(\d\d\d\d-\d\d-\d\d)" );
+	Date dt;
+	auto due_m = matchFirst( str, date_regex );
+	if (due_m) {
+		dt = Date( due_m.captures[1] );
+		str = replaceAll( str, date_regex, "" );
+		// Replace multiple spaces
+		str = replaceAll( str, regex(r"(?:^|\s) +"), "" );
+	}
+	return tuple( dt, str );
+}
+
+/// Return date from string. Date is something along 2014-01-12
+auto parseDate( string str ) {
+	// Due dates
+	auto date_regex = regex( r"(\d\d\d\d-\d\d-\d\d)" );
+	Date dt;
+	auto due_m = matchFirst( str, date_regex );
+	if (due_m)
+		dt = Date( due_m.captures[1] );
+	return dt;
+}
+
+unittest {
+	auto tup = parseAndRemoveDueDate( "D2014-01-12" );
+	assert( tup[0].substract( Date( "2014-01-08" ) ) == 4 );
+	assert( tup[1] == "" );
+
+	tup = parseAndRemoveDueDate( "Bla D2014-01-12" );
+	assert( tup[0].substract( Date( "2014-01-08" ) ) == 4 );
+	assert( tup[1] == "Bla " );
+
+	tup = parseAndRemoveDueDate( "Bla" );
+	assert( tup[0] == false );
+	assert( tup[1] == "Bla" );
 }
 
 Todo applyTags( ref Todo td, TagDelta delta ) {

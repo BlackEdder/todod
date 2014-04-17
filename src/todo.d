@@ -95,6 +95,17 @@ void init_commands() {
 			ts = commands["show"]( ts, "" );
 			return ts;
 		},
+		"due": delegate( Todos ts, string parameter ) {
+			auto targets = parseTarget( parameter );
+			if (targets.empty)
+				writeln( "Please provide a list of todos (1,3,..) or all" );
+			else {
+				auto duedate = parseDate( parameter );
+				ts.apply( delegate( ref Todo t ) { t.due_date = duedate; }, targets );
+			}
+			ts = commands["show"]( ts, "" );
+			return ts;
+		},
 		"show": delegate( Todos ts, string parameter ) {
 			linenoiseClearScreen();
 			if (parameter == "tags")
