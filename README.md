@@ -12,14 +12,14 @@ For command line Tab completion Todod depends on linenoise:
 https://github.com/antirez/linenoise.git
 You need to create a static library as follows:
 
-    gcc -c -o linenoise.o linenoise.c
+		gcc -c -o linenoise.o linenoise.c
 		ar rcs liblinenoise.a linenoise.o
 
 and move the resulting static library to somewhere D can find it (e.g. /usr/lib/).
 
 Other than that you need dub and dmd installed. Then execute:
 
-    dub -c shell -b release
+		dub -c shell -b release
 
 to create an executable: bin/todod. You can copy this to anywhere in your path.
 
@@ -37,7 +37,7 @@ __done__ - Usage done todo_id. Marks Todo specified by id as done.
 
 __progress__ - Usage: progress TARGETS. Marks that you have made progress on the provided TARGETS. This will lower the weight of this todo and therefore lower the likelihood of it appearing in the randomly shown subset of todos. Targets can either be a list of numbers (2,3,4) or all for all shown Todos.
 
-__search__- Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. Search without any further parameters resets the search (activates all Todos).
+__search__ - Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. Search without any further parameters resets the search (activates all Todos).
 
 __reroll__ - Reroll the Todos that are active. I.e. chooses up to five Todos from all the active Todos to show
 
