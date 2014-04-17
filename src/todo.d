@@ -14,11 +14,12 @@ import deimos.linenoise;
 import todod.todo;
 import todod.date;
 import todod.shell;
+import todod.commandline;
 
 Todos ts; // Defined global to give C access to it in tab completion
 
 extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
-	string[] command_keys = commands.keys;
+	string[] command_keys = commands.commands;
 	string mybuf = to!string( buf );
 	if (match( mybuf, "^[A-z]+$" )) {
 		// Main commands
@@ -40,34 +41,46 @@ extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 	}
 }
 
-Todos delegate( Todos, string)[string] commands;
+auto commands = Commands!( Todos delegate( Todos, string) )( "Usage command [OPTIONS].
+		
+  This todod manager allows you to keep track of large amounts of todos. Todos can be tagged and/or given due dates. A feature specific to this todo manager is that it will show at most 5 todos at a time. Todos that are due or are old have a higher probability of being shown. Limiting the view to the more important todos allows you to focus on high priority todos first.\n");
+
+//Todos delegate( Todos, string)[string] commands;
 
 void init_commands() {
-	commands = [
-		"add": delegate( Todos ts, string parameter ) {
+	commands.add(
+		"add", delegate( Todos ts, string parameter ) {
 			ts.addTodo( Todo( parameter ) );
 			ts[0].random = false;
 			ts = commands["show"]( ts, "" );
 			return ts;
-		},
-		"del": delegate( Todos ts, string parameter ) {
+		}, "Add a new todo with provided title. One can respectively add tags with +tag and a due date with DYYYY-MM-DD" );
+
+		commands.add( 
+				"del", delegate( Todos ts, string parameter ) {
 			size_t id = to!size_t(parameter);
 			ts[id].deleted = true;
 			ts = commands["show"]( ts, "" );
 			return ts;
-		},
-		"done": delegate( Todos ts, string parameter ) {
+		}, "Usage del todo_id. Deletes Todo specified by id." );
+
+		commands.add( 
+				"done", delegate( Todos ts, string parameter ) {
 			ts = commands["del"]( ts, parameter );
 			ts = commands["show"]( ts, "" );
 			return ts;
-		},
-		"progress": delegate( Todos ts, string parameter ) {
+		}, "Usage done todo_id. Marks Todo specified by id as done." );
+
+		commands.add( 
+				"progress", delegate( Todos ts, string parameter ) {
 			size_t id = to!size_t(parameter);
 			ts[id].progress ~= Date.now;
 			ts = commands["show"]( ts, "" );
 			return ts;
-		},
-		"search": delegate( Todos ts, string parameter ) {
+		}, "Usage: progress TARGETS. Marks that you have made progress on the provided TARGETS. Targets can either be a list of numbers (2,3,4) or all for all shown Todos." );
+
+		commands.add( 
+				"search", delegate( Todos ts, string parameter ) {
 			if ( parameter == "" )
 				ts.filters = default_filters;
 			else {
@@ -77,14 +90,18 @@ void init_commands() {
 			ts = random( ts );
 			ts = commands["show"]( ts, "" );
 			return ts;
-		},
-		"reroll": delegate( Todos ts, string parameter ) {
+		}, "Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. Search without any further parameters resets the search (activates all Todos)." );
+
+		commands.add( 
+				"reroll", delegate( Todos ts, string parameter ) {
 			ts.filters = ts.filters[0..$-1]; // Undo random
 			ts = random( ts );
 			ts = commands["show"]( ts, "" );
 			return ts;
-		},
-		"tag": delegate( Todos ts, string parameter ) {
+		}, "Reroll the Todos that are active. I.e. chooses up to five Todos from all the active Todos to show" );
+
+		commands.add(
+				"tag", delegate( Todos ts, string parameter ) {
 			auto targets = parseTarget( parameter );
 			if (targets.empty)
 				writeln( "Please provide a list of todos (1,3,..) or all" );
@@ -94,8 +111,10 @@ void init_commands() {
 			}
 			ts = commands["show"]( ts, "" );
 			return ts;
-		},
-		"due": delegate( Todos ts, string parameter ) {
+		}, "Usage: tag +tagtoadd -tagtoremove [TARGETS]. Adds or removes given tags for the provided targets. Targets can either be a list of numbers (2,3,4) or all for all shown Todos" );
+
+		commands.add( 
+				"due", delegate( Todos ts, string parameter ) {
 			auto targets = parseTarget( parameter );
 			if (targets.empty)
 				writeln( "Please provide a list of todos (1,3,..) or all" );
@@ -105,12 +124,15 @@ void init_commands() {
 			}
 			ts = commands["show"]( ts, "" );
 			return ts;
-		},
-		"show": delegate( Todos ts, string parameter ) {
+		}, "Usage: due YYYY-MM-DD [TARGETS]. Sets the given due date for the provided targets. Targets can either be a list of numbers (2,3,4) or all for all shown Todos" );
+
+		commands.add( 
+				"show", delegate( Todos ts, string parameter ) {
 			ts = commands["clear"]( ts, "" ); 
 			if (parameter == "tags")
 				writeln( prettyStringTags( ts.allTags ) );
 			else {
+				writeln( "Tags and number of todos associated with that tag." );
 				auto filters = ts.filters;
 				ts.filters = ts.filters[0..$-1];
 				auto tags = ts.tagsWithCount();
@@ -122,19 +144,33 @@ void init_commands() {
 				write( prettyStringTodos( ts ) );
 			}
 			return ts;
-		},
-		"clear": delegate( Todos ts, string parameter ) {
+		}, "Show a (random) subset of Todos. Subject to filters added throught the search command. Shows a list of tags present in the filtered list of Todos at the top of the output." );
+
+		commands.add( 
+				"clear", delegate( Todos ts, string parameter ) {
 			linenoiseClearScreen();
 			return ts;
-		}
-	];
+			}, "Clear the screen." );
+
+		commands.add( 
+				"help", delegate( Todos ts, string parameter ) {
+			ts = commands["clear"]( ts, "" ); 
+			writeln( commands.toString );
+			return ts;
+		}, "Print this help message" );
+
+		commands.add( 
+				"quit", delegate( Todos ts, string parameter ) {
+			return ts;
+		}, "Quit todod and save the todos" );
+
 }
 
 Todos handle_message( string command, string parameter, Todos ts ) {
-	if ( command in commands ) {
+	if ( commands.exists( command ) ) {
 		ts = commands[command]( ts, parameter );
 	} else {
-		writeln( "Unknown option" );
+		ts = commands["help"]( ts, "" );
 	}
 	return ts;
 }
@@ -147,7 +183,7 @@ void main( string[] args ) {
 	
 	ts = loadTodos( fileName );
 	ts = random( ts );
-	commands["show"]( ts, "" );
+	handle_message( "show", "", ts );
 
 	bool quit = false;
 
@@ -171,5 +207,6 @@ void main( string[] args ) {
 			linenoiseHistorySave(std.string.toStringz(historyFile)); /* Save the history on disk. */
 		}
 		free(line);
+		writeTodos( ts, fileName );
 	}
 }

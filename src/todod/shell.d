@@ -171,6 +171,10 @@ string tagColor( string str ) {
 	return "\033[1;31m" ~ str ~ "\033[0m";
 }
 
+string titleEmphasize( string str ) {
+	return "\033[3;32m" ~ str ~ "\033[0m";
+}
+
 string prettyStringTags( const string[] tags ) {
 	string line;
 	foreach( tag; tags ) {
@@ -181,14 +185,14 @@ string prettyStringTags( const string[] tags ) {
 
 string prettyStringTodo( const Todo t ) {
 	Date currentDate = Date.now;
-	string description = t.title ~ "\n";
-	description ~= "\tTags:       " ~ prettyStringTags( t.tags ) ~"\n";
-	description ~= "\t" ~ "Last progress    " 
+	string description = titleEmphasize(t.title) ~ "\n";
+	description ~= "\t  Tags:       " ~ prettyStringTags( t.tags ) ~"\n";
+	description ~= "\t  " ~ "Last progress    " 
 		~ tagColor(to!string( lastProgress( t ) ).rightJustify( 4 )) ~
 		" days ago\n";
 
 	if ( t.due_date == true )
-		description ~= "\t" ~ "Due in           " ~ tagColor( 
+		description ~= "\t  " ~ "Due in           " ~ tagColor( 
 				to!string( t.due_date.substract( currentDate ) ).rightJustify( 4 ) ) 
 			~ " days\n";
 
@@ -199,7 +203,7 @@ string prettyStringTodos( const Todos ts ) {
 	string str;
 	size_t id = 0;
 	foreach( t; ts ) {
-		str = str ~ to!string( id ) ~ " " ~ prettyStringTodo( t ) ~ "\n";
+		str = str ~ to!string( id ) ~ "\t" ~ prettyStringTodo( t ) ~ "\n";
 		id++;
 	}
 	return str;
