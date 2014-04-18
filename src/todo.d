@@ -108,13 +108,15 @@ void init_commands() {
 			if ( parameter == "" )
 				ts.filters = default_filters;
 			else {
+				if ( match( parameter, r" all$" ) ) // Search through all todos
+					ts.filters = default_filters;
 				ts.filters = ts.filters[0..$-1]; // Undo random
 				ts.filters = filterOnTags( ts.filters, parseTags( parameter ) );
 			}
 			ts = random( ts );
 			ts = commands["show"]( ts, "" );
 			return ts;
-		}, "Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. Search without any further parameters resets the search (activates all Todos)." );
+		}, "Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. search ... all will search through all Todos instead. Similarly, search without any further parameters resets the search (activates all Todos)." );
 
 		commands.add( 
 				"reroll", delegate( Todos ts, string parameter ) {
