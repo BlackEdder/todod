@@ -71,9 +71,9 @@ auto weight( const Todo t ) {
 	return progressWeight( lastProgress( t ) );
 }
 
-Random gen;
 
 Todos randomGillespie( Todos ts, size_t no = 5 ) {
+	auto gen = Random( unpredictableSeed );
 	void eventTodo( Gillespie gillespie, ref Todo t, event_id id ) {
 		gillespie.del_event( id );
 		t.random = true; 
