@@ -78,7 +78,7 @@ void init_commands() {
 				ts[0].random = false;
 			ts = commands["show"]( ts, "" );
 			return ts;
-		}, "Add a new todo with provided title. One can respectively add tags with +tag and a due date with DYYYY-MM-DD" );
+		}, "Add a new todo with provided title. One can respectively add tags with +tag and a due date with DYYYY-MM-DD or D+7 for a week from now." );
 
 		commands.add( 
 				"del", delegate( Todos ts, string parameter ) {
@@ -150,7 +150,7 @@ void init_commands() {
 			}
 			ts = commands["show"]( ts, "" );
 			return ts;
-		}, "Usage: due YYYY-MM-DD [TARGETS]. Sets the given due date for the provided targets. Targets can either be a list of numbers (2,3,4) or all for all shown Todos" );
+		}, "Usage: due YYYY-MM-DD [TARGETS] or +days. Sets the given due date for the provided targets. Targets can either be a list of numbers (2,3,4) or all for all shown Todos" );
 
 		commands.add( 
 				"show", delegate( Todos ts, string parameter ) {
@@ -176,7 +176,7 @@ void init_commands() {
 				"clear", delegate( Todos ts, string parameter ) {
 			linenoiseClearScreen();
 			return ts;
-			}, "Clear the screen." );
+		}, "Clear the screen." );
 
 		commands.add( 
 				"help", delegate( Todos ts, string parameter ) {

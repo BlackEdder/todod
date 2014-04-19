@@ -132,21 +132,18 @@ auto parseAndRemoveDueDate( string str ) {
 	if (due_m) {
 		dt = Date( due_m.captures[1] );
 		str = replaceAll( str, date_regex, "" );
-		// Replace multiple spaces
-		str = replaceAll( str, regex(r"(?:^|\s) +"), "" );
+	} else {
+		date_regex = regex( r"(?:^|\s)D\+(\d+)" );
+		due_m = matchFirst( str, date_regex );
+		if (due_m) {
+			dt = Date.now;
+			dt.addDays( to!long( due_m.captures[1] ) );
+			str = replaceAll( str, date_regex, "" );
+		}
 	}
+	// Replace multiple spaces
+	str = replaceAll( str, regex(r"(?:^|\s) +"), "" );
 	return tuple( dt, str );
-}
-
-/// Return date from string. Date is something along 2014-01-12
-auto parseDate( string str ) {
-	// Due dates
-	auto date_regex = regex( r"(\d\d\d\d-\d\d-\d\d)" );
-	Date dt;
-	auto due_m = matchFirst( str, date_regex );
-	if (due_m)
-		dt = Date( due_m.captures[1] );
-	return dt;
 }
 
 unittest {
@@ -162,6 +159,38 @@ unittest {
 	assert( tup[0] == false );
 	assert( tup[1] == "Bla" );
 }
+
+/// Return date from string. Date is something along 2014-01-12
+auto parseDate( string str, Date from = Date.now ) {
+	// Due dates
+	auto date_regex = regex( r"(\d\d\d\d-\d\d-\d\d)" );
+	Date dt;
+	auto due_m = matchFirst( str, date_regex );
+	if (due_m) {
+		dt = Date( due_m.captures[1] );
+		return dt;
+	} else {
+		due_m = matchFirst( str, r"(?:^|\s|D)\+(\d+)" );
+		if (due_m) {
+			from.addDays( to!long( due_m.captures[1] ) );
+		}
+		return from.dup;
+	}
+}
+
+unittest {
+	auto fromDate = Date("2014-01-16");
+	auto dt = parseDate( "Bla +4 Bla", fromDate );
+	assert( dt.substract( fromDate ) == 4 );
+
+	dt = parseDate( "Bla D+31 Bla", fromDate );
+	assert( dt.substract( fromDate ) == 31 );
+
+	dt = parseDate( "+11 Bla", fromDate );
+	assert( dt.substract( fromDate ) == 11 );
+}
+
+
 
 Todo applyTags( ref Todo td, TagDelta delta ) {
 	td.tags ~= delta.add_tags;

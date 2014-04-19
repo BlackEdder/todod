@@ -53,6 +53,27 @@ struct Date {
 		return (this.mytime - other_date.mytime).total!"days";
 	}
 
+	/// Add given number of days
+	void addDays( long days ) {
+		mytime += datetime.dur!"days"(days);
+	}
+
+	unittest {
+		auto dt = Date( "2014-01-16" );
+		dt.addDays(4);
+		assert( dt.mytime.day == 20 );
+		dt.addDays(31);
+		assert( dt.mytime.day == 20 );
+		assert( dt.mytime.month == 2 );
+	}
+
+	Date dup() {
+		Date dt;
+		dt.mytime = mytime;
+		dt.init = true;
+		return dt;
+	}
+
 	private:
 		datetime.Date mytime;
 		bool init = false;
