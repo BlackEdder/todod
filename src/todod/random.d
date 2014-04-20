@@ -66,7 +66,7 @@ unittest {
 
 /// Associate a weight to a Todo depending on last progress and todo dates
 auto weight( const Todo t ) {
-	if ( t.due_date == true )
+	if ( t.due_date )
 		return dueWeight( t.due_date.substract( Date.now ) );
 	return progressWeight( lastProgress( t ) );
 }

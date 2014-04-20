@@ -37,8 +37,8 @@ struct Date {
 		}
 	}
 
-  bool opEquals()(auto ref const bool v) const {
-		return v == init;
+	bool opCast( T : bool )() const {
+		return init;
 	}
 
 	static Date now() {
@@ -86,15 +86,15 @@ version( unittest ) {
 unittest {
 	// Test for initialization
 	Date dt;
-	assert( dt == false );
+	assert( !dt );
 	dt = Date( "2014-08-01" );
-	assert( dt != false );
+	assert( dt );
 
 	dt = Date( "-1" );
-	assert( dt == false );
+	assert( !dt );
 
 	dt = Date.now;
-	assert( dt != false );
+	assert( dt );
 }
 
 unittest {
@@ -106,7 +106,7 @@ unittest {
 
 
 string toString( const Date dt ) {
-	if (dt == true)
+	if (dt)
 		return dt.mytime.toISOExtString();
 	else
 		return "-1";
@@ -120,7 +120,7 @@ unittest {
 	Date dt;
 	assert( toString( dt ) == "-1" );
 	auto dt_invalid = Date( toString( dt ) );
-	assert( dt_invalid == false );
+	assert( !dt_invalid );
 
 	dt = Date( "2014-01-08" );
 	assert( toString( dt ) == "2014-01-08" );
