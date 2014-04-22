@@ -58,10 +58,7 @@ HabitRPG loadHRPG( string fileName ) {
 		auto content = file.readln();
 		if (content != "") {
 			auto json = parseJSON( content );
-			writeln( "Made it here ", json );
-			writeln( "Made it here too ", json["api_key"] );
 			hrpg.api_user = json["api_user"].str;
-			writeln( "Probably not here" );
 			hrpg.api_key = json["api_key"].str;
 		}
 	} else {
