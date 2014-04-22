@@ -38,8 +38,10 @@ import todod.todo;
 import todod.date;
 import todod.shell;
 import todod.commandline;
+import todod.habitrpg;
 
 Todos ts; // Defined global to give C access to it in tab completion
+HabitRPG hrpg;
 
 extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 	string[] command_keys = commands.commands;
@@ -90,6 +92,7 @@ void init_commands() {
 
 		commands.add( 
 				"done", delegate( Todos ts, string parameter ) {
+			upHabit( hrpg, "productivity" );
 			ts = commands["del"]( ts, parameter );
 			ts = commands["show"]( ts, "" );
 			return ts;
@@ -98,6 +101,7 @@ void init_commands() {
 		commands.add( 
 				"progress", delegate( Todos ts, string parameter ) {
 			size_t id = to!size_t(parameter);
+			upHabit( hrpg, "productivity" );
 			ts[id].progress ~= Date.now;
 			ts = commands["show"]( ts, "" );
 			return ts;
@@ -208,6 +212,8 @@ void main( string[] args ) {
 	mkdirRecurse( dirName );
 	auto fileName = dirName ~ "todos.json";
 	scope( exit ) { writeTodos( ts, fileName ); }
+
+	hrpg = loadHRPG( dirName ~ "habitrpg.json" );
 	
 	ts = loadTodos( fileName );
 	ts = random( ts );
