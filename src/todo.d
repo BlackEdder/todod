@@ -206,7 +206,7 @@ void main( string[] args ) {
 
 	auto dirName = expandTilde( "~/.config/todod/" );
 	mkdirRecurse( dirName );
-	auto fileName = dirName ~ "todos.yaml";
+	auto fileName = dirName ~ "todos.json";
 	scope( exit ) { writeTodos( ts, fileName ); }
 	
 	ts = loadTodos( fileName );
