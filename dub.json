@@ -1,6 +1,6 @@
 {
 	"name": "todod",
-	"description": "A minimal D todo list.",
+	"description": "A command line todo list written in D.",
 	"copyright": "Copyright © 2014, Edwin van Leeuwen",
 	"authors": ["Edwin van Leeuwen"],
 	"license": "GPL-3.0",
