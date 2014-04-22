@@ -156,7 +156,7 @@ unittest {
 	assert( tup[1] == "Bla " );
 
 	tup = parseAndRemoveDueDate( "Bla" );
-	assert( tup[0] == false );
+	assert( !tup[0] );
 	assert( tup[1] == "Bla" );
 }
 
@@ -243,7 +243,7 @@ string prettyStringTodo( const Todo t ) {
 		~ tagColor(to!string( lastProgress( t ) ).rightJustify( 4 )) ~
 		" days ago\n";
 
-	if ( t.due_date == true )
+	if ( t.due_date )
 		description ~= "\t  " ~ "Due in           " ~ tagColor( 
 				to!string( t.due_date.substract( currentDate ) ).rightJustify( 4 ) ) 
 			~ " days\n";
