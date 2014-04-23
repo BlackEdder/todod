@@ -114,7 +114,8 @@ void init_commands() {
 			else {
 				if ( match( parameter, r" all$" ) ) // Search through all todos
 					ts.filters = default_filters;
-				ts.filters = ts.filters[0..$-1]; // Undo random
+				else
+					ts.filters = ts.filters[0..$-1]; // Undo random
 				ts.filters = filterOnTags( ts.filters, parseTags( parameter ) );
 			}
 			ts = random( ts );
