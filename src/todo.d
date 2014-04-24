@@ -168,8 +168,9 @@ void init_commands() {
 				ts.filters = ts.filters[0..$-1];
 				auto tags = ts.tagsWithCount();
 				foreach( tag, count; tags ) {
-					writeln( tagColor(tag.name).leftJustify( 20 ), "\t", count );
+					write( tagColor(tag.name), " (", count, "),  " );
 				}
+				writeln();
 				writeln();
 				ts.filters = filters;
 				write( prettyStringTodos( ts ) );
