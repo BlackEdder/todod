@@ -96,3 +96,35 @@ string upHabit( const HabitRPG hrpg, string habit ) {
 	return result;
 }
 
+unittest {
+	HabitRPG hrpg;
+	hrpg.api_user = "f55f430e-36b8-4ebf-b6fa-ad4ff552fe7e";
+	hrpg.api_key = "3fca0d72-2f95-4e57-99e5-43ddb85b9780";
+	string result;
+	if (hrpg) {
+		auto url = "https://habitrpg.com/api/v2/user/tasks/";
+		auto http = HTTP( url );
+		http.addRequestHeader( "x-api-user", hrpg.api_user );
+		http.addRequestHeader( "x-api-key", hrpg.api_key );
+		http.addRequestHeader( "Content-Type","application/json" );
+		//http.postData = "";
+		http.method = HTTP.Method.get;
+		//http.verbose( true );
+		http.onReceive = (ubyte[] data) { 
+			result ~= array( map!(a => cast(char) a)( data ) );
+			return data.length; 
+		};
+
+		http.perform();
+	}
+
+	//writeln( result );
+
+	auto tasks = parseJSON( result ).array;
+
+	foreach ( task; tasks ) {
+		if ( task["type"].str == "todo" && task["completed"].type == JSON_TYPE.FALSE ) {
+			writeln( task );
+		}
+	}
+}
