@@ -35,6 +35,7 @@ import std.conv;
 
 import todod.todo;
 import todod.date;
+import todod.tag;
 
 auto addTagRegex = regex(r"(?:^|\s)\+(\w+)");
 auto delTagRegex = regex(r"(?:^|\s)\-(\w+)");
@@ -61,11 +62,11 @@ auto parseAndRemoveTags( string str ) {
 	TagDelta td;
 	auto m = matchAll( str, addTagRegex );
 	foreach ( hits ; m ) {
-		td.add_tags ~=  hits[1];
+		td.add_tags ~=  Tag( hits[1] );
 	}
 	m = matchAll( str, delTagRegex );
 	foreach ( hits ; m ) {
-		td.delete_tags ~=  hits[1];
+		td.delete_tags ~=  Tag( hits[1] );
 	}
 	
 	// Should be possible to do matching 
@@ -83,45 +84,46 @@ TagDelta parseTags( string str ) {
 	TagDelta td;
 	auto m = matchAll( str, addTagRegex );
 	foreach ( hits ; m ) {
-		td.add_tags ~=  hits[1];
+		td.add_tags ~=  Tag( hits[1] );
 	}
 	m = matchAll( str, delTagRegex );
 	foreach ( hits ; m ) {
-		td.delete_tags ~=  hits[1];
+		td.delete_tags ~=  Tag( hits[1] );
 	}
 	return td;
 }
 
 unittest {
 	auto td = parseTags( "+tag1" );
-	assert( std.algorithm.equal(td.add_tags, ["tag1"]) );
+	assert( std.algorithm.equal(td.add_tags, [Tag("tag1")]) );
 	td = parseTags( "+tag1 +tag2" );
-	assert( std.algorithm.equal(td.add_tags, ["tag1", "tag2"]) );
+	assert( std.algorithm.equal(td.add_tags, [Tag("tag1"), Tag("tag2")]) );
 	td = parseTags( "+tag1+tag2" );
-	assert( std.algorithm.equal(td.add_tags, ["tag1"]) ); 
+	assert( std.algorithm.equal(td.add_tags, [Tag("tag1")]) ); 
 
 	// Same for negative tags
 	td = parseTags( "-tag1" );
-	assert( std.algorithm.equal(td.delete_tags, ["tag1"]) );
+	assert( std.algorithm.equal(td.delete_tags, [Tag("tag1")]) );
 	td = parseTags( "-tag1 -tag2" );
-	assert( std.algorithm.equal(td.delete_tags, ["tag1", "tag2"]) );
+	assert( std.algorithm.equal(td.delete_tags, [Tag("tag1"), Tag("tag2")]) );
 	td = parseTags( "-tag1-tag2" );
-	assert( std.algorithm.equal(td.delete_tags, ["tag1"]) );
+	assert( std.algorithm.equal(td.delete_tags, [Tag("tag1")]) );
 
 	td = parseTags( "-tag1+tag2" );
-	assert( std.algorithm.equal(td.delete_tags, ["tag1"]) );
+	assert( std.algorithm.equal(td.delete_tags, [Tag("tag1")]) );
 	assert( td.add_tags.length == 0 );
 	td = parseTags( "+tag1-tag2" );
-	assert( std.algorithm.equal(td.add_tags, ["tag1"]) );
+	assert( std.algorithm.equal(td.add_tags, [Tag("tag1")]) );
 	assert( td.delete_tags.length == 0 );
 
 	td = parseTags( "-tag1 +tag2" );
-	assert( std.algorithm.equal(td.delete_tags, ["tag1"]) );
-	assert( std.algorithm.equal(td.add_tags, ["tag2"]) ); 
+	assert( std.algorithm.equal(td.delete_tags, [Tag("tag1")]) );
+	assert( std.algorithm.equal(td.add_tags, [Tag("tag2")]) ); 
 	td = parseTags( "+tag1 -tag2" );
-	assert( std.algorithm.equal(td.delete_tags, ["tag2"]) );
-	assert( std.algorithm.equal(td.add_tags, ["tag1"]) ); 
+	assert( std.algorithm.equal(td.delete_tags, [Tag("tag2")]) );
+	assert( std.algorithm.equal(td.add_tags, [Tag("tag1")]) ); 
 }
+
 /// Return tuple witch string with due date removed. Due date is something along
 /// D2014-01-12
 auto parseAndRemoveDueDate( string str ) {
@@ -208,15 +210,15 @@ Todo applyTags( ref Todo td, TagDelta delta ) {
 
 unittest {
 	TagDelta delta;
-	delta.add_tags = ["tag2", "tag1"];
+	delta.add_tags = [Tag("tag2"), Tag("tag1")];
 	Todo td;
 	td = applyTags( td, delta );
-	assert( equal( td.tags, ["tag1", "tag2"] ) );
+	assert( equal( td.tags, [Tag("tag1"), Tag("tag2")] ) );
 	td = applyTags( td, delta );
-	assert( equal( td.tags, ["tag1", "tag2"] ) );
-	delta.delete_tags = ["tag3", "tag1"];
+	assert( equal( td.tags, [Tag("tag1"), Tag("tag2")] ) );
+	delta.delete_tags = [Tag("tag3"), Tag("tag1")];
 	td = applyTags( td, delta );
-	assert( equal( td.tags, ["tag2"] ) );
+	assert( equal( td.tags, [Tag("tag2")] ) );
 }
 
 string tagColor( string str ) {
@@ -227,10 +229,10 @@ string titleEmphasize( string str ) {
 	return "\033[3;32m" ~ str ~ "\033[0m";
 }
 
-string prettyStringTags( const string[] tags ) {
+string prettyStringTags( const Tag[] tags ) {
 	string line;
 	foreach( tag; tags ) {
-		line ~= tag ~ " ";
+		line ~= tag.name ~ " ";
 	}
 	return tagColor( line );
 }

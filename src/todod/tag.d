@@ -31,6 +31,10 @@ struct Tag {
 	string name;
 	string id = "-1";
 
+	this( string tag_name ) {
+		name = tag_name;
+	}
+
 	void opAssign( string tag_name ) {
 		name = tag_name;
 		id = "-1";
@@ -74,7 +78,52 @@ struct Tag {
 		assert( tag1 != tag2 );
 	}
 
+	int opCmp(ref const Tag other_tag ) const { 
+		if ( this == other_tag )
+			return 0;
+		else if ( name < other_tag.name )
+			return -1;
+		return 1;
+	}
+
+	unittest {
+		Tag tag1;
+		tag1 = "tag1";
+
+		Tag tag2;
+		tag2 = "tag2";
+
+		assert( tag1 < tag2 );
+
+		tag1 = "tag1";
+		tag2 = "tag1";
+
+		assert( !(tag1 < tag2) );
+		assert( !(tag1 > tag2) );
+		assert( (tag1 <= tag2) );
+		assert( (tag1 >= tag2) );
+	}
+
+
+	/// Turn into hash used by associative arrays.
+	/// Note that in rare cases (i.e. where one tag is id is initialized 
+	/// and the other isn't this can lead to different hashes even though
+	/// opEquals returns equal.
+	const hash_t toHash()
+	{ 
+		hash_t hash;
+		if ( id == "-1" )
+			foreach (char c; id)
+				hash = (hash * 9) + c;
+		else
+			foreach (char c; name)
+				hash = (hash * 9) + c;
+	
+		return hash;
+	}
 }
 
-
-
+struct TagDelta {
+	Tag[] add_tags;
+	Tag[] delete_tags;
+}
