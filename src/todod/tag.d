@@ -25,6 +25,8 @@ module todod.tag;
 
 version (unittest) {
 	import std.stdio;
+	import std.algorithm;
+	import std.array;
 }
 
 struct Tag {
@@ -109,9 +111,9 @@ struct Tag {
 	/// Note that in rare cases (i.e. where one tag is id is initialized 
 	/// and the other isn't this can lead to different hashes even though
 	/// opEquals returns equal.
-	const hash_t toHash()
+	const nothrow size_t toHash()
 	{ 
-		hash_t hash;
+		size_t hash;
 		if ( id == "-1" )
 			foreach (char c; id)
 				hash = (hash * 9) + c;
@@ -120,6 +122,30 @@ struct Tag {
 				hash = (hash * 9) + c;
 	
 		return hash;
+	}
+	
+	unittest {
+		// Do uniq and sort work properly?
+		Tag tag1;
+		tag1 = "tag1";
+		Tag tag2;
+		tag2 = "tag2";
+		Tag[] ts = [ tag2, tag1 ];
+		sort( ts );
+		assert( equal( ts, [ tag1, tag2 ] ) );
+
+		ts = [ tag1, tag2, tag1 ];
+		sort( ts );
+		assert( equal( ts, [ tag1, tag1, tag2 ] ) );
+		assert( equal( uniq(ts).array, [ tag1, tag2 ] ) );
+
+		tag2.id = "1";
+		tag1.id = "1";
+
+		ts = [ tag1, tag2, tag1 ];
+		sort( ts );
+		assert( equal( ts[1].name, "tag2" ) );
+		assert( equal( uniq(ts).array, [ tag1 ] ) );
 	}
 }
 
