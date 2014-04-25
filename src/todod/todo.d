@@ -97,10 +97,11 @@ string toString( const Todo t ) {
 JSONValue toJSON( const Todo t ) {
 	JSONValue[string] jsonTODO;
 	jsonTODO["title"] = t.title;
-	string[] tag_names;
+	JSONValue[] tags;
 	foreach( tag; t.tags )
-		tag_names ~= tag.name;
-	jsonTODO["tags"] = tag_names;
+		tags ~= tag.to!JSONValue();
+	jsonTODO["tags"] = JSONValue(tags);
+
 	string[] progress_array;
 	foreach( d; t.progress )
 		progress_array ~= d.toStringDate;
@@ -114,7 +115,7 @@ Todo toTodo( const JSONValue json ) {
 	Todo t;
 	t.mytitle = json["title"].str;
 	foreach ( tag; json["tags"].array )
-		t.tags ~= Tag(tag.str);
+		t.tags ~= Tag.parseJSON( tag );
 	foreach ( js; json["progress"].array )
 		t.progress ~= Date( js.str );
 	t.creation_date = Date( json["creation_date"].str );

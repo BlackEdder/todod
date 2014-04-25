@@ -23,6 +23,9 @@
 
 module todod.tag;
 
+import std.json;
+import std.conv;
+
 version (unittest) {
 	import std.stdio;
 	import std.algorithm;
@@ -146,6 +149,32 @@ struct Tag {
 		sort( ts );
 		assert( equal( ts[1].name, "tag2" ) );
 		assert( equal( uniq(ts).array, [ tag1 ] ) );
+	}
+
+	JSONValue opCast( T : JSONValue )() const {
+		JSONValue[string] json;
+		json["id"] = id;
+		json["name"] = name;
+		return JSONValue( json );
+	}
+
+	unittest {
+		Tag tag1;
+		tag1 = "tag1";
+		assert( to!JSONValue( tag1 )["name"].str == "tag1" );
+	}
+
+	static Tag parseJSON( const JSONValue json ) {
+		Tag tag;
+		tag.id = json["id"].str;
+		tag.name = json["name"].str;
+		return tag;
+	}
+
+	unittest {
+		Tag tag1;
+		tag1 = "tag1";
+		assert( parseJSON(to!JSONValue( tag1 )).name == "tag1" );
 	}
 }
 
