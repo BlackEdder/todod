@@ -41,6 +41,7 @@ import std.random;
 import todod.shell;
 import todod.date;
 import todod.random;
+import todod.tag;
 
 struct Todo {
 	Date[] progress; /// Keep track of how long/often we've worked on this
@@ -48,7 +49,7 @@ struct Todo {
 
 	bool random = true;
 
-	string[] tags;
+	Tags tags;
 
 	Date creation_date;
 	Date due_date;
@@ -82,11 +83,11 @@ unittest {
 
 	Todo t2 = Todo( "Bla 1 +tag1 -tag2" );
 	assert( t2.title == "Bla 1" );
-	assert( t2.tags[0] == "tag1" );
+	assert( t2.tags[0] == Tag("tag1") );
 
 	Todo t3 = Todo( "+tag1 Bla 1 -tag2" );
 	assert( t3.title == "Bla 1" );
-	assert( t3.tags[0] == "tag1" );
+	assert( t3.tags[0] == Tag("tag1") );
 }
 
 string toString( const Todo t ) {
@@ -96,7 +97,11 @@ string toString( const Todo t ) {
 JSONValue toJSON( const Todo t ) {
 	JSONValue[string] jsonTODO;
 	jsonTODO["title"] = t.title;
-	jsonTODO["tags"] = t.tags;
+	JSONValue[] tags;
+	foreach( tag; t.tags )
+		tags ~= tag.to!JSONValue();
+	jsonTODO["tags"] = JSONValue(tags);
+
 	string[] progress_array;
 	foreach( d; t.progress )
 		progress_array ~= d.toStringDate;
@@ -110,7 +115,7 @@ Todo toTodo( const JSONValue json ) {
 	Todo t;
 	t.mytitle = json["title"].str;
 	foreach ( tag; json["tags"].array )
-		t.tags ~= tag.str;
+		t.tags.add( Tag.parseJSON( tag ) );
 	foreach ( js; json["progress"].array )
 		t.progress ~= Date( js.str );
 	t.creation_date = Date( json["creation_date"].str );
@@ -302,16 +307,11 @@ Filters filterOnTitle( Filters fltrs, string title ) {
 	return fltrs;
 }
 
-struct TagDelta {
-	string[] add_tags;
-	string[] delete_tags;
-}
-
 Filters filterOnTags( Filters fltrs, TagDelta tagDelta ) {
 	foreach ( tag; tagDelta.add_tags )
-		fltrs ~= t => canFind( t.tags, tag );
+		fltrs ~= t => t.tags.canFind( tag );
 	foreach ( tag; tagDelta.delete_tags )
-		fltrs ~= t => !canFind( t.tags, tag );
+		fltrs ~= t => !t.tags.canFind( tag );
 	return fltrs;
 }
 
@@ -373,33 +373,31 @@ unittest {
 }
 
 /// Return all existing tags
-string[] allTags( Todos ts ) {
-	string[] tags;
+Tags allTags( Todos ts ) {
+	Tags tags;
 	auto filters = ts.filters;
 	scope(exit) { ts.filters = filters; }
 	ts.filters = default_filters;
 	foreach( t; ts )
-		tags ~= t.tags;
-
-	sort( tags );
-	tags = array( uniq( tags ) );
+		tags.add( t.tags );
 
 	return tags;
 }
 
 unittest {
 	auto ts = generateSomeTodos();
-	assert( equal( ts.allTags(), ["tag1", "tag2", "tag3", "tag4"] ) );
+	assert( equal( ts.allTags().array, [Tag("tag1"), Tag("tag2"), 
+						Tag("tag3"), Tag("tag4")] ) );
 }
 
-size_t[string] tagsWithCount( Todos ts ) {
-	size_t[string] tags;
+size_t[Tag] tagsWithCount( Todos ts ) {
+	size_t[Tag] tags;
 	foreach( t; ts ) {
 		foreach( tag; t.tags ) {
 			tags[tag]++;
 		}
-		if (t.tags.empty)
-			tags["untagged"]++;
+		if (t.tags.length == 0)
+			tags[Tag("untagged")]++;
 	}
 	return tags;
 }
@@ -407,8 +405,9 @@ size_t[string] tagsWithCount( Todos ts ) {
 unittest {
 	auto ts = generateSomeTodos();
 	auto expected = ["tag2":2, "tag3":1, "tag4":1, "tag1":1];
-	foreach( k, v; ts.tagsWithCount() )
-		assert( v == expected[k] );
+	foreach( k, v; ts.tagsWithCount() ) {
+		assert( v == expected[k.name] );
+	}
 }
 
 string toString( const Todos ts ) {

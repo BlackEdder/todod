@@ -57,10 +57,10 @@ extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 		auto m = match( mybuf, r"^(.* )([+-])(\w*)$" );
 		if (m) {
 			auto matching_commands =
-				filter!( a => match( a, regex(m.captures[3]) ))( ts.allTags );
+				filter!( a => match( a.name, regex(m.captures[3]) ))( ts.allTags.array );
 			foreach ( com; matching_commands ) {
 				linenoiseAddCompletion(lc,std.string.toStringz( m.captures[1]
-							~ m.captures[2] ~ com ));
+							~ m.captures[2] ~ com.name ));
 			}
 		}
 	}
@@ -114,7 +114,8 @@ void init_commands() {
 			else {
 				if ( match( parameter, r" all$" ) ) // Search through all todos
 					ts.filters = default_filters;
-				ts.filters = ts.filters[0..$-1]; // Undo random
+				else
+					ts.filters = ts.filters[0..$-1]; // Undo random
 				ts.filters = filterOnTags( ts.filters, parseTags( parameter ) );
 			}
 			ts = random( ts );
@@ -167,8 +168,9 @@ void init_commands() {
 				ts.filters = ts.filters[0..$-1];
 				auto tags = ts.tagsWithCount();
 				foreach( tag, count; tags ) {
-					writeln( tagColor(tag).leftJustify( 20 ), "\t", count );
+					write( tagColor(tag.name), " (", count, "),  " );
 				}
+				writeln();
 				writeln();
 				ts.filters = filters;
 				write( prettyStringTodos( ts ) );
