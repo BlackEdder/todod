@@ -27,15 +27,17 @@ import std.json;
 import std.conv;
 import std.uuid;
 
+import std.range;
+import std.array;
+import std.algorithm;
+
 version (unittest) {
 	import std.stdio;
-	import std.algorithm;
-	import std.array;
 }
 
 struct Tag {
 	string name;
-	UUID id;
+	UUID id; /// id is mainly used for syncing with habitrpg
 
 	this( string tag_name ) {
 		name = tag_name;
@@ -54,6 +56,7 @@ struct Tag {
 		assert( tag.id.empty );
 	}
 
+	/// If either id is uninitialized (empty) compare on name, otherwise on id
 	bool opEquals()(auto ref const Tag other_tag) const {
 		if (id.empty || other_tag.id.empty)
 			return name == other_tag.name;
@@ -181,4 +184,86 @@ struct Tag {
 struct TagDelta {
 	Tag[] add_tags;
 	Tag[] delete_tags;
+}
+
+/// A sorted, unique set implementation for Tags
+/// Currently based on simple list, so not very efficient
+struct Tags {
+	void add( Tag tag ) {
+		auto tags = myTags.find( tag );
+		if ( tags.empty ) {
+			myTags ~= tag;
+			sort( myTags );
+		} else if (!tag.id.empty) {
+			tags[0].id = tag.id; // Prefer the tag if it has an id attached to it
+		}
+	}
+
+	unittest { // Test for doubles
+		Tags tgs;
+		Tag tag3 = "tag3";
+		tgs.add( tag3 );
+		Tag tag4 = "tag4";
+		tgs.add( tag4 );
+		assert( equal( tgs.array, [ tag3, tag4 ] ) );
+		assert( tgs.length == 2 );
+
+		// Doubles
+		tgs.add( tag3 );
+		assert( equal( tgs.array, [ tag3, tag4 ] ) );
+		assert( tgs.length == 2 );
+
+		// Sorted
+		Tag tag2 = "tag2";
+		tgs.add( tag2 );
+		assert( equal( tgs.array, [ tag2, tag3, tag4 ] ) );
+		assert( tgs.length == 3 );
+
+		tag2.id = randomUUID;
+		assert( tgs.array.front.id.empty );
+		tgs.add( tag2 );
+		assert( !tgs.array.front.id.empty );
+		assert( tgs.length == 3 );
+	}
+
+	void remove( Tag tag ) {
+		auto i = countUntil( myTags, tag );
+		if (i != -1)
+			myTags = myTags[0..i] ~ myTags[i+1..$];
+	}
+
+	unittest {
+		Tags tgs;
+		Tag tag3 = "tag3";
+		tgs.add( tag3 );
+		Tag tag4 = "tag4";
+		tgs.add( tag4 );
+		assert( equal( tgs.array, [ tag3, tag4 ] ) );
+		assert( tgs.length == 2 );
+
+		tgs.remove( tag4 );
+		assert( equal( tgs.array, [ tag3 ] ) );
+		assert( tgs.length == 1 );
+
+		tgs.remove( tag4 );
+		assert( equal( tgs.array, [ tag3 ] ) );
+		assert( tgs.length == 1 );
+	
+	}
+
+	public int opApply(int delegate(ref Tag) dg) {
+		int res = 0;
+		foreach( ref tag; myTags ) {
+			res = dg(tag);
+			if (res) return res;
+		}
+		return res;
+	}
+
+	size_t length() {
+		return myTags.length;
+	}
+
+	private:
+		Tag[] myTags;
 }
