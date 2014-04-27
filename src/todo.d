@@ -57,7 +57,7 @@ extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 		auto m = match( mybuf, r"^(.* )([+-])(\w*)$" );
 		if (m) {
 			auto matching_commands =
-				filter!( a => match( a.name, regex(m.captures[3]) ))( ts.allTags );
+				filter!( a => match( a.name, regex(m.captures[3]) ))( ts.allTags.array );
 			foreach ( com; matching_commands ) {
 				linenoiseAddCompletion(lc,std.string.toStringz( m.captures[1]
 							~ m.captures[2] ~ com.name ));

@@ -182,8 +182,8 @@ struct Tag {
 }
 
 struct TagDelta {
-	Tag[] add_tags;
-	Tag[] delete_tags;
+	Tags add_tags;
+	Tags delete_tags;
 }
 
 /// A sorted, unique set implementation for Tags
@@ -226,7 +226,8 @@ struct Tags {
 		assert( tgs.length == 3 );
 	}
 
-	void add( Tags tags ) {
+	void add(RANGE)(RANGE tags ) {
+		// TODO optimize this since both ranges are sorted
 		foreach (tag; tags)
 			add( tag );
 	}
@@ -235,6 +236,17 @@ struct Tags {
 		auto i = countUntil( myTags, tag );
 		if (i != -1)
 			myTags = myTags[0..i] ~ myTags[i+1..$];
+	}
+
+	void remove(RANGE)( RANGE tags ) {
+		// TODO optimize this since both ranges are sorted
+		foreach (tag; tags)
+			remove( tag );
+	}
+
+
+	Tag[] array() {
+		return myTags;
 	}
 
 	unittest {
@@ -263,6 +275,27 @@ struct Tags {
 			if (res) return res;
 		}
 		return res;
+	}
+
+	public int opApply(int delegate(ref const Tag) dg) const {
+		int res = 0;
+		foreach( tag; myTags ) {
+			res = dg(tag);
+			if (res) return res;
+		}
+		return res;
+	}
+
+	ref Tag opIndex(size_t id) {
+		return myTags[id];
+	}
+
+	bool canFind( const Tag compareTag ) const {
+		foreach ( const tag; this ) {
+			if (tag == compareTag )
+				return true;
+		}
+		return false;
 	}
 
 	size_t length() {

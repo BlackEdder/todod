@@ -49,7 +49,7 @@ struct Todo {
 
 	bool random = true;
 
-	Tag[] tags;
+	Tags tags;
 
 	Date creation_date;
 	Date due_date;
@@ -115,7 +115,7 @@ Todo toTodo( const JSONValue json ) {
 	Todo t;
 	t.mytitle = json["title"].str;
 	foreach ( tag; json["tags"].array )
-		t.tags ~= Tag.parseJSON( tag );
+		t.tags.add( Tag.parseJSON( tag ) );
 	foreach ( js; json["progress"].array )
 		t.progress ~= Date( js.str );
 	t.creation_date = Date( json["creation_date"].str );
@@ -309,9 +309,9 @@ Filters filterOnTitle( Filters fltrs, string title ) {
 
 Filters filterOnTags( Filters fltrs, TagDelta tagDelta ) {
 	foreach ( tag; tagDelta.add_tags )
-		fltrs ~= t => canFind( t.tags, tag );
+		fltrs ~= t => t.tags.canFind( tag );
 	foreach ( tag; tagDelta.delete_tags )
-		fltrs ~= t => !canFind( t.tags, tag );
+		fltrs ~= t => !t.tags.canFind( tag );
 	return fltrs;
 }
 
@@ -373,23 +373,20 @@ unittest {
 }
 
 /// Return all existing tags
-Tag[] allTags( Todos ts ) {
-	Tag[] tags;
+Tags allTags( Todos ts ) {
+	Tags tags;
 	auto filters = ts.filters;
 	scope(exit) { ts.filters = filters; }
 	ts.filters = default_filters;
 	foreach( t; ts )
-		tags ~= t.tags;
-
-	sort( tags );
-	tags = array( uniq( tags ) );
+		tags.add( t.tags );
 
 	return tags;
 }
 
 unittest {
 	auto ts = generateSomeTodos();
-	assert( equal( ts.allTags(), [Tag("tag1"), Tag("tag2"), 
+	assert( equal( ts.allTags().array, [Tag("tag1"), Tag("tag2"), 
 						Tag("tag3"), Tag("tag4")] ) );
 }
 
@@ -399,7 +396,7 @@ size_t[Tag] tagsWithCount( Todos ts ) {
 		foreach( tag; t.tags ) {
 			tags[tag]++;
 		}
-		if (t.tags.empty)
+		if (t.tags.length == 0)
 			tags[Tag("untagged")]++;
 	}
 	return tags;
