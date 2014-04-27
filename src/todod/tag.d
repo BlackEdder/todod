@@ -226,6 +226,11 @@ struct Tags {
 		assert( tgs.length == 3 );
 	}
 
+	void add( Tags tags ) {
+		foreach (tag; tags)
+			add( tag );
+	}
+
 	void remove( Tag tag ) {
 		auto i = countUntil( myTags, tag );
 		if (i != -1)
