@@ -25,6 +25,7 @@ module todod.tag;
 
 import std.json;
 import std.conv;
+import std.uuid;
 
 version (unittest) {
 	import std.stdio;
@@ -34,7 +35,7 @@ version (unittest) {
 
 struct Tag {
 	string name;
-	string id = "-1";
+	UUID id;
 
 	this( string tag_name ) {
 		name = tag_name;
@@ -42,19 +43,19 @@ struct Tag {
 
 	void opAssign( string tag_name ) {
 		name = tag_name;
-		id = "-1";
+		id = UUID();
 	}
 
 	unittest {
 		Tag tag;
-		tag.id = "1";
+		tag.id = randomUUID;
 		tag = "tag1";
 		assert( tag.name == "tag1" );
-		assert( tag.id == "-1" );
+		assert( tag.id.empty );
 	}
 
 	bool opEquals()(auto ref const Tag other_tag) const {
-		if (id == "-1" || other_tag.id == "-1")
+		if (id.empty || other_tag.id.empty)
 			return name == other_tag.name;
 		else
 			return id == other_tag.id;
@@ -68,18 +69,18 @@ struct Tag {
 		tag2 = "tag2";
 
 		assert( tag1 != tag2 );
-		tag1.id = "1";
+		tag1.id = randomUUID;
 		assert( tag1 != tag2 );
-		tag2.id = "1";
+		tag2.id = tag1.id;
 		assert( tag1 == tag2 );
 
 		tag1 = "tag1";
 		tag2 = "tag1";
 
 		assert( tag1 == tag2 );
-		tag1.id = "1";
+		tag1.id = randomUUID;
 		assert( tag1 == tag2 );
-		tag2.id = "2";
+		tag2.id = randomUUID;
 		assert( tag1 != tag2 );
 	}
 
@@ -117,12 +118,11 @@ struct Tag {
 	const nothrow size_t toHash()
 	{ 
 		size_t hash;
-		if ( id == "-1" )
-			foreach (char c; id)
-				hash = (hash * 9) + c;
-		else
+		if ( id.empty  )
 			foreach (char c; name)
 				hash = (hash * 9) + c;
+		else
+			id.toHash;
 	
 		return hash;
 	}
@@ -142,8 +142,8 @@ struct Tag {
 		assert( equal( ts, [ tag1, tag1, tag2 ] ) );
 		assert( equal( uniq(ts).array, [ tag1, tag2 ] ) );
 
-		tag2.id = "1";
-		tag1.id = "1";
+		tag2.id = randomUUID;
+		tag1.id = tag2.id;
 
 		ts = [ tag1, tag2, tag1 ];
 		sort( ts );
@@ -153,7 +153,7 @@ struct Tag {
 
 	JSONValue opCast( T : JSONValue )() const {
 		JSONValue[string] json;
-		json["id"] = id;
+		json["id"] = id.toString;
 		json["name"] = name;
 		return JSONValue( json );
 	}
@@ -166,7 +166,7 @@ struct Tag {
 
 	static Tag parseJSON( const JSONValue json ) {
 		Tag tag;
-		tag.id = json["id"].str;
+		tag.id = parseUUID( json["id"].str );
 		tag.name = json["name"].str;
 		return tag;
 	}
