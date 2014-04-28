@@ -35,6 +35,10 @@ import std.file;
 
 import std.json;
 
+import todod.tag;
+import todod.commandline;
+import todod.todo;
+
 version (unittest) {
 	import std.stdio;
 }
@@ -126,8 +130,68 @@ unittest {
 	auto tasks = parseJSON( result ).array;
 
 	foreach ( task; tasks ) {
-		if ( task["type"].str == "todo" && task["completed"].type == JSON_TYPE.FALSE ) {
+		if ( task["type"].str == "todo" 
+				&& task["completed"].type == JSON_TYPE.FALSE ) {
 			writeln( task );
 		}
 	}
+}
+
+unittest {
+	HabitRPG hrpg;
+	hrpg.api_user = "f55f430e-36b8-4ebf-b6fa-ad4ff552fe7e";
+	hrpg.api_key = "3fca0d72-2f95-4e57-99e5-43ddb85b9780";
+	string result;
+	if (hrpg) {
+		auto http = connectHabitRPG( hrpg );
+		http.method = HTTP.Method.get;
+		auto url = "https://habitrpg.com/api/v2/user/";
+		http.url = url;
+		//http.verbose( true );
+		http.onReceive = (ubyte[] data) { 
+			result ~= array( map!(a => cast(char) a)( data ) );
+			return data.length; 
+		};
+
+		http.perform();
+	}
+
+	writeln( parseJSON(result)["tags"] );
+
+	Tags tags;
+
+	auto tagsJSON = parseJSON( result )["tags"].array;
+		foreach ( tag; tagsJSON ) {
+			tags.add( Tag.parseJSON( tag ) );
+		}
+}
+
+Commands!( Todos delegate( Todos, string) ) add_habitrpg_commands( 
+		ref Commands!( Todos delegate( Todos, string) ) main, string dirName ) {
+	HabitRPG hrpg = loadHRPG( dirName ~ "habitrpg.json" );
+	if (!hrpg) {
+		auto habitrpg_commands = Commands!( Todos delegate( Todos, string) )("Commands specifically used to interact with HabitRPG");
+
+		habitrpg_commands.add( 
+				"tags", delegate( Todos ts, string parameter ) {
+			writeln( "Not implemented yet" );
+			return ts;
+		}, "Sync tags with HabitRPG" );
+
+		habitrpg_commands.add( 
+				"help", delegate( Todos ts, string parameter ) {
+			ts = main["clear"]( ts, "" ); 
+			writeln( habitrpg_commands.toString );
+			return ts;
+		}, "Print this help message" );
+
+		main.add( 
+				"habitrpg", delegate( Todos ts, string parameter ) {
+				auto split = parameter.findSplit( " " );
+				ts = habitrpg_commands[split[0]]( ts, split[2] );
+				return ts;
+				}, "Syncing with HabitRPG. Use habitrpg help for more help." );
+
+	}
+	return main;
 }

@@ -216,6 +216,7 @@ void main( string[] args ) {
 	scope( exit ) { writeTodos( ts, fileName ); }
 
 	hrpg = loadHRPG( dirName ~ "habitrpg.json" );
+	commands = add_habitrpg_commands( commands, dirName );
 	
 	ts = loadTodos( fileName );
 	ts = random( ts );
