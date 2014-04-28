@@ -35,6 +35,7 @@ import std.file;
 
 import std.json;
 
+import std.uuid;
 import todod.tag;
 import todod.commandline;
 import todod.todo;
@@ -166,15 +167,70 @@ unittest {
 		}
 }
 
+/// Sync tags with habitrpg. Ensures all tag ids are set properly and returns
+/// list of all tags know to habitrpg
+Tags sync_tags( Tags tags, ref HTTP http ) {
+	// Get tags from habitrpg
+	auto url = "https://habitrpg.com/api/v2/user/";
+	http.url = url;
+	string result;
+
+	http.method = HTTP.Method.get;
+	http.onReceive = (ubyte[] data) { 
+		result ~= array( map!(a => cast(char) a)( data ) );
+		return data.length; 
+	};
+
+	http.perform();
+
+	Tags hrpgTags;
+
+	auto tagsJSON = parseJSON( result )["tags"].array;
+	foreach ( tag; tagsJSON ) {
+		writeln( tag );
+		hrpgTags.add( Tag.parseJSON( tag ) );
+	}
+
+	// Remove those tags from all todo tags
+	tags.remove( hrpgTags );
+
+	// Push all tags to habitrpg (and set id)
+	foreach( tag; tags ) {
+		if (tag.id.empty)
+			tag.id = randomUUID();
+		writeln( tag.id.toString, " ", tag.to!JSONValue.toString );
+		url = "https://habitrpg.com/api/v2/user/tags/" ~ tag.name; 
+		http.url = url;
+		//http.verbose = true;
+		http.method = HTTP.Method.post;
+		http.postData = "";
+		//http.postData = tag.to!JSONValue.toString;
+		//http.postData = "[{name:"~tag.name~",id:" ~ tag.id.toString ~ "}]";//tag.to!JSONValue.toString;
+		result = "";
+		http.onReceive = (ubyte[] data) { 
+			result ~= array( map!(a => cast(char) a)( data ) );
+			return data.length; 
+		};
+
+		http.perform();
+		writeln( "Result: ", result );
+	}
+
+	// Return all tags with set ids and including hrpgTags
+	tags.add( hrpgTags );
+	return tags;
+}
+
 Commands!( Todos delegate( Todos, string) ) add_habitrpg_commands( 
 		ref Commands!( Todos delegate( Todos, string) ) main, string dirName ) {
 	HabitRPG hrpg = loadHRPG( dirName ~ "habitrpg.json" );
-	if (!hrpg) {
+	if (hrpg) {
 		auto habitrpg_commands = Commands!( Todos delegate( Todos, string) )("Commands specifically used to interact with HabitRPG");
 
 		habitrpg_commands.add( 
 				"tags", delegate( Todos ts, string parameter ) {
-			writeln( "Not implemented yet" );
+			auto http = connectHabitRPG( hrpg );
+			sync_tags( ts.allTags, http );
 			return ts;
 		}, "Sync tags with HabitRPG" );
 

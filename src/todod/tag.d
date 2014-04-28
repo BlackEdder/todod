@@ -156,8 +156,8 @@ struct Tag {
 
 	JSONValue opCast( T : JSONValue )() const {
 		JSONValue[string] json;
-		json["id"] = id.toString;
 		json["name"] = name;
+		json["id"] = id.toString;
 		return JSONValue( json );
 	}
 
