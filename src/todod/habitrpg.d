@@ -169,8 +169,9 @@ unittest {
 
 /// Sync tags with habitrpg. Ensures all tag ids are set properly and returns
 /// list of all tags know to habitrpg
-Tags sync_tags( Tags tags, ref HTTP http ) {
+Tags sync_tags( Tags tags, HabitRPG hrpg ) {
 	// Get tags from habitrpg
+	auto http = connectHabitRPG( hrpg );
 	auto url = "https://habitrpg.com/api/v2/user/";
 	http.url = url;
 	string result;
@@ -187,7 +188,6 @@ Tags sync_tags( Tags tags, ref HTTP http ) {
 
 	auto tagsJSON = parseJSON( result )["tags"].array;
 	foreach ( tag; tagsJSON ) {
-		writeln( tag );
 		hrpgTags.add( Tag.parseJSON( tag ) );
 	}
 
@@ -196,27 +196,42 @@ Tags sync_tags( Tags tags, ref HTTP http ) {
 
 	// Push all tags to habitrpg (and set id)
 	foreach( tag; tags ) {
-		if (tag.id.empty)
-			tag.id = randomUUID();
-		writeln( tag.id.toString, " ", tag.to!JSONValue.toString );
-		url = "https://habitrpg.com/api/v2/user/tags/" ~ tag.name; 
-		http.url = url;
+		// Create new tag
+		http = connectHabitRPG( hrpg );
+		url = "https://habitrpg.com/api/v2/user/tags"; 
 		//http.verbose = true;
 		http.method = HTTP.Method.post;
+		http.url = url;
 		http.postData = "";
-		//http.postData = tag.to!JSONValue.toString;
-		//http.postData = "[{name:"~tag.name~",id:" ~ tag.id.toString ~ "}]";//tag.to!JSONValue.toString;
 		result = "";
 		http.onReceive = (ubyte[] data) { 
 			result ~= array( map!(a => cast(char) a)( data ) );
 			return data.length; 
 		};
-
 		http.perform();
-		writeln( "Result: ", result );
+
+		string new_id = parseJSON( result ).array[$-1..$][0]["id"].str;
+		tag.id = UUID( new_id );
+
+		// Set name of new tag (Couldn't get it to work without new connection
+		http = connectHabitRPG( hrpg );
+		url ~= "/" ~ new_id ~"/";
+		http.method = HTTP.Method.put;
+		http.url = url;
+		string msg = "{\"name\":\"" ~ tag.name ~ "\"}";
+		http.contentLength = msg.length;
+		http.onSend = (void[] data)
+		{
+			auto m = cast(void[])msg;
+			size_t len = m.length > data.length ? data.length : m.length;
+			if (len == 0) return len;
+			data[0..len] = m[0..len];
+			msg = msg[len..$];
+			return len;
+		};
+		http.perform();
 	}
 
-	// Return all tags with set ids and including hrpgTags
 	tags.add( hrpgTags );
 	return tags;
 }
@@ -230,7 +245,7 @@ Commands!( Todos delegate( Todos, string) ) add_habitrpg_commands(
 		habitrpg_commands.add( 
 				"tags", delegate( Todos ts, string parameter ) {
 			auto http = connectHabitRPG( hrpg );
-			sync_tags( ts.allTags, http );
+			sync_tags( ts.allTags, hrpg );
 			return ts;
 		}, "Sync tags with HabitRPG" );
 
