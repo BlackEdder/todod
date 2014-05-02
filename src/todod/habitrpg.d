@@ -167,6 +167,41 @@ unittest {
 		}
 }
 
+/// Request a new id from habitrpg website for given type ("tasks" or "tags")
+string newHabitRPGID( const HabitRPG hrpg, string type ) {
+	auto http = connectHabitRPG( hrpg );
+	auto url = "https://habitrpg.com/api/v2/user/" ~ type; 
+	//http.verbose = true;
+	http.method = HTTP.Method.post;
+	http.url = url;
+	http.postData = "";
+	auto result = "";
+	http.onReceive = (ubyte[] data) { 
+		result ~= array( map!(a => cast(char) a)( data ) );
+		return data.length; 
+	};
+	http.perform();
+
+	return parseJSON( result ).array[$-1..$][0]["id"].str;
+}
+
+void putMessage( HabitRPG hrpg, string url, string msg ) {
+	auto http = connectHabitRPG( hrpg );
+	http.method = HTTP.Method.put;
+	http.url = url;
+	http.contentLength = msg.length;
+	http.onSend = (void[] data)
+	{
+		auto m = cast(void[])msg;
+		size_t len = m.length > data.length ? data.length : m.length;
+		if (len == 0) return len;
+		data[0..len] = m[0..len];
+		msg = msg[len..$];
+		return len;
+	};
+	http.perform();
+}
+
 /// Sync tags with habitrpg. Ensures all tag ids are set properly and returns
 /// list of all tags know to habitrpg
 Tags sync_tags( Tags tags, HabitRPG hrpg ) {
@@ -196,40 +231,13 @@ Tags sync_tags( Tags tags, HabitRPG hrpg ) {
 
 	// Push all tags to habitrpg (and set id)
 	foreach( tag; tags ) {
-		// Create new tag
-		http = connectHabitRPG( hrpg );
-		url = "https://habitrpg.com/api/v2/user/tags"; 
-		//http.verbose = true;
-		http.method = HTTP.Method.post;
-		http.url = url;
-		http.postData = "";
-		result = "";
-		http.onReceive = (ubyte[] data) { 
-			result ~= array( map!(a => cast(char) a)( data ) );
-			return data.length; 
-		};
-		http.perform();
-
-		string new_id = parseJSON( result ).array[$-1..$][0]["id"].str;
-		tag.id = UUID( new_id );
+		// Create new tag id
+		string new_id = newHabitRPGID( hrpg, "tags" );
 
 		// Set name of new tag (Couldn't get it to work without new connection
-		http = connectHabitRPG( hrpg );
-		url ~= "/" ~ new_id ~"/";
-		http.method = HTTP.Method.put;
-		http.url = url;
+		url = "https://habitrpg.com/api/v2/user/tags/" ~ new_id ~"/";
 		string msg = "{\"name\":\"" ~ tag.name ~ "\"}";
-		http.contentLength = msg.length;
-		http.onSend = (void[] data)
-		{
-			auto m = cast(void[])msg;
-			size_t len = m.length > data.length ? data.length : m.length;
-			if (len == 0) return len;
-			data[0..len] = m[0..len];
-			msg = msg[len..$];
-			return len;
-		};
-		http.perform();
+		putMessage( hrpg, url, msg );
 	}
 
 	tags.add( hrpgTags );
