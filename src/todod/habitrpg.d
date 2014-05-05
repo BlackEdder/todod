@@ -204,7 +204,7 @@ void putMessage( HabitRPG hrpg, string url, string msg ) {
 
 /// Sync tags with habitrpg. Ensures all tag ids are set properly and returns
 /// list of all tags know to habitrpg
-Tags sync_tags( Tags tags, HabitRPG hrpg ) {
+Tags syncTags( Tags tags, HabitRPG hrpg ) {
 	// Get tags from habitrpg
 	auto http = connectHabitRPG( hrpg );
 	auto url = "https://habitrpg.com/api/v2/user/";
@@ -244,7 +244,7 @@ Tags sync_tags( Tags tags, HabitRPG hrpg ) {
 	return tags;
 }
 
-Commands!( Todos delegate( Todos, string) ) add_habitrpg_commands( 
+Commands!( Todos delegate( Todos, string) ) addHabitRPGCommands( 
 		ref Commands!( Todos delegate( Todos, string) ) main, string dirName ) {
 	HabitRPG hrpg = loadHRPG( dirName ~ "habitrpg.json" );
 	if (hrpg) {
@@ -253,7 +253,7 @@ Commands!( Todos delegate( Todos, string) ) add_habitrpg_commands(
 		habitrpg_commands.add( 
 				"tags", delegate( Todos ts, string parameter ) {
 			auto http = connectHabitRPG( hrpg );
-			sync_tags( ts.allTags, hrpg );
+			syncTags( ts.allTags, hrpg );
 			return ts;
 		}, "Sync tags with HabitRPG" );
 

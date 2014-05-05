@@ -72,7 +72,7 @@ auto commands = Commands!( Todos delegate( Todos, string) )( "Usage command [OPT
 
 //Todos delegate( Todos, string)[string] commands;
 
-void init_commands() {
+void initCommands() {
 	commands.add(
 		"add", delegate( Todos ts, string parameter ) {
 			ts.addTodo( Todo( parameter ) );
@@ -208,7 +208,7 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 }
 
 void main( string[] args ) {
-	init_commands;
+	initCommands;
 
 	auto dirName = expandTilde( "~/.config/todod/" );
 	mkdirRecurse( dirName );
@@ -216,7 +216,7 @@ void main( string[] args ) {
 	scope( exit ) { writeTodos( ts, fileName ); }
 
 	hrpg = loadHRPG( dirName ~ "habitrpg.json" );
-	commands = add_habitrpg_commands( commands, dirName );
+	commands = addHabitRPGCommands( commands, dirName );
 	
 	ts = loadTodos( fileName );
 	ts = random( ts );
