@@ -107,84 +107,6 @@ string upHabit( const HabitRPG hrpg, string habit ) {
 	return result;
 }
 
-unittest {
-	HabitRPG hrpg;
-	hrpg.api_user = "f55f430e-36b8-4ebf-b6fa-ad4ff552fe7e";
-	hrpg.api_key = "3fca0d72-2f95-4e57-99e5-43ddb85b9780";
-	string result;
-	if (hrpg) {
-		auto http = connectHabitRPG( hrpg );
-		http.method = HTTP.Method.get;
-		auto url = "https://habitrpg.com/api/v2/user/tasks/";
-		http.url = url;
-		//http.verbose( true );
-		http.onReceive = (ubyte[] data) { 
-			result ~= array( map!(a => cast(char) a)( data ) );
-			return data.length; 
-		};
-
-		http.perform();
-	}
-
-	//writeln( result );
-
-	auto tasks = parseJSON( result ).array;
-
-	foreach ( task; tasks ) {
-		if ( task["type"].str == "todo" 
-				&& task["completed"].type == JSON_TYPE.FALSE ) {
-			writeln( task );
-		}
-	}
-}
-
-unittest {
-	HabitRPG hrpg;
-	hrpg.api_user = "f55f430e-36b8-4ebf-b6fa-ad4ff552fe7e";
-	hrpg.api_key = "3fca0d72-2f95-4e57-99e5-43ddb85b9780";
-	string result;
-	if (hrpg) {
-		auto http = connectHabitRPG( hrpg );
-		http.method = HTTP.Method.get;
-		auto url = "https://habitrpg.com/api/v2/user/";
-		http.url = url;
-		//http.verbose( true );
-		http.onReceive = (ubyte[] data) { 
-			result ~= array( map!(a => cast(char) a)( data ) );
-			return data.length; 
-		};
-
-		http.perform();
-	}
-
-	writeln( parseJSON(result)["tags"] );
-
-	Tags tags;
-
-	auto tagsJSON = parseJSON( result )["tags"].array;
-		foreach ( tag; tagsJSON ) {
-			tags.add( Tag.parseJSON( tag ) );
-		}
-}
-
-/// Request a new id from habitrpg website for given type ("tasks" or "tags")
-string newHabitRPGID( const HabitRPG hrpg, string type ) {
-	auto http = connectHabitRPG( hrpg );
-	auto url = "https://habitrpg.com/api/v2/user/" ~ type; 
-	//http.verbose = true;
-	http.method = HTTP.Method.post;
-	http.url = url;
-	http.postData = "";
-	auto result = "";
-	http.onReceive = (ubyte[] data) { 
-		result ~= array( map!(a => cast(char) a)( data ) );
-		return data.length; 
-	};
-	http.perform();
-
-	return parseJSON( result ).array[$-1..$][0]["id"].str;
-}
-
 void putMessage( HabitRPG hrpg, string url, string msg ) {
 	auto http = connectHabitRPG( hrpg );
 	http.method = HTTP.Method.put;
@@ -200,6 +122,32 @@ void putMessage( HabitRPG hrpg, string url, string msg ) {
 		return len;
 	};
 	http.perform();
+}
+
+void postMessage( HabitRPG hrpg, string url, string msg ) {
+	auto http = connectHabitRPG( hrpg );
+	http.method = HTTP.Method.post;
+	http.url = url;
+	http.contentLength = msg.length;
+	http.onSend = (void[] data)
+	{
+		auto m = cast(void[])msg;
+		size_t len = m.length > data.length ? data.length : m.length;
+		if (len == 0) return len;
+		data[0..len] = m[0..len];
+		msg = msg[len..$];
+		return len;
+	};
+	http.perform();
+}
+
+void postNewTag( HabitRPG hrpg, Tag tag )
+	in {
+		assert( !tag.id.empty, "Tag UUID needs to be initialized" );
+	}
+body {
+	postMessage( hrpg, "https://habitrpg.com/api/v2/user/tags",
+			tag.to!JSONValue.toString);
 }
 
 /// Sync tags with habitrpg. Ensures all tag ids are set properly and returns
@@ -232,12 +180,9 @@ Tags syncTags( Tags tags, HabitRPG hrpg ) {
 	// Push all tags to habitrpg (and set id)
 	foreach( tag; tags ) {
 		// Create new tag id
-		string new_id = newHabitRPGID( hrpg, "tags" );
-
-		// Set name of new tag (Couldn't get it to work without new connection
-		url = "https://habitrpg.com/api/v2/user/tags/" ~ new_id ~"/";
-		string msg = "{\"name\":\"" ~ tag.name ~ "\"}";
-		putMessage( hrpg, url, msg );
+		if ( tag.id.empty )
+			tag.id = randomUUID();
+		postNewTag( hrpg, tag );
 	}
 
 	tags.add( hrpgTags );
@@ -274,3 +219,13 @@ Commands!( Todos delegate( Todos, string) ) addHabitRPGCommands(
 	}
 	return main;
 }
+
+/*unittest {
+	HabitRPG hrpg;
+	hrpg.api_user = "f55f430e-36b8-4ebf-b6fa-ad4ff552fe7e";
+	hrpg.api_key = "3fca0d72-2f95-4e57-99e5-43ddb85b9780";
+	Tag tag;
+	tag.name = "1tag";
+	tag.id = randomUUID;
+	postNewTag( hrpg, tag );
+}*/
