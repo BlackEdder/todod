@@ -178,6 +178,7 @@ class Todos {
 	}
 
 	void remove( Todo todo ) {
+		todo.deleted = true;
 		auto i = countUntil( myTodos, todo );
 		if (i != -1)
 			myTodos = myTodos[0..i] ~ myTodos[i+1..$];

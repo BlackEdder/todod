@@ -75,7 +75,7 @@ auto commands = Commands!( Todos delegate( Todos, string) )( "Usage command [OPT
 void initCommands() {
 	commands.add(
 		"add", delegate( Todos ts, string parameter ) {
-			ts.addTodo( Todo( parameter ) );
+			ts.add( Todo( parameter ) );
 			if (ts.walkLength >= 5)
 				ts[0].random = false;
 			ts = commands["show"]( ts, "" );
