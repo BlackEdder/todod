@@ -121,19 +121,25 @@ JSONValue toJSON( const Todo t ) {
 
 Todo toTodo( const JSONValue json ) {
 	Todo t;
-	t.mytitle = json["title"].str;
-	foreach ( tag; json["tags"].array )
+	const JSONValue[string] jsonAA = json.object;
+	t.mytitle = jsonAA["title"].str;
+	foreach ( tag; jsonAA["tags"].array )
 		t.tags.add( Tag.parseJSON( tag ) );
-	foreach ( js; json["progress"].array )
+	foreach ( js; jsonAA["progress"].array )
 		t.progress ~= Date( js.str );
-	t.creation_date = Date( json["creation_date"].str );
-	t.due_date = Date( json["due_date"].str );
+	t.creation_date = Date( jsonAA["creation_date"].str );
+	if ("due_date" in jsonAA)
+		t.due_date = Date( jsonAA["due_date"].str );
 	return t;
 }
 
 unittest {
 	Todo t1 = Todo( "Todo 1 +tag" );
 	assert( toJSON( t1 ).toTodo == t1 );
+
+	string missingDate = "{\"title\":\"Todo 1\",\"tags\":[{\"name\":\"tag\",\"id\":\"00000000-0000-0000-0000-000000000000\"}],\"progress\":[],\"creation_date\":\"2014-05-06\"}";
+
+	assert( toTodo( parseJSON(missingDate) ).title == "Todo 1" );
 }
 
 /// Days since last progress. If no progress has been made then days since creation
