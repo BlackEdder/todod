@@ -152,7 +152,13 @@ body {
 
 /// Sync tags with habitrpg. Ensures all tag ids are set properly and returns
 /// list of all tags know to habitrpg
-Tags syncTags( Tags tags, HabitRPG hrpg ) {
+Tags syncTags( Tags tags, HabitRPG hrpg )
+in 
+{
+	assert( hrpg );
+}
+body
+{
 	// Get tags from habitrpg
 	auto http = connectHabitRPG( hrpg );
 	auto url = "https://habitrpg.com/api/v2/user/";
@@ -187,6 +193,41 @@ Tags syncTags( Tags tags, HabitRPG hrpg ) {
 
 	tags.add( hrpgTags );
 	return tags;
+}
+
+/// Convert Todo toHabitRPGJSON
+/// Needs a copy of all tags to check habitrpg ids etc
+string toHabitRPGJSON( const Todo todo, const Tags tags ) {
+	JSONValue[string] json;
+
+	return JSONValue( json ).toString;
+}
+
+Todos syncTodos( Todos ts, HabitRPG hrpg ) 
+in 
+{
+	assert( hrpg );
+}
+body
+{
+	// Needed for tag ids for all todos 
+	Tags tags = syncTags( ts.allTags, hrpg );
+
+	auto hrpgTodos = new Todos();
+	foreach( todo; ts )
+		hrpgTodos.add( ts );
+
+	// Get all habitrpg tasks of type Todo
+	// Convert to Todo
+	// Remove from hrpgTodos
+
+	// Foreach hrpgTodos still in the list
+	foreach ( todo; hrpgTodos ) {
+		// Convert to HabitRPGTodo ( will need to pass along tags )
+		toHabitRPGJSON( todo, tags );
+		// Post new Todo
+	}
+	return ts;
 }
 
 Commands!( Todos delegate( Todos, string) ) addHabitRPGCommands( 
