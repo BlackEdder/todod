@@ -199,7 +199,9 @@ body
 /// Needs a copy of all tags to check habitrpg ids etc
 string toHabitRPGJSON( const Todo todo, const Tags tags ) {
 	JSONValue[string] json;
-
+	json["text"] = todo.title;
+	//json["dateCreated"] = todo.creation_date.toString; // Need to convert to proper format
+	json["type"] = "todo";
 	return JSONValue( json ).toString;
 }
 
@@ -214,18 +216,43 @@ body
 	Tags tags = syncTags( ts.allTags, hrpg );
 
 	auto hrpgTodos = new Todos();
+	auto filters = ts.filters;
+	ts.filters = default_filters;
 	foreach( todo; ts )
 		hrpgTodos.add( ts );
+	ts.filters = filters;
 
 	// Get all habitrpg tasks of type Todo
-	// Convert to Todo
-	// Remove from hrpgTodos
+	auto http = connectHabitRPG( hrpg );
+	auto url = "https://habitrpg.com/api/v2/user/tasks";
+	http.url = url;
+	string result;
+
+	http.method = HTTP.Method.get;
+	http.onReceive = (ubyte[] data) { 
+		result ~= array( map!(a => cast(char) a)( data ) );
+		return data.length; 
+	};
+
+	http.perform();
+
+	foreach ( task; parseJSON( result ).array ) {
+		if ( task["type"].str == "todo"
+				&& task["completed"].type == JSON_TYPE.FALSE) {
+			// Convert to Todo
+			auto todo = Todo( task["text"].str );
+			// Remove from hrpgTodos
+			hrpgTodos.remove( todo );
+			ts.add( todo );
+		}
+	}
 
 	// Foreach hrpgTodos still in the list
 	foreach ( todo; hrpgTodos ) {
 		// Convert to HabitRPGTodo ( will need to pass along tags )
-		toHabitRPGJSON( todo, tags );
+		auto msg = toHabitRPGJSON( todo, tags );
 		// Post new Todo
+		postMessage( hrpg, url, msg );
 	}
 	return ts;
 }
@@ -238,10 +265,15 @@ Commands!( Todos delegate( Todos, string) ) addHabitRPGCommands(
 
 		habitrpg_commands.add( 
 				"tags", delegate( Todos ts, string parameter ) {
-			auto http = connectHabitRPG( hrpg );
 			syncTags( ts.allTags, hrpg );
 			return ts;
 		}, "Sync tags with HabitRPG" );
+
+		habitrpg_commands.add( 
+				"todos", delegate( Todos ts, string parameter ) {
+			ts = syncTodos( ts, hrpg );
+			return ts;
+		}, "Sync todos (and tags) with HabitRPG" );
 
 		habitrpg_commands.add( 
 				"help", delegate( Todos ts, string parameter ) {
