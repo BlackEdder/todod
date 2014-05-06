@@ -202,6 +202,13 @@ string toHabitRPGJSON( const Todo todo, const Tags tags ) {
 	json["text"] = todo.title;
 	//json["dateCreated"] = todo.creation_date.toString; // Need to convert to proper format
 	json["type"] = "todo";
+	// add tags
+	JSONValue[string] tagArray;
+	foreach ( tag; todo.tags ) {
+		auto id = tags.find( tag ).id;
+		tagArray[id.toString] = JSONValue(true);
+	}
+	json["tags"] = JSONValue( tagArray );
 	return JSONValue( json ).toString;
 }
 

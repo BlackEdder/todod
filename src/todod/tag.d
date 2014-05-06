@@ -298,6 +298,15 @@ struct Tags {
 		return false;
 	}
 
+	Tag find( const Tag compareTag ) const {
+		foreach ( const tag; this ) {
+			if (tag == compareTag )
+				return tag;
+		}
+		Tag tag;
+		return tag;
+	}
+
 	size_t length() {
 		return myTags.length;
 	}
