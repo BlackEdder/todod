@@ -73,6 +73,14 @@ struct Todo {
 		return mytitle == t.mytitle;
 	}
 
+	int opCmp(ref const Todo otherTodo ) const { 
+		if ( this == otherTodo )
+			return 0;
+		else if ( title < otherTodo.title )
+			return -1;
+		return 1;
+	}
+
 	private:
 		string mytitle;
 }
@@ -149,13 +157,43 @@ class Todos {
 	};
 
 	this( Todo[] ts ) {
-		myTodos = ts;
+		myTodos = [];
+		foreach ( todo ; ts )
+			add( ts );
 		resetFilter();
 	}
 
-	void addTodo( Todo t ) {
-		myTodos ~= t;
+	void add( Todo todo ) {
+		auto todos = myTodos.find( todo  );
+		if ( todos.empty ) {
+			myTodos ~= todo;
+			sort( myTodos );
+		}
 	}
+
+	void add(RANGE)(RANGE todos ) {
+		// TODO optimize this since both ranges are sorted
+		foreach (todo; todos)
+			add( todo );
+	}
+
+	void remove( Todo todo ) {
+		auto i = countUntil( myTodos, todo );
+		if (i != -1)
+			myTodos = myTodos[0..i] ~ myTodos[i+1..$];
+	}
+
+	void remove(RANGE)( RANGE todos ) {
+		// TODO optimize this since both ranges are sorted
+		foreach (todo; todos)
+			remove( todo );
+	}
+
+	/*
+		Will need to take into account filters
+		Todo[] array() {
+		return myTodos;
+	}*/
 
 	public int opApply(int delegate(ref Todo) dg) {
 		int res = 0;
@@ -340,21 +378,21 @@ version(unittest) {
 	Todos generateSomeTodos() {
 		Todo t1 = Todo( "Todo 1 +tag1 +tag2 +tag3" );
 		Todo t2 = Todo( "Bla +tag2 +tag4" );
-		Todos mytodos = new Todos( [t1, t2] );
+		Todos mytodos = new Todos( [t2, t1] );
 		return mytodos;
 	}
 }
 
 unittest {
 	auto mytodos = generateSomeTodos().array;
-	assert(	mytodos[0].title == "Todo 1" );
-	assert(	mytodos[1].title == "Bla" );
+	assert(	mytodos[1].title == "Todo 1" );
+	assert(	mytodos[0].title == "Bla" );
 
 	// Filter on title
 	auto todos = generateSomeTodos();
 	todos.applyFilters( filterOnTitle( default_filters, "Bla" ) );
 	assert( todos.array.length == 1 );
-	todos.addTodo( Todo( "Blaat" ) );
+	todos.add( Todo( "Blaat" ) );
 	assert( todos.array.length == 2 );
 	todos.filters = filterOnTitle( todos.filters, "Blaat" );
 	assert( todos.array.length == 1 );
@@ -365,7 +403,7 @@ unittest {
 	deleted_t.deleted = true;
 	mytodos = new Todos([deleted_t]).array;
 	assert( mytodos.length == 0 );
-	Todo t;
+	Todo t = Todo( "Tag2" );
 	mytodos = new Todos([t, deleted_t]).array;
 	assert( mytodos.length == 1 );
 	mytodos = new Todos([deleted_t, t]).array;
@@ -430,7 +468,7 @@ JSONValue toJSON( const Todos ts ) {
 Todos toTodos( const JSONValue json ) {
 	Todos ts = new Todos;
 	foreach ( js; json["todos"].array )
-		ts.addTodo( toTodo( js ) );
+		ts.add( toTodo( js ) );
 	return ts;
 }
 
