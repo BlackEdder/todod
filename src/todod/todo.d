@@ -38,12 +38,16 @@ import std.array;
 
 import std.random;
 
+import std.uuid;
+
 import todod.shell;
 import todod.date;
 import todod.random;
 import todod.tag;
 
 struct Todo {
+	UUID id; /// id is mainly used for syncing with habitrpg
+
 	Date[] progress; /// Keep track of how long/often we've worked on this
 	bool deleted = false;
 
@@ -116,6 +120,7 @@ JSONValue toJSON( const Todo t ) {
 	jsonTODO["progress"] = progress_array;
 	jsonTODO["creation_date"] = t.creation_date.toStringDate;
 	jsonTODO["due_date"] = t.due_date.toStringDate;
+	jsonTODO["id"] = t.id.toString;
 	return JSONValue( jsonTODO );	
 }
 
@@ -130,6 +135,8 @@ Todo toTodo( const JSONValue json ) {
 	t.creation_date = Date( jsonAA["creation_date"].str );
 	if ("due_date" in jsonAA)
 		t.due_date = Date( jsonAA["due_date"].str );
+	if ("id" in jsonAA)
+		t.id = UUID( jsonAA["id"].str );
 	return t;
 }
 
@@ -174,6 +181,9 @@ class Todos {
 		if ( todos.empty ) {
 			myTodos ~= todo;
 			sort( myTodos );
+		} else {
+			if (!todo.id.empty) // Will automatically cause sync to HabitRPG id
+				todos[0].id = todo.id;
 		}
 	}
 

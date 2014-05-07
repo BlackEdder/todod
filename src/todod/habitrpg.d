@@ -230,6 +230,8 @@ string toHabitRPGJSON( const Todo todo, const Tags tags ) {
 	json["dateCreated"] = toStringDate( todo.creation_date );
 	if (todo.due_date)
 		json["date"] = toStringDate( todo.due_date );
+	if (!todo.id.empty)
+		json["id"] = todo.id.toString;
 	return JSONValue( json ).toString;
 }
 
