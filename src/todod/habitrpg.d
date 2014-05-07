@@ -219,17 +219,20 @@ in
 }
 body
 {
+	debug writeln( "Debug: Starting Todo sync." );
 	// Needed for tag ids for all todos 
 	Tags tags = syncTags( ts.allTags, hrpg );
 
 	auto hrpgTodos = new Todos();
 	auto filters = ts.filters;
 	ts.filters = default_filters;
+	debug writeln( "Debug: Adding existing Todos to hbrgTodos." );
 	foreach( todo; ts )
 		hrpgTodos.add( ts );
 	ts.filters = filters;
 
 	// Get all habitrpg tasks of type Todo
+	debug writeln( "Debug: Getting existing Todos from HabitRPG." );
 	auto http = connectHabitRPG( hrpg );
 	auto url = "https://habitrpg.com/api/v2/user/tasks";
 	http.url = url;
@@ -243,6 +246,7 @@ body
 
 	http.perform();
 
+	debug writeln( "Debug: Converting HabitRPG tasks to Todos and remove them from the to sync list." );
 	foreach ( task; parseJSON( result ).array ) {
 		if ( task["type"].str == "todo"
 				&& task["completed"].type == JSON_TYPE.FALSE) {
@@ -255,6 +259,7 @@ body
 	}
 
 	// Foreach hrpgTodos still in the list
+	debug writeln( "Debug: Pushing missing Todos to HabitRPG." );
 	foreach ( todo; hrpgTodos ) {
 		// Convert to HabitRPGTodo ( will need to pass along tags )
 		auto msg = toHabitRPGJSON( todo, tags );
