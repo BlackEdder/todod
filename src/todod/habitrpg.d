@@ -248,13 +248,16 @@ body
 
 	debug writeln( "Debug: Converting HabitRPG tasks to Todos and remove them from the to sync list." );
 	foreach ( task; parseJSON( result ).array ) {
-		if ( task["type"].str == "todo"
-				&& task["completed"].type == JSON_TYPE.FALSE) {
-			// Convert to Todo
-			auto todo = Todo( task["text"].str );
-			// Remove from hrpgTodos
-			hrpgTodos.remove( todo );
-			ts.add( todo );
+		if ( task["type"].str == "todo" ) {
+			JSONValue[string] taskArray = task.object;
+			if ( !("completed" in taskArray) 
+					|| taskArray["completed"].type == JSON_TYPE.FALSE) {
+				// Convert to Todo
+				auto todo = Todo( task["text"].str );
+				// Remove from hrpgTodos
+				hrpgTodos.remove( todo );
+				ts.add( todo );
+			}
 		}
 	}
 
