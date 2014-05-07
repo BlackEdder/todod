@@ -100,9 +100,14 @@ void initCommands() {
 
 		commands.add( 
 				"progress", delegate( Todos ts, string parameter ) {
-			size_t id = to!size_t(parameter);
-			upHabit( hrpg, "productivity" );
-			ts[id].progress ~= Date.now;
+			auto targets = parseTarget( parameter );
+			if (targets.empty)
+				writeln( "Please provide a list of todos (1,3,..) or all" );
+			else {
+			ts.apply( delegate( ref Todo t ) { 
+				upHabit( hrpg, "productivity" );
+				t.progress ~= Date.now; }, targets );
+			}
 			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Usage: progress TARGETS. Marks that you have made progress on the provided TARGETS. This will lower the weight of this todo and therefore lower the likelihood of it appearing in the randomly shown subset of todos. Targets can either be a list of numbers (2,3,4) or all for all shown Todos." );
