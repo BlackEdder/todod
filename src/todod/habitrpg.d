@@ -39,6 +39,7 @@ import std.uuid;
 import todod.tag;
 import todod.commandline;
 import todod.todo;
+import todod.date;
 
 version (unittest) {
 	import std.stdio;
@@ -197,6 +198,23 @@ body
 
 /// Convert Todo toHabitRPGJSON
 /// Needs a copy of all tags to check habitrpg ids etc
+/*
+	   {
+    "date": "2014-05-04T23:00:00.000Z",
+    "text": "Blargh",
+    "attribute": "str",
+    "priority": 1,
+    "value": 0,
+    "notes": "",
+    "dateCreated": "2014-05-07T06:23:40.367Z",
+    "id": "c708e86a-3901-4c41-b9fb-6c29f2da7949",
+    "checklist": [],
+    "collapseChecklist": false,
+    "archived": false,
+    "completed": false,
+    "type": "todo"
+  },
+	*/
 string toHabitRPGJSON( const Todo todo, const Tags tags ) {
 	JSONValue[string] json;
 	json["text"] = todo.title;
@@ -209,6 +227,9 @@ string toHabitRPGJSON( const Todo todo, const Tags tags ) {
 		tagArray[id.toString] = JSONValue(true);
 	}
 	json["tags"] = JSONValue( tagArray );
+	json["dateCreated"] = toStringDate( todo.creation_date );
+	if (todo.due_date)
+		json["date"] = toStringDate( todo.due_date );
 	return JSONValue( json ).toString;
 }
 
