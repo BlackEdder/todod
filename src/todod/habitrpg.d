@@ -281,6 +281,7 @@ body
 					todo.creation_date = Date( taskArray["dateCreated"].str );
 				if ("date" in taskArray)
 					todo.due_date = Date( taskArray["date"].str );
+				todo.id = UUID( taskArray["id"].str );
 
 				// Remove from hrpgTodos
 				hrpgTodos.remove( todo );
