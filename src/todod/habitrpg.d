@@ -230,8 +230,8 @@ string toHabitRPGJSON( const Todo todo, const Tags tags ) {
 	json["dateCreated"] = toStringDate( todo.creation_date );
 	if (todo.due_date)
 		json["date"] = toStringDate( todo.due_date );
-	if (!todo.id.empty)
-		json["id"] = todo.id.toString;
+	assert( !todo.id.empty );
+	json["id"] = todo.id.toString;
 	return JSONValue( json ).toString;
 }
 
@@ -294,6 +294,9 @@ body
 	debug writeln( "Debug: Pushing missing Todos to HabitRPG." );
 	foreach ( todo; hrpgTodos ) {
 		// Convert to HabitRPGTodo ( will need to pass along tags )
+		if ( todo.id.empty )
+			todo.id = randomUUID;
+				
 		auto msg = toHabitRPGJSON( todo, tags );
 		// Post new Todo
 		postMessage( hrpg, url, msg );
