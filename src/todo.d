@@ -85,7 +85,7 @@ void initCommands() {
 		commands.add( 
 				"del", delegate( Todos ts, string parameter ) {
 			size_t id = to!size_t(parameter);
-			ts[id].deleted = true;
+			ts.remove( ts[id] );
 			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Usage del todo_id. Deletes Todo specified by id." );

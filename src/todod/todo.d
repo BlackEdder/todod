@@ -49,8 +49,6 @@ struct Todo {
 	UUID id; /// id is mainly used for syncing with habitrpg
 
 	Date[] progress; /// Keep track of how long/often we've worked on this
-	bool deleted = false;
-
 	bool random = true;
 
 	Tags tags;
@@ -194,7 +192,6 @@ class Todos {
 	}
 
 	void remove( Todo todo ) {
-		todo.deleted = true;
 		auto i = countUntil( myTodos, todo );
 		if (i != -1)
 			myTodos = myTodos[0..i] ~ myTodos[i+1..$];
@@ -317,13 +314,14 @@ class Todos {
 	unittest {
 		auto targets = parseTarget( "1" );
 		auto ts = generateSomeTodos;
-		ts.apply( delegate( ref Todo t ) { t.deleted = true; }, targets );
-		assert( ts.walkLength == 1 );
+		assert( ts[1].tags.length == 3 );
+		ts.apply( delegate( ref Todo t ) { t.tags.add( Tag( "tag5" ) ); }, targets );
+		assert( ts[1].tags.length == 4 );
 		ts = generateSomeTodos;
-		assert( ts.walkLength == 2 );
 		targets = parseTarget( "all" );
-		ts.apply( delegate( ref Todo t ) { t.deleted = true; }, targets );
-		assert( ts.walkLength == 0 );
+		ts.apply( delegate( ref Todo t ) { t.tags.add( Tag( "tag5" ) ); }, targets );
+		assert( ts[0].tags.length == 3 );
+		assert( ts[1].tags.length == 4 );
 	}
 
 	/// Access by id. 
@@ -340,9 +338,9 @@ class Todos {
 
 	unittest {
 		auto ts = generateSomeTodos;
-		assert( ts.walkLength == 2 );
-		ts[1].deleted = true;
-		assert( ts.walkLength == 1 );
+		assert( ts[1].tags.length == 3 );
+		ts[1].tags.add( Tag( "tag5" ) );
+		assert( ts[1].tags.length == 4 );
 	}
 
 	private:
@@ -353,7 +351,6 @@ alias bool delegate( const Todo )[] Filters;
 
 Filters default_filters() {
 	Filters fltrs;
-	fltrs ~= t => !t.deleted;
 	return fltrs;
 }
 
@@ -413,18 +410,6 @@ unittest {
 	assert( todos.array.length == 2 );
 	todos.filters = filterOnTitle( todos.filters, "Blaat" );
 	assert( todos.array.length == 1 );
-
-
-	// Test for deleted
-	Todo deleted_t;
-	deleted_t.deleted = true;
-	mytodos = new Todos([deleted_t]).array;
-	assert( mytodos.length == 0 );
-	Todo t = Todo( "Tag2" );
-	mytodos = new Todos([t, deleted_t]).array;
-	assert( mytodos.length == 1 );
-	mytodos = new Todos([deleted_t, t]).array;
-	assert( mytodos.length == 1 );
 }
 
 /// Return all existing tags
