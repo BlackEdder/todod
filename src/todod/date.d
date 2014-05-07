@@ -26,13 +26,18 @@ module todod.date;
 import datetime = std.datetime;
 import std.conv;
 import std.string;
+import std.regex;
 
 /// Convenience struct around datetime.Date
 struct Date {
 	this( string dateStr ) {
 		if ( dateStr != "-1" ) {
-			auto splitted = split( dateStr, "-" );
-			mytime = datetime.Date.fromISOExtString( dateStr );
+			if (dateStr.match( r"^\d\d\d\d-\d\d-\d\d$" ) ) {
+				mytime = 
+					cast(datetime.SysTime)(datetime.Date.fromISOExtString( dateStr ));
+			} else {
+				mytime = datetime.SysTime.fromISOExtString( dateStr );
+			}
 			init = true;
 		}
 	}
@@ -43,14 +48,19 @@ struct Date {
 
 	static Date now() {
 		Date dt;
-		dt.mytime = cast(datetime.Date)(datetime.Clock.currTime);
+		dt.mytime = datetime.Clock.currTime;
 		dt.init = true;
 		return dt;
 	}
 
 	/// Returns difference in days
-	long substract( const Date other_date ) const {
-		return (this.mytime - other_date.mytime).total!"days";
+	long substract( const Date otherDate ) const {
+		// First cast to dates, so that we work on actual dates, 
+		// not number of 24 hours, i.e. the day before, but within 24 hours should
+		// still count as a day.
+		auto date1 = cast( datetime.Date )( this.mytime );
+		auto date2 = cast( datetime.Date )( otherDate.mytime );
+		return (date1 - date2).total!"days";
 	}
 
 	/// Add given number of days
@@ -75,7 +85,7 @@ struct Date {
 	}
 
 	private:
-		datetime.Date mytime;
+		datetime.SysTime mytime;
 		bool init = false;
 }
 
@@ -98,10 +108,10 @@ unittest {
 }
 
 unittest {
-	auto dt = Date( "2014-01-12" );
-	assert( dt.substract( Date( "2014-01-16" ) ) == -4 );
-	assert( dt.substract( Date( "2014-01-01" ) ) == 11 );
-	assert( dt.substract( Date( "2013-01-12" ) ) == 365 );
+	auto dt = Date( "2014-01-12T00:01:01" );
+	assert( dt.substract( Date( "2014-01-16T00:02:01" ) ) == -4 );
+	assert( dt.substract( Date( "2014-01-01T00:02:01" ) ) == 11 );
+	assert( dt.substract( Date( "2013-01-12T00:02:01" ) ) == 365 );
 }
 
 
@@ -123,7 +133,10 @@ unittest {
 	assert( !dt_invalid );
 
 	dt = Date( "2014-01-08" );
-	assert( toString( dt ) == "2014-01-08" );
+	assert( toString( dt ) == "2014-01-08T00:00:00" );
+
+	dt = Date( "2014-01-08T08:01:01" );
+	assert( toString( dt ) == "2014-01-08T08:01:01" );
 
 	auto now = datetime.Clock.currTime;
 	dt = Date.now;
