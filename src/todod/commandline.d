@@ -28,10 +28,16 @@ import std.string;
 
 /// Manage command line arguments
 struct Commands(COMMAND) {
+	alias string[] delegate( string ) Completion;
+
+	@disable this();
 
 	/// Create commands using the introduction when printing help
 	this( string introduction ) {
 		myintroduction = introduction;
+		myDefaultCompletion = delegate ( string parameter ) { 
+			string[] emptyResult = [];
+			return emptyResult; };
 	}
 
 	///
@@ -79,6 +85,23 @@ struct Commands(COMMAND) {
 		else
 			return false;
 	}
+
+	/// Add completion option for this specific command
+	void addCompletion( const string cmd, Completion completion ) {
+		completions[cmd] = completion;
+	}
+
+	/// Set default completion function
+	void defaultCompletion( Completion completion ) {
+		myDefaultCompletion = completion;
+	}
+
+	/// Return completion options
+	string[] completionOptions( const string cmd, const string parameter ) {
+		if ( cmd in completions )
+			return completions[cmd]( parameter );
+		return myDefaultCompletion( parameter );
+	}
 	
 	private:
 		string[] addition_order;
@@ -86,6 +109,8 @@ struct Commands(COMMAND) {
 		string myintroduction;
 		COMMAND[string] mycommands;
 		string[string] myhelp;
+		Completion[string] completions;
+		Completion myDefaultCompletion;
 }
 
 unittest {
@@ -94,4 +119,10 @@ unittest {
 	cmd.add( "cmd2", 2, "help2" );
 	assert( cmd["cmd1"] == 1 );
 	assert( cmd["cmd2"] == 2 );
+}
+
+unittest {
+	import std.stdio;
+	auto cmd = Commands!int( "" );
+	assert( cmd.myDefaultCompletion( "" ).length == 0 );
 }
