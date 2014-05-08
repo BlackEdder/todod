@@ -91,8 +91,11 @@ void initCommands() {
 
 		commands.add( 
 				"done", delegate( Todos ts, string parameter ) {
-			upHabit( hrpg, "productivity" );
-			ts = commands["del"]( ts, parameter );
+			auto todo = ts[to!size_t(parameter)];
+			if (hrpg)
+				doneTodo( todo, hrpg );
+				
+			ts.remove( todo );
 			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Usage done todo_id. Marks Todo specified by id as done." );

@@ -306,6 +306,20 @@ body
 	return ts;
 }
 
+/// Mark give todo as completed in HabitRPG
+Todo doneTodo( Todo todo, const HabitRPG hrpg ) {
+	if (todo.id.empty)
+		return todo;
+
+	upHabit( hrpg, todo.id.toString );
+
+	auto url = "https://habitrpg.com/api/v2/user/tasks/" ~ todo.id.toString;
+
+	putMessage( hrpg, url, "{ \"completed\": true }" );
+
+	return todo;
+}
+
 Commands!( Todos delegate( Todos, string) ) addHabitRPGCommands( 
 		ref Commands!( Todos delegate( Todos, string) ) main, string dirName ) {
 	HabitRPG hrpg = loadHRPG( dirName ~ "habitrpg.json" );
