@@ -54,13 +54,12 @@ extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 			linenoiseAddCompletion(lc,std.string.toStringz(com));
 		}
 	} else {
-		auto m = match( mybuf, r"^(.*) ([+-])(\w*)$" );
+		auto m = match( mybuf, r"^([A-z]+) (.*)$" );
 		if (m) {
 			auto matching_commands =
-				filter!( a => match( a.name, regex(m.captures[3]) ))( ts.allTags.array );
+				commands.completionOptions( m.captures[1], m.captures[2] );
 			foreach ( com; matching_commands ) {
-				linenoiseAddCompletion(lc,std.string.toStringz( m.captures[1]
-							~ " " ~ m.captures[2] ~ com.name ));
+				linenoiseAddCompletion(lc,std.string.toStringz( com ));
 			}
 		}
 	}
@@ -147,7 +146,7 @@ void initCommands() {
 			}
 			ts = commands["show"]( ts, "" );
 			return ts;
-		}, "Usage: tag +tagtoadd -tagtoremove [TARGETS]. Adds or removes given tags for the provided targets. Targets can either be a list of numbers (2,3,4) or all for all shown Todos" );
+		}, "Usage: tag +tagtoadd -tagtoremove [TARGETS]. Adds or removes given tags for the provided targets. Targets can either be a list of numbe constrs (2,3,4) or all for all shown Todos" );
 
 		commands.add( 
 				"due", delegate( Todos ts, string parameter ) {
@@ -201,20 +200,20 @@ void initCommands() {
 			return ts;
 		}, "Quit todod and save the todos" );
 
-		// For now set tag completion as general completion
-		auto tagCompletion = delegate( const string cmd, string parameter ) {
+		auto tagCompletion = delegate( string cmd, string parameter ) {
 			string[] result;
+			auto m = match( parameter, r"^(.*\s*)([+-])(\w*)$" );
+			if (m) {
+				auto matching_commands =
+					filter!( a => match( a.name, regex(m.captures[3]) ))( ts.allTags.array );
+				foreach ( com; matching_commands ) {
+					result ~= [cmd ~ " " ~ m.captures[1] ~ m.captures[2] ~ com.name];
+				}
+			}
 			return result;
 		};
-		/*auto m = match( mybuf, r"^(.* )([+-])(\w*)$" );
-		if (m) {
-			auto matching_commands =
-				filter!( a => match( a.name, regex(m.captures[3]) ))( ts.allTags.array );
-			foreach ( com; matching_commands ) {
-				linenoiseAddCompletion(lc,std.string.toStringz( m.captures[1]
-							~ " " ~ m.captures[2] ~ com.name ));
-			}
-		}*/
+		// For now set tag completion as general completion
+		commands.defaultCompletion( tagCompletion );
 }
 
 Todos handle_message( string command, string parameter, Todos ts ) {

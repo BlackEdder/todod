@@ -82,7 +82,7 @@ struct Commands(COMMAND) {
 	}
 
 	/// Add completion option for this specific command
-	void addCompletion( const string cmd, Completion completion ) {
+	void addCompletion( string cmd, Completion completion ) {
 		completions[cmd] = completion;
 	}
 
@@ -93,7 +93,7 @@ struct Commands(COMMAND) {
 	}
 
 	/// Return completion options
-	string[] completionOptions( const string cmd, const string parameter ) {
+	string[] completionOptions( string cmd, string parameter ) {
 		if ( cmd in completions )
 			return completions[cmd]( cmd, parameter );
 		else if ( defaulCompletionInitialized )
