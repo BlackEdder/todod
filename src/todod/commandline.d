@@ -28,7 +28,7 @@ import std.string;
 
 /// Manage command line arguments
 struct Commands(COMMAND) {
-	alias string[] delegate( string ) Completion;
+	alias string[] delegate( string, string ) Completion;
 
 	/// Create commands using the introduction when printing help
 	this( string introduction ) {
@@ -95,9 +95,9 @@ struct Commands(COMMAND) {
 	/// Return completion options
 	string[] completionOptions( const string cmd, const string parameter ) {
 		if ( cmd in completions )
-			return completions[cmd]( parameter );
+			return completions[cmd]( cmd, parameter );
 		else if ( defaulCompletionInitialized )
-			return myDefaultCompletion( parameter );
+			return myDefaultCompletion( cmd, parameter );
 		string[] emptyResult;
 		return emptyResult;
 	}

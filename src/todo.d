@@ -44,23 +44,23 @@ Todos ts; // Defined global to give C access to it in tab completion
 HabitRPG hrpg;
 
 extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
-	string[] command_keys = commands.commands;
 	string mybuf = to!string( buf );
 	if (match( mybuf, "^[A-z]+$" )) {
 		// Main commands
+		string[] command_keys = commands.commands;
 		auto regex_buf = "^" ~ mybuf;
 		auto matching_commands = filter!( a => match( a, regex_buf ))( command_keys );
 		foreach ( com; matching_commands ) {
 			linenoiseAddCompletion(lc,std.string.toStringz(com));
 		}
 	} else {
-		auto m = match( mybuf, r"^(.* )([+-])(\w*)$" );
+		auto m = match( mybuf, r"^(.*) ([+-])(\w*)$" );
 		if (m) {
 			auto matching_commands =
 				filter!( a => match( a.name, regex(m.captures[3]) ))( ts.allTags.array );
 			foreach ( com; matching_commands ) {
 				linenoiseAddCompletion(lc,std.string.toStringz( m.captures[1]
-							~ m.captures[2] ~ com.name ));
+							~ " " ~ m.captures[2] ~ com.name ));
 			}
 		}
 	}
@@ -201,6 +201,20 @@ void initCommands() {
 			return ts;
 		}, "Quit todod and save the todos" );
 
+		// For now set tag completion as general completion
+		auto tagCompletion = delegate( const string cmd, string parameter ) {
+			string[] result;
+			return result;
+		};
+		/*auto m = match( mybuf, r"^(.* )([+-])(\w*)$" );
+		if (m) {
+			auto matching_commands =
+				filter!( a => match( a.name, regex(m.captures[3]) ))( ts.allTags.array );
+			foreach ( com; matching_commands ) {
+				linenoiseAddCompletion(lc,std.string.toStringz( m.captures[1]
+							~ " " ~ m.captures[2] ~ com.name ));
+			}
+		}*/
 }
 
 Todos handle_message( string command, string parameter, Todos ts ) {
