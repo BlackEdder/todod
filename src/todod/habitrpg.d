@@ -30,6 +30,8 @@ import std.array;
 import core.thread;
 import std.encoding;
 
+import std.regex;
+
 import std.stdio;
 import std.file;
 
@@ -336,6 +338,22 @@ Commands!( Todos delegate( Todos, string) ) addHabitRPGCommands(
 				return ts;
 				}, "Syncing with HabitRPG. Use habitrpg help for more help." );
 
+		main.addCompletion( "habitrpg",
+			delegate( string cmd, string parameter ) {
+				string[] results;
+				auto m = match( parameter, "^([A-z]*)$" );
+				if (m) {
+					// Main commands
+					string[] command_keys = habitrpg_commands.commands;
+					auto matching_commands =
+						filter!( a => match( a, m.captures[1] ))( command_keys );
+					foreach ( com; matching_commands ) {
+						results ~= [cmd ~ " " ~ com];
+					}
+				}
+				return results;
+			}
+		);
 	}
 	return main;
 }
