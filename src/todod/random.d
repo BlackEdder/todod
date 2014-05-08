@@ -31,6 +31,7 @@ import stochastic.gillespie;
 
 import todod.todo;
 import todod.date;
+import todod.tag;
 
 version( unittest ) {
 	import std.stdio;
@@ -64,15 +65,31 @@ unittest {
 	assert( progressWeight( 14 ) == 1.5 );
 }
 
+/// Weight due to tag selection
+auto tagWeightScalar( const Tags tags, TagDelta selected ) {
+	foreach ( tag; tags ) {
+		if (selected.delete_tags.canFind( tag ))
+			return 0.0;
+	}
+
+	foreach ( tag; tags ) {
+		if (selected.add_tags.canFind( tag ))
+			return 5.0;
+	}
+
+	return 1.0;
+}
+
 /// Associate a weight to a Todo depending on last progress and todo dates
-auto weight( const Todo t ) {
+auto weight( const Todo t, TagDelta selected ) {
+	double tw = tagWeightScalar( t.tags, selected );
 	if ( t.due_date )
-		return dueWeight( t.due_date.substract( Date.now ) );
-	return progressWeight( lastProgress( t ) );
+		return tw * dueWeight( t.due_date.substract( Date.now ) );
+	return tw * progressWeight( lastProgress( t ) );
 }
 
 
-Todos randomGillespie( Todos ts, size_t no = 5 ) {
+Todos randomGillespie( Todos ts, TagDelta selected, size_t no = 5 ) {
 	auto gen = Random( unpredictableSeed );
 	void eventTodo( Gillespie gillespie, ref Todo t, event_id id ) {
 		gillespie.del_event( id );
@@ -85,7 +102,7 @@ Todos randomGillespie( Todos ts, size_t no = 5 ) {
 	auto gillespie = new Gillespie();
 	foreach( ref t; ts ) {
 		auto e_id = gillespie.new_event_id;
-		gillespie.add_event( e_id, to!real( weight( t ) ),
+		gillespie.add_event( e_id, to!real( weight( t, selected ) ),
 				delegate() => eventTodo( gillespie, t, e_id ) );
 	}
 

@@ -35,6 +35,7 @@ import core.stdc.string, core.stdc.stdlib, std.stdio;
 import deimos.linenoise;
 
 import todod.todo;
+import todod.tag;
 import todod.date;
 import todod.shell;
 import todod.commandline;
@@ -42,6 +43,8 @@ import todod.habitrpg;
 
 Todos ts; // Defined global to give C access to it in tab completion
 HabitRPG hrpg;
+
+TagDelta selected;
 
 extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 	string mybuf = to!string( buf );
@@ -117,15 +120,17 @@ void initCommands() {
 		commands.add( 
 				"search", delegate( Todos ts, string parameter ) {
 			if ( parameter == "" )
-				ts.filters = default_filters;
+				selected = TagDelta();
 			else {
 				if ( match( parameter, r" all$" ) ) // Search through all todos
-					ts.filters = default_filters;
+					selected = TagDelta();
 				else
 					ts.filters = ts.filters[0..$-1]; // Undo random
-				ts.filters = filterOnTags( ts.filters, parseTags( parameter ) );
+				TagDelta newTags = parseTags( parameter );
+				selected.add_tags.add( newTags.add_tags );
+				selected.delete_tags.add( newTags.delete_tags );
 			}
-			ts = random( ts );
+			ts = random( ts, selected );
 			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. search ... all will search through all Todos instead. Similarly, search without any further parameters resets the search (activates all Todos)." );
@@ -133,7 +138,7 @@ void initCommands() {
 		commands.add( 
 				"reroll", delegate( Todos ts, string parameter ) {
 			ts.filters = ts.filters[0..$-1]; // Undo random
-			ts = random( ts );
+			ts = random( ts, selected );
 			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Reroll the Todos that are active. I.e. chooses up to five Todos from all the active Todos to show" );
@@ -181,6 +186,10 @@ void initCommands() {
 				writeln();
 				ts.filters = filters;
 				write( prettyStringTodos( ts ) );
+				debug {
+					writeln( "Debug: Selected ", selected.add_tags );
+					writeln( "Debug: Deselected ", selected.delete_tags );
+				}
 			}
 			return ts;
 		}, "Show a (random) subset of Todos. Subject to filters added throught the search command. Shows a list of tags present in the filtered list of Todos at the top of the output." );
@@ -240,7 +249,7 @@ void main( string[] args ) {
 	commands = addHabitRPGCommands( commands, dirName );
 	
 	ts = loadTodos( fileName );
-	ts = random( ts );
+	ts = random( ts, selected );
 	handle_message( "show", "", ts );
 
 	bool quit = false;

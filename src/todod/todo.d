@@ -372,13 +372,13 @@ Filters filterOnRandom( Filters fltrs ) {
 	return fltrs;
 }
 
-Todos random( Todos ts, size_t no = 5 ) {
+Todos random( Todos ts, TagDelta selected, size_t no = 5 ) {
 	if (ts.walkLength > no) {
 		// Clear all old randoms
 		foreach ( ref t; ts )
 			t.random = false;
 
-		ts = randomGillespie( ts, no );
+		ts = randomGillespie( ts, selected, no );
 
 	} else {
 		foreach ( ref t; ts )
