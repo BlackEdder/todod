@@ -30,14 +30,9 @@ import std.string;
 struct Commands(COMMAND) {
 	alias string[] delegate( string ) Completion;
 
-	@disable this();
-
 	/// Create commands using the introduction when printing help
 	this( string introduction ) {
 		myintroduction = introduction;
-		myDefaultCompletion = delegate ( string parameter ) { 
-			string[] emptyResult = [];
-			return emptyResult; };
 	}
 
 	///
@@ -93,6 +88,7 @@ struct Commands(COMMAND) {
 
 	/// Set default completion function
 	void defaultCompletion( Completion completion ) {
+		defaulCompletionInitialized = true;
 		myDefaultCompletion = completion;
 	}
 
@@ -100,7 +96,10 @@ struct Commands(COMMAND) {
 	string[] completionOptions( const string cmd, const string parameter ) {
 		if ( cmd in completions )
 			return completions[cmd]( parameter );
-		return myDefaultCompletion( parameter );
+		else if ( defaulCompletionInitialized )
+			return myDefaultCompletion( parameter );
+		string[] emptyResult;
+		return emptyResult;
 	}
 	
 	private:
@@ -110,6 +109,8 @@ struct Commands(COMMAND) {
 		COMMAND[string] mycommands;
 		string[string] myhelp;
 		Completion[string] completions;
+
+		bool defaulCompletionInitialized = false;
 		Completion myDefaultCompletion;
 }
 
@@ -122,7 +123,6 @@ unittest {
 }
 
 unittest {
-	import std.stdio;
 	auto cmd = Commands!int( "" );
-	assert( cmd.myDefaultCompletion( "" ).length == 0 );
+	assert( cmd.completionOptions( "bla", "" ).length == 0 );
 }
