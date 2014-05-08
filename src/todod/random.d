@@ -41,16 +41,16 @@ version( unittest ) {
 auto dueWeight( long days ) {
 	double baseDays = 7; // if days == baseDays weight should return 1
 	if ( days < 0 )
-		return 100.0;
+		return 5.0;
 	else
-		return exp( (log(100.0)/baseDays) * (baseDays - to!double(days)) );
+		return exp( (log(5.0)/baseDays) * (baseDays - to!double(days)) );
 }
 
 unittest {
-	assert( dueWeight( -1 ) == 100.0 );
+	assert( dueWeight( -1 ) == 5.0 );
 	assert( dueWeight( 8 ) < 1.0 );
 	assert( dueWeight( 7 ) == 1.0 );
-	assert( dueWeight( 0 ) == 100.0 );
+	assert( dueWeight( 0 ) == 5.0 );
 }
 
 /// Weight due to progress
@@ -74,7 +74,7 @@ auto tagWeightScalar( const Tags tags, TagDelta selected ) {
 
 	foreach ( tag; tags ) {
 		if (selected.add_tags.canFind( tag ))
-			return 5.0;
+			return 10.0;
 	}
 
 	return 1.0;
