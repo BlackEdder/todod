@@ -283,6 +283,25 @@ struct Targets {
 		else
 			targets.popFront;
 	}
+
+	/// Apply a delegate to all todos specified by targets
+	void apply( void delegate( ref Todo ) dg, Todo[] selectedTodos  ) {
+		auto first = front;
+		size_t count = 0;
+		popFront;
+		foreach ( ref t; selectedTodos ) {
+			if (count == first) {
+				dg( t );
+				if ( empty )
+					break;
+				else {
+					first = front;
+					popFront;
+				}
+			}
+			count++;
+		}
+	}
 }
 
 /// Convert all or 1,.. into Targets
@@ -317,3 +336,5 @@ unittest {
 	targets = parseTarget( "bla" );
 	assert( targets.take(5).walkLength == 0 );
 }
+
+

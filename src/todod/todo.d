@@ -253,26 +253,6 @@ class Todos {
 		return myTodos.length;
 	}
 
-	/// Apply a delegate to all todos specified by targets
-	void apply( void delegate( ref Todo ) dg, Todo[] selectedTodos,
-			Targets targets ) {
-		auto first = targets.front;
-		size_t count = 0;
-		targets.popFront;
-		foreach ( ref t; selectedTodos ) {
-			if (count == first) {
-				dg( t );
-				if ( targets.empty )
-					break;
-				else {
-					first = targets.front;
-					targets.popFront;
-				}
-			}
-			count++;
-		}
-	}
-
 	/// Access by id. 
 	/// Performance: starts at the beginning every time, so if you need to access multiple then
 	/// using apply might be more performant 
