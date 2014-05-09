@@ -249,12 +249,9 @@ body
 	Tags tags = syncTags( ts.allTags, hrpg );
 
 	auto hrpgTodos = new Todos();
-	auto filters = ts.filters;
-	ts.filters = default_filters;
 	debug writeln( "Debug: Adding existing Todos to hbrgTodos." );
 	foreach( todo; ts )
 		hrpgTodos.add( ts );
-	ts.filters = filters;
 
 	// Get all habitrpg tasks of type Todo
 	debug writeln( "Debug: Getting existing Todos from HabitRPG." );

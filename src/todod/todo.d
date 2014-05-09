@@ -49,7 +49,6 @@ struct Todo {
 	UUID id; /// id is mainly used for syncing with habitrpg
 
 	Date[] progress; /// Keep track of how long/often we've worked on this
-	bool random = true;
 
 	Tags tags;
 
@@ -160,18 +159,12 @@ auto lastProgress( const Todo t ) {
 	Working on list of todos
 	*/
 class Todos {
-
-	Filters filters;
-
-	this() {
-		resetFilter();
-	};
+	this() {};
 
 	this( Todo[] ts ) {
 		myTodos = [];
 		foreach ( todo ; ts )
 			add( ts );
-		resetFilter();
 	}
 
 	void add( Todo todo ) {
@@ -212,17 +205,8 @@ class Todos {
 	public int opApply(int delegate(ref Todo) dg) {
 		int res = 0;
 		foreach( ref t; myTodos ) {
-			bool keep = true;
-			foreach ( f ; filters ) {
-				if ( !f( t ) ) {
-					keep = false;
-					break;
-				}
-			}
-			if (keep) {
-				res = dg(t);
-				if (res) return res;
-			}
+			res = dg(t);
+			if (res) return res;
 		}
 		return res;
 	}
@@ -252,17 +236,8 @@ class Todos {
 	public int opApply(int delegate(ref const Todo) dg) const {
 		int res = 0;
 		foreach( t; myTodos ) {
-			bool keep = true;
-			foreach ( f ; filters ) {
-				if ( !f( t ) ) {
-					keep = false;
-					break;
-				}
-			}
-			if (keep) {
-				res = dg(t);
-				if (res) return res;
-			}
+			res = dg(t);
+			if (res) return res;
 		}
 		return res;
 	}
@@ -274,31 +249,17 @@ class Todos {
 		return result;
 	}
 
-	void applyFilter( bool delegate(const Todo) dg ) {
-		filters ~= dg;
-	}
-
-	Todos applyFilters( Filters fltrs ) {
-		filters ~= fltrs;
-		return this;
-	}
-
-	void resetFilter() {
-		filters = default_filters;
-	}
-
-	size_t walkLength() {
-		size_t l = 0;
-		foreach( t; this )
-			l++;
-		return l;
+	size_t length() {
+		return myTodos.length;
 	}
 
 	/// Apply a delegate to all todos specified by targets
-	void apply( void delegate( ref Todo ) dg, Targets targets ) {
+	void apply( void delegate( ref Todo ) dg, Todo[] selectedTodos,
+			Targets targets ) {
 		auto first = targets.front;
+		size_t count = 0;
 		targets.popFront;
-		foreach ( count, ref t; this ) {
+		foreach ( ref t; selectedTodos ) {
 			if (count == first) {
 				dg( t );
 				if ( targets.empty )
@@ -308,32 +269,15 @@ class Todos {
 					targets.popFront;
 				}
 			}
+			count++;
 		}
-	}
-
-	unittest {
-		auto targets = parseTarget( "1" );
-		auto ts = generateSomeTodos;
-		assert( ts[1].tags.length == 3 );
-		ts.apply( delegate( ref Todo t ) { t.tags.add( Tag( "tag5" ) ); }, targets );
-		assert( ts[1].tags.length == 4 );
-		ts = generateSomeTodos;
-		targets = parseTarget( "all" );
-		ts.apply( delegate( ref Todo t ) { t.tags.add( Tag( "tag5" ) ); }, targets );
-		assert( ts[0].tags.length == 3 );
-		assert( ts[1].tags.length == 4 );
 	}
 
 	/// Access by id. 
 	/// Performance: starts at the beginning every time, so if you need to access multiple then
 	/// using apply might be more performant 
 	ref Todo opIndex(size_t id) {
-		foreach ( count, ref t; this ) {
-			if (count == id) {
-				return t;
-			}
-		}
-		assert( false );
+		return myTodos[id];
 	}
 
 	unittest {
@@ -347,45 +291,11 @@ class Todos {
 		Todo[] myTodos;
 }
 
-alias bool delegate( const Todo )[] Filters;
-
-Filters default_filters() {
-	Filters fltrs;
-	return fltrs;
-}
-
-Filters filterOnTitle( Filters fltrs, string title ) {
-	fltrs ~= t => !matchFirst( t.title.toLower, title.toLower ).empty;
-	return fltrs;
-}
-
-Filters filterOnTags( Filters fltrs, TagDelta tagDelta ) {
-	foreach ( tag; tagDelta.add_tags )
-		fltrs ~= t => t.tags.canFind( tag );
-	foreach ( tag; tagDelta.delete_tags )
-		fltrs ~= t => !t.tags.canFind( tag );
-	return fltrs;
-}
-
-Filters filterOnRandom( Filters fltrs ) {
-	fltrs ~= t => t.random;
-	return fltrs;
-}
-
-Todos random( Todos ts, TagDelta selected, size_t no = 5 ) {
-	if (ts.walkLength > no) {
-		// Clear all old randoms
-		foreach ( ref t; ts )
-			t.random = false;
-
-		ts = randomGillespie( ts, selected, no );
-
-	} else {
-		foreach ( ref t; ts )
-			t.random = true;
-	}
-	ts.filters = filterOnRandom( ts.filters );
-	return ts;
+Todo[] random( Todos ts, TagDelta selected, size_t no = 5 ) {
+	if (ts.length > no) {
+		return randomGillespie( ts, selected, no );
+	}	
+	return ts.myTodos;
 }
 
 version(unittest) {
@@ -399,25 +309,13 @@ version(unittest) {
 
 unittest {
 	auto mytodos = generateSomeTodos().array;
-	assert(	mytodos[1].title == "Todo 1" );
 	assert(	mytodos[0].title == "Bla" );
-
-	// Filter on title
-	auto todos = generateSomeTodos();
-	todos.applyFilters( filterOnTitle( default_filters, "Bla" ) );
-	assert( todos.array.length == 1 );
-	todos.add( Todo( "Blaat" ) );
-	assert( todos.array.length == 2 );
-	todos.filters = filterOnTitle( todos.filters, "Blaat" );
-	assert( todos.array.length == 1 );
+	assert(	mytodos[1].title == "Todo 1" );
 }
 
 /// Return all existing tags
 Tags allTags( Todos ts ) {
 	Tags tags;
-	auto filters = ts.filters;
-	scope(exit) { ts.filters = filters; }
-	ts.filters = default_filters;
 	foreach( t; ts )
 		tags.add( t.tags );
 
@@ -492,8 +390,5 @@ Todos loadTodos( string fileName ) {
 
 void writeTodos( Todos ts, string fileName ) {
 	File file = File( fileName, "w" );
-	auto applied_filters = ts.filters;
-	ts.resetFilter;
 	file.write( toJSON( ts ).toString );
-	ts.applyFilters( applied_filters );
 }

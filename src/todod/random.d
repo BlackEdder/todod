@@ -89,15 +89,18 @@ auto weight( const Todo t, TagDelta selected ) {
 }
 
 
-Todos randomGillespie( Todos ts, TagDelta selected, size_t no = 5 ) {
+Todo[] randomGillespie( Todos ts, TagDelta selected, size_t no = 5 ) 
+in {
+	assert( ts.length >= no );
+}
+body {
+	Todo[] selectedTodos;
 	auto gen = Random( unpredictableSeed );
 	void eventTodo( Gillespie gillespie, ref Todo t, event_id id ) {
 		gillespie.del_event( id );
-		t.random = true; 
+		selectedTodos ~= t;
 	}
 
-	if (ts.walkLength <= no)
-		return ts;
 	//Random gen = rndGen();
 	auto gillespie = new Gillespie();
 	foreach( ref t; ts ) {
@@ -115,5 +118,5 @@ Todos randomGillespie( Todos ts, TagDelta selected, size_t no = 5 ) {
 	}
 
 
-	return ts;
+	return selectedTodos;
 }

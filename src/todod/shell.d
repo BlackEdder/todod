@@ -245,7 +245,7 @@ string prettyStringTodo( const Todo t ) {
 	return description;
 }
 
-string prettyStringTodos( const Todos ts ) {
+string prettyStringTodos(RANGE)( const RANGE ts ) {
 	string str;
 	size_t id = 0;
 	foreach( t; ts ) {

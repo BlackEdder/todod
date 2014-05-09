@@ -46,6 +46,8 @@ HabitRPG hrpg;
 
 TagDelta selected;
 
+Todo[] selectedTodos;
+
 extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 	string mybuf = to!string( buf );
 	if (match( mybuf, "^[A-z]+$" )) {
@@ -78,8 +80,6 @@ void initCommands() {
 	commands.add(
 		"add", delegate( Todos ts, string parameter ) {
 			ts.add( Todo( parameter ) );
-			if (ts.walkLength >= 5)
-				ts[0].random = false;
 			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Add a new todo with provided title. One can respectively add tags with +tag and a due date with DYYYY-MM-DD or D+7 for a week from now." );
@@ -87,19 +87,19 @@ void initCommands() {
 		commands.add( 
 				"del", delegate( Todos ts, string parameter ) {
 			size_t id = to!size_t(parameter);
-			ts.remove( ts[id] );
-			ts = commands["show"]( ts, "" );
+			ts.remove( selectedTodos[id] );
+			ts = commands["reroll"]( ts, "" );
 			return ts;
 		}, "Usage del todo_id. Deletes Todo specified by id." );
 
 		commands.add( 
 				"done", delegate( Todos ts, string parameter ) {
-			auto todo = ts[to!size_t(parameter)];
+			auto todo = selectedTodos[to!size_t(parameter)];
 			if (hrpg)
 				doneTodo( todo, hrpg );
 				
 			ts.remove( todo );
-			ts = commands["show"]( ts, "" );
+			ts = commands["reroll"]( ts, "" );
 			return ts;
 		}, "Usage done todo_id. Marks Todo specified by id as done." );
 
@@ -111,7 +111,7 @@ void initCommands() {
 			else {
 			ts.apply( delegate( ref Todo t ) { 
 				upHabit( hrpg, "productivity" );
-				t.progress ~= Date.now; }, targets );
+				t.progress ~= Date.now; }, selectedTodos, targets );
 			}
 			ts = commands["show"]( ts, "" );
 			return ts;
@@ -124,21 +124,18 @@ void initCommands() {
 			else {
 				if ( match( parameter, r" all$" ) ) // Search through all todos
 					selected = TagDelta();
-				else
-					ts.filters = ts.filters[0..$-1]; // Undo random
 				TagDelta newTags = parseTags( parameter );
 				selected.add_tags.add( newTags.add_tags );
 				selected.delete_tags.add( newTags.delete_tags );
 			}
-			ts = random( ts, selected );
+			selectedTodos = random( ts, selected );
 			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. search ... all will search through all Todos instead. Similarly, search without any further parameters resets the search (activates all Todos)." );
 
 		commands.add( 
 				"reroll", delegate( Todos ts, string parameter ) {
-			ts.filters = ts.filters[0..$-1]; // Undo random
-			ts = random( ts, selected );
+			selectedTodos = random( ts, selected );
 			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Reroll the Todos that are active. I.e. chooses up to five Todos from all the active Todos to show" );
@@ -150,7 +147,8 @@ void initCommands() {
 				writeln( "Please provide a list of todos (1,3,..) or all" );
 			else {
 				auto td = parseTags( parameter );
-				ts.apply( delegate( ref Todo t ) { applyTags( t, td ); }, targets );
+				ts.apply( delegate( ref Todo t ) { applyTags( t, td ); },
+					selectedTodos, targets );
 			}
 			ts = commands["show"]( ts, "" );
 			return ts;
@@ -163,7 +161,8 @@ void initCommands() {
 				writeln( "Please provide a list of todos (1,3,..) or all" );
 			else {
 				auto duedate = parseDate( parameter );
-				ts.apply( delegate( ref Todo t ) { t.due_date = duedate; }, targets );
+				ts.apply( delegate( ref Todo t ) { t.due_date = duedate; },
+					selectedTodos, targets );
 			}
 			ts = commands["show"]( ts, "" );
 			return ts;
@@ -176,16 +175,13 @@ void initCommands() {
 				writeln( prettyStringTags( ts.allTags ) );
 			else {
 				writeln( "Tags and number of todos associated with that tag." );
-				auto filters = ts.filters;
-				ts.filters = ts.filters[0..$-1];
 				auto tags = ts.tagsWithCount();
 				foreach( tag, count; tags ) {
 					write( tagColor(tag.name), " (", count, "),  " );
 				}
 				writeln();
 				writeln();
-				ts.filters = filters;
-				write( prettyStringTodos( ts ) );
+				write( prettyStringTodos( selectedTodos ) );
 				debug {
 					writeln( "Debug: Selected ", selected.add_tags );
 					writeln( "Debug: Deselected ", selected.delete_tags );
@@ -217,7 +213,8 @@ void initCommands() {
 			auto m = match( parameter, r"^(.*\s*)([+-])(\w*)$" );
 			if (m) {
 				auto matching_commands =
-					filter!( a => match( a.name, regex(m.captures[3]) ))( ts.allTags.array );
+					filter!( a => match( a.name, regex(m.captures[3]) ))( 
+							ts.allTags.array );
 				foreach ( com; matching_commands ) {
 					result ~= [cmd ~ " " ~ m.captures[1] ~ m.captures[2] ~ com.name];
 				}
@@ -249,7 +246,7 @@ void main( string[] args ) {
 	commands = addHabitRPGCommands( commands, dirName );
 	
 	ts = loadTodos( fileName );
-	ts = random( ts, selected );
+	selectedTodos = random( ts, selected );
 	handle_message( "show", "", ts );
 
 	bool quit = false;
