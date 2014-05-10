@@ -68,24 +68,24 @@ unittest {
 }
 
 /// Weight due to tag selection
-auto tagWeightScalar( const Tags tags, TagDelta selected ) {
+auto tagWeightScalar( const Tags tags, TagDelta selected, double defaultScale ) {
 	foreach ( tag; tags ) {
 		if (selected.delete_tags.canFind( tag ))
 			return 0.0;
 	}
 	
-	double scalar = 1.0;
+	double scalar = defaultScale;
 	foreach ( tag; tags ) {
 		if (selected.add_tags.canFind( tag ))
-			scalar += 20.0/selected.add_tags.length;
+			scalar += 10.0/selected.add_tags.length;
 	}
 
 	return scalar;
 }
 
 /// Associate a weight to a Todo depending on last progress and todo dates
-auto weight( const Todo t, TagDelta selected ) {
-	double tw = tagWeightScalar( t.tags, selected );
+auto weight( const Todo t, TagDelta selected, double defaultScale ) {
+	double tw = tagWeightScalar( t.tags, selected, defaultScale );
 	if ( t.due_date )
 		return tw * dueWeight( t.due_date.substract( Date.now ) );
 	return tw * progressWeight( lastProgress( t ) );
@@ -108,7 +108,8 @@ body {
 	auto gillespie = new Gillespie();
 	foreach( ref t; ts ) {
 		auto e_id = gillespie.new_event_id;
-		gillespie.add_event( e_id, to!real( weight( t, selected ) ),
+		gillespie.add_event( e_id, 
+				to!real( weight( t, selected, 1.0/ts.length ) ),
 				delegate() => eventTodo( gillespie, t, e_id ) );
 	}
 
