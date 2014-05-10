@@ -111,7 +111,10 @@ body {
 		gillespie.add_event( e_id, to!real( weight( t, selected ) ),
 				delegate() => eventTodo( gillespie, t, e_id ) );
 	}
-	
+
+	if (gillespie.rate == 0)
+		return selectedTodos;
+
 	auto sim = gillespie.simulation( gen );
 
 	for (size_t i = 0; i < no; i++) {
