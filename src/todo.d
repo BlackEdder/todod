@@ -109,9 +109,9 @@ void initCommands() {
 			if (targets.empty)
 				writeln( "Please provide a list of todos (1,3,..) or all" );
 			else {
-			targets.apply( delegate( ref Todo t ) { 
+			ts = targets.apply( delegate( ref Todo t ) { 
 				upHabit( hrpg, "productivity" );
-				t.progress ~= Date.now; }, selectedTodos );
+				t.progress ~= Date.now; }, ts, selectedTodos );
 			}
 			ts = commands["show"]( ts, "" );
 			return ts;
@@ -147,8 +147,8 @@ void initCommands() {
 				writeln( "Please provide a list of todos (1,3,..) or all" );
 			else {
 				auto td = parseTags( parameter );
-				targets.apply( delegate( ref Todo t ) { applyTags( t, td ); },
-					selectedTodos );
+				ts = targets.apply( delegate( ref Todo t ) { applyTags( t, td ); },
+					ts, selectedTodos );
 			}
 			ts = commands["show"]( ts, "" );
 			return ts;
@@ -161,8 +161,8 @@ void initCommands() {
 				writeln( "Please provide a list of todos (1,3,..) or all" );
 			else {
 				auto duedate = parseDate( parameter );
-				targets.apply( delegate( ref Todo t ) { t.due_date = duedate; },
-					selectedTodos );
+				ts = targets.apply( delegate( ref Todo t ) { t.due_date = duedate; },
+					ts, selectedTodos );
 			}
 			ts = commands["show"]( ts, "" );
 			return ts;

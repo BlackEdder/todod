@@ -242,6 +242,15 @@ class Todos {
 		return res;
 	}
 
+	ref Todo find( Todo findTodo ) {
+		foreach( ref t; this ) {
+			if ( t == findTodo ) {
+				return t;
+			}
+		}
+		assert( 0 );
+	}
+
 	Todo[] array() {
 		Todo[] result;
 		foreach( ref t; this )
