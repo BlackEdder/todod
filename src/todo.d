@@ -177,7 +177,12 @@ void initCommands() {
 				writeln( "Tags and number of todos associated with that tag." );
 				auto tags = ts.tagsWithCount();
 				foreach( tag, count; tags ) {
-					write( tagColor(tag.name), " (", count, "),  " );
+					if (!selected.delete_tags.canFind( tag )) {
+						if (selected.add_tags.canFind( tag ))
+							write( tagColor(tag.name), " (", count, "),  " );
+						else
+							write( tag.name, " (", count, "),  " );
+					}
 				}
 				writeln();
 				writeln();
