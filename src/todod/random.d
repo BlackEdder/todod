@@ -37,6 +37,8 @@ version( unittest ) {
 	import std.stdio;
 }
 
+debug import std.stdio;
+
 /// Calculate due weight based on number of dates till due
 auto dueWeight( long days ) {
 	double baseDays = 7; // if days == baseDays weight should return 1
@@ -108,12 +110,14 @@ body {
 		gillespie.add_event( e_id, to!real( weight( t, selected ) ),
 				delegate() => eventTodo( gillespie, t, e_id ) );
 	}
-
+	
 	auto sim = gillespie.simulation( gen );
 
 	for (size_t i = 0; i < no; i++) {
 		auto state = sim.front;
 		state[1]();
+		if (gillespie.rate == 0)
+			break;
 		sim.popFront;
 	}
 
