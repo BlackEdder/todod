@@ -73,13 +73,14 @@ auto tagWeightScalar( const Tags tags, TagDelta selected ) {
 		if (selected.delete_tags.canFind( tag ))
 			return 0.0;
 	}
-
+	
+	double scalar = 1.0;
 	foreach ( tag; tags ) {
 		if (selected.add_tags.canFind( tag ))
-			return 10.0;
+			scalar += 20.0/selected.add_tags.length;
 	}
 
-	return 1.0;
+	return scalar;
 }
 
 /// Associate a weight to a Todo depending on last progress and todo dates
