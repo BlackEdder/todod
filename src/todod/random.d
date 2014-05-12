@@ -57,14 +57,16 @@ unittest {
 
 /// Weight due to progress
 auto progressWeight( long days ) {
+	double max = 3.0; // days is infinite
+	double min = 0.5; // At days since last progress is 0
 	double baseDays = 7.0; // if days == baseDays weight should return 1
-	return 1.0 + (days-baseDays)*0.5/baseDays;
+	return max+(min-max)*exp(days*log( -(max-1)/(min-max) )/baseDays); 
 }
 
 unittest {
 	assert( progressWeight( 0 ) == 0.5 );
 	assert( progressWeight( 7 ) == 1 );
-	assert( progressWeight( 14 ) == 1.5 );
+	assert( progressWeight( 100 ) > 2.8 && progressWeight( 100 ) < 3.0 );
 }
 
 /// Weight due to tag selection
@@ -77,7 +79,7 @@ auto tagWeightScalar( const Tags tags, TagDelta selected, double defaultScale ) 
 	double scalar = defaultScale;
 	foreach ( tag; tags ) {
 		if (selected.add_tags.canFind( tag ))
-			scalar += 10.0/selected.add_tags.length;
+			scalar += 20.0/selected.add_tags.length;
 	}
 
 	return scalar;
