@@ -76,20 +76,13 @@ auto tagWeightScalar( const Tags tags, TagDelta selected, double defaultScale ) 
 			return 0.0;
 	}
 	
-	double noOfTags = 0;
+	double scalar = defaultScale;
 	foreach ( tag; tags ) {
 		if (selected.add_tags.canFind( tag ))
-			noOfTags++;
+			scalar += 20.0/selected.add_tags.length;
 	}
 
-	if (noOfTags>0) {
-		double max = 3; // days is infinite
-		double min = 0.75; // At days since last progress is 0
-		double baseTags = 2.0; // if days == baseDays weight should return 1
-		return 10.0*(max+(min-max)*exp(noOfTags*log( -(max-1)/(min-max) )/baseTags));
-	}
-	else return
-		defaultScale;
+	return scalar;
 }
 
 /// Associate a weight to a Todo depending on last progress and todo dates
