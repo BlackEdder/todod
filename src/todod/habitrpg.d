@@ -63,7 +63,9 @@ HabitRPG loadHRPG( string fileName ) {
 	HabitRPG hrpg;
 	if (exists( fileName )) {
 		File file = File( fileName, "r" );
-		auto content = file.readln();
+		string content;
+		foreach( line; file.byLine() )
+			content ~= line;
 		if (content != "") {
 			auto json = parseJSON( content );
 			hrpg.api_user = json["api_user"].str;
@@ -76,7 +78,7 @@ HabitRPG loadHRPG( string fileName ) {
 		jsonHRPG["api_key"] = hrpg.api_key;
 		auto json = JSONValue( jsonHRPG );
 		File file = File( fileName, "w" );
-		file.write( json.toString );
+		file.writeln( json.toPrettyString );
 	}
 	return hrpg;
 }

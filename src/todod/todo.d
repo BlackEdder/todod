@@ -370,7 +370,9 @@ Todos loadTodos( string fileName ) {
 	Todos ts = new Todos;
 	if (exists( fileName )) {
 		File file = File( fileName, "r" );
-		auto content = file.readln();
+		string content;
+		foreach ( line; file.byLine())
+			content ~= line;
 		if (content != "")
 			ts = toTodos( parseJSON( content ) );
 	}
@@ -379,5 +381,5 @@ Todos loadTodos( string fileName ) {
 
 void writeTodos( Todos ts, string fileName ) {
 	File file = File( fileName, "w" );
-	file.write( toJSON( ts ).toString );
+	file.writeln( toJSON( ts ).toPrettyString );
 }
