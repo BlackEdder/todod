@@ -43,9 +43,9 @@ debug import std.stdio;
 auto dueWeight( long days ) {
 	double baseDays = 7; // if days == baseDays weight should return 1
 	if ( days < 0 )
-		return 5.0;
+		return 16.0;
 	else
-		return exp( (log(5.0)/baseDays) * (baseDays - to!double(days)) );
+		return exp( (log(16.0)/baseDays) * (baseDays - to!double(days)) );
 }
 
 unittest {
@@ -57,7 +57,7 @@ unittest {
 
 /// Weight due to progress
 auto progressWeight( long days ) {
-	double max = 3.0; // days is infinite
+	double max = 4.0; // days is infinite
 	double min = 0.5; // At days since last progress is 0
 	double baseDays = 7.0; // if days == baseDays weight should return 1
 	return max+(min-max)*exp(days*log( -(max-1)/(min-max) )/baseDays); 
@@ -76,11 +76,14 @@ auto tagWeightScalar( const Tags tags, TagDelta selected, double defaultScale ) 
 			return 0.0;
 	}
 	
-	double scalar = defaultScale;
+	double scalar = 1;
 	foreach ( tag; tags ) {
 		if (selected.add_tags.canFind( tag ))
-			scalar += 20.0/selected.add_tags.length;
+			scalar = scalar*4;
 	}
+
+	if (scalar == 1)
+		return defaultScale;
 
 	return scalar;
 }
