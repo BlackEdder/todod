@@ -53,17 +53,18 @@ void commitChanges( GitRepo gr, string fileName, string message ) {
 	git_object* head;
 	int rc = git_revparse_single(&head, repo, "HEAD");
 
-	/*if (rc == 0) {
+	if (rc == 0) {
 		// Check if there are actually any changes in the workdir 
 		git_diff *diff;
 		enforce( git_diff_index_to_workdir( &diff,
 					repo, my_repo_index, null ) == 0 );
 		if ( git_diff_num_deltas( diff ) == 0 ) {
 			debug writeln( "GIT: No changes: ", git_diff_num_deltas( diff ) );
+			git_diff_free( diff );
+			return;
 		}
 		git_diff_free( diff );
-		return;
-	}*/
+	}
 
 	enforce( git_index_add_bypath(my_repo_index,(fileName).toStringz) >= 0 );
 
@@ -92,7 +93,7 @@ void commitChanges( GitRepo gr, string fileName, string message ) {
 
 		enforce( git_commit_create_v(
 					&commit_id, repo, "HEAD", sig, sig,
-					"UTF-8", "Followup commit", tree, 1, parent ) >=0 );
+					"UTF-8", message.toStringz, tree, 1, parent ) >=0 );
 		git_commit_free( parent );
 	}
 
