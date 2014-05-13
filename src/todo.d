@@ -38,6 +38,7 @@ import todod.todo;
 import todod.tag;
 import todod.date;
 import todod.shell;
+import todod.storage;
 import todod.commandline;
 import todod.habitrpg;
 
@@ -244,13 +245,14 @@ void main( string[] args ) {
 
 	auto dirName = expandTilde( "~/.config/todod/" );
 	mkdirRecurse( dirName );
-	auto fileName = dirName ~ "todos.json";
-	scope( exit ) { writeTodos( ts, fileName ); }
+	auto gitRepo = openRepo( dirName );
+
+	scope( exit ) { writeTodos( ts, gitRepo ); }
 
 	hrpg = loadHRPG( dirName ~ "habitrpg.json" );
 	commands = addHabitRPGCommands( commands, dirName );
 	
-	ts = loadTodos( fileName );
+	ts = loadTodos( gitRepo );
 	selectedTodos = random( ts, selected );
 	handle_message( "show", "", ts );
 
@@ -276,6 +278,6 @@ void main( string[] args ) {
 			linenoiseHistorySave(std.string.toStringz(historyFile)); /* Save the history on disk. */
 		}
 		free(line);
-		writeTodos( ts, fileName );
+		writeTodos( ts, gitRepo );
 	}
 }

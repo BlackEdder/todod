@@ -44,6 +44,7 @@ import todod.shell;
 import todod.date;
 import todod.random;
 import todod.tag;
+import todod.storage;
 
 struct Todo {
 	UUID id; /// id is mainly used for syncing with habitrpg
@@ -366,20 +367,17 @@ unittest {
 	assert(	toJSON( mytodos ).toTodos.array[0] == mytodos.array[0] );
 }
 
-Todos loadTodos( string fileName ) {
+Todos loadTodos( GitRepo gr ) {
 	Todos ts = new Todos;
-	if (exists( fileName )) {
-		File file = File( fileName, "r" );
-		string content;
-		foreach ( line; file.byLine())
-			content ~= line;
-		if (content != "")
-			ts = toTodos( parseJSON( content ) );
-	}
+	auto todosFileName = "todos.json";
+	auto content = readFile( gr.workPath, todosFileName );
+	if (content != "")
+		ts = toTodos( parseJSON( content ) );
 	return ts;
 }
 
-void writeTodos( Todos ts, string fileName ) {
-	File file = File( fileName, "w" );
-	file.writeln( toJSON( ts ).toPrettyString );
+void writeTodos( Todos ts, GitRepo gr ) {
+	auto todosFileName = "todos.json";
+	writeToFile( gr.workPath, todosFileName, toJSON( ts ).toPrettyString );
+	commitChanges( gr, todosFileName, "Updating todos file" );
 }
