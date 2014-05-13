@@ -121,12 +121,32 @@ void gitPush( GitRepo gr ) {
     enforce(git_push_add_refspec(push,
 					"refs/heads/master:refs/heads/master") == 0 );
    	enforce(git_push_finish(push) == 0);
+		git_remote_disconnect(remote);
+		enforce( git_remote_update_tips(remote) == 0);
 	} else {
 		debug writeln( "No remote found" );
 	}
 }
 
 void gitPull( GitRepo gr ) {
+	git_repository *repo = gr.repo;
+	git_remote *remote;
+	if ( git_remote_load( &remote, repo, "origin") == 0 ) {
+		enforce( git_remote_fetch( remote ) == 0 );
+		/*git_merge_head* head;
+		git_oid *id;
+		git_merge_head_from_fetchhead(&head, repo, "master",
+				"/home/edwin/tmp/todos.git/", id);/*
+				//"origin", id);/*
+		git_merge_head* heads[1];
+		heads[0] = head;
+		git_merge_result *result;
+		git_merge_opts *merge_opts;
+		git_merge(&result, repo, heads, cast(ulong)(1), merge_opts);*/
+	} else {
+		debug writeln( "No remote found" );
+	}
+
 }
 
 Commands!( Todos delegate( Todos, string) ) addStorageCommands( 
