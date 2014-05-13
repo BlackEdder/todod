@@ -1,13 +1,18 @@
 module todod.storage;
 
+import std.algorithm;
 import std.conv;
 import std.exception;
 import std.file;
+import std.regex;
 import std.stdio;
 import std.string;
 import std.uuid;
 
 import deimos.git2.all;
+
+import todod.commandline;
+import todod.todo;
 
 void writeToFile( string path, string name, string contents ) {
 	auto fileName = path ~ "/" ~ name;
@@ -106,6 +111,54 @@ void commitChanges( GitRepo gr, string fileName, string message ) {
 		git_tree_free(tree);
 	}
 }
+
+Commands!( Todos delegate( Todos, string) ) addStorageCommands( 
+		ref Commands!( Todos delegate( Todos, string) ) main, GitRepo gitRepo ) {
+
+	auto storageCommands = Commands!( Todos delegate( Todos, string) )("Commands specifically used to interact with stored config files");
+
+	storageCommands.add( 
+			"pull", delegate( Todos ts, string parameter ) {
+		return ts;
+	}, "Pull todos from remote git repository" );
+
+	storageCommands.add( 
+			"push", delegate( Todos ts, string parameter ) {
+		return ts;
+	}, "Push todos to remote git repository" );
+
+	storageCommands.add( 
+			"help", delegate( Todos ts, string parameter ) {
+			ts = main["clear"]( ts, "" ); 
+			writeln( storageCommands.toString );
+			return ts;
+			}, "Print this help message" );
+
+	main.add( 
+			"git", delegate( Todos ts, string parameter ) {
+		auto split = parameter.findSplit( " " );
+		ts = storageCommands[split[0]]( ts, split[2] );
+		return ts;
+	}, "Storage and git related commands. Use git help for more help." );
+
+	main.addCompletion( "git",
+			delegate( string cmd, string parameter ) {
+		string[] results;
+		auto m = match( parameter, "^([A-z]*)$" );
+		if (m) {
+			// Main commands
+			string[] command_keys = storageCommands.commands;
+			auto matching_commands =
+			filter!( a => match( a, m.captures[1] ))( command_keys );
+			foreach ( com; matching_commands ) {
+				results ~= [cmd ~ " " ~ com];
+			}
+		}
+		return results;
+	} );
+	return main;
+}
+
 
 /*unittest {
 	auto repoPath = "/home/edwin/tmp/test_libgit2/";
