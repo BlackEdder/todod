@@ -18,6 +18,7 @@ unittest {
 	auto repoPath = "/home/edwin/tmp/test_libgit2/";
 	File file = File( repoPath ~ "a.txt", "w" );
 	file.writeln( uuid );
+	file.close;
 
 	git_repository *repo;
 	git_index *my_repo_index;
