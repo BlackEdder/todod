@@ -64,8 +64,15 @@ struct Commands(COMMAND) {
 		return description;
 	}
 
-	COMMAND opIndex(string command) {
-		return mycommands[command];
+	/// Return COMMAND associated with command. If command does not exist then call return COMMAND associated with help. If neither exist fail.
+	COMMAND opIndex( const string command ) {
+		if ( exists( command )) 
+			return mycommands[command];
+		else if ( exists( "help" ) )
+			return mycommands[ "help" ];
+		import std.stdio;
+		writeln( toString );
+		assert( 0, "Command does not exist: " ~ command );
 	}
 
 	/// Return an array with all possible commands
