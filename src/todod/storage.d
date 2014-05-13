@@ -40,7 +40,6 @@ struct GitRepo {
 	}
 }
 
-
 /// Open (or initializes when not exists) a repository in the given path
 GitRepo openRepo( string repoPath ) {
 	GitRepo gr;
@@ -112,6 +111,24 @@ void commitChanges( GitRepo gr, string fileName, string message ) {
 	}
 }
 
+void gitPush( GitRepo gr ) {
+	git_repository *repo = gr.repo;
+	git_remote *remote;
+	if ( git_remote_load( &remote, repo, "origin") == 0 ) {
+		enforce( git_remote_connect(remote, GIT_DIRECTION_PUSH) == 0 );
+		git_push *push;
+    enforce(git_push_new(&push, remote) == 0);
+    enforce(git_push_add_refspec(push,
+					"refs/heads/master:refs/heads/master") == 0 );
+   	enforce(git_push_finish(push) == 0);
+	} else {
+		debug writeln( "No remote found" );
+	}
+}
+
+void gitPull( GitRepo gr ) {
+}
+
 Commands!( Todos delegate( Todos, string) ) addStorageCommands( 
 		ref Commands!( Todos delegate( Todos, string) ) main, GitRepo gitRepo ) {
 
@@ -119,11 +136,13 @@ Commands!( Todos delegate( Todos, string) ) addStorageCommands(
 
 	storageCommands.add( 
 			"pull", delegate( Todos ts, string parameter ) {
+		gitPull( gitRepo );
 		return ts;
 	}, "Pull todos from remote git repository" );
 
 	storageCommands.add( 
 			"push", delegate( Todos ts, string parameter ) {
+		gitPush( gitRepo );
 		return ts;
 	}, "Push todos to remote git repository" );
 
