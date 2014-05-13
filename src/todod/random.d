@@ -49,10 +49,10 @@ auto dueWeight( long days ) {
 }
 
 unittest {
-	assert( dueWeight( -1 ) == 5.0 );
+	assert( dueWeight( -1 ) == 16.0 );
 	assert( dueWeight( 8 ) < 1.0 );
 	assert( dueWeight( 7 ) == 1.0 );
-	assert( dueWeight( 0 ) == 5.0 );
+	assert( dueWeight( 0 ) == 16.0 );
 }
 
 /// Weight due to progress
@@ -66,7 +66,7 @@ auto progressWeight( long days ) {
 unittest {
 	assert( progressWeight( 0 ) == 0.5 );
 	assert( progressWeight( 7 ) == 1 );
-	assert( progressWeight( 100 ) > 2.8 && progressWeight( 100 ) < 3.0 );
+	assert( progressWeight( 100 ) > 3.5 && progressWeight( 100 ) < 4.0 );
 }
 
 /// Weight due to tag selection
