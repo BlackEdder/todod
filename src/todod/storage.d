@@ -133,6 +133,32 @@ void gitPull( GitRepo gr ) {
 	git_remote *remote;
 	if ( git_remote_load( &remote, repo, "origin") == 0 ) {
 		enforce( git_remote_fetch( remote ) == 0 );
+
+		// Get fetch head
+		git_object* fetch_head;
+		enforce( git_revparse_single(&fetch_head, repo, "FETCH_HEAD") == 0 );
+		git_oid *fetch_head_id = cast(git_oid *)fetch_head; 
+		git_merge_head *merge_fetch_head;
+		//git_merge_head_from_oid(&merge_fetch_head, repo, fetch_head_id);
+		enforce( git_merge_head_from_fetchhead(&merge_fetch_head, repo, "master",
+				"origin", fetch_head_id) == 0 );
+
+		/*// Get current head
+		git_object* head;
+		enforce( git_revparse_single(&head, repo, "HEAD") == 0 );
+		git_oid *head_id = cast(git_oid *)head; 
+		git_merge_head *merge_head;
+		git_merge_head_from_oid(&merge_head, repo, head_id);*/
+
+	
+		git_merge_head* heads[1];
+		//heads[0] = merge_head;
+		heads[0] = merge_fetch_head;
+		git_merge_result *result;
+		git_merge_opts *merge_opts;
+		size_t length = 1;
+		git_merge(&result, repo, &merge_fetch_head, length, merge_opts);
+	
 		/*git_merge_head* head;
 		git_oid *id;
 		git_merge_head_from_fetchhead(&head, repo, "master",
