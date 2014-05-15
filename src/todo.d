@@ -252,7 +252,9 @@ void main( string[] args ) {
 	hrpg = loadHRPG( dirName ~ "habitrpg.json" );
 	commands = addHabitRPGCommands( commands, dirName );
 	
-	commands = addStorageCommands( commands, gitRepo );
+	version( assert ) {
+		commands = addStorageCommands( commands, gitRepo );
+	}
 	
 	ts = loadTodos( gitRepo );
 	selectedTodos = random( ts, selected );
