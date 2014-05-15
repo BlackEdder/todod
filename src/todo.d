@@ -251,7 +251,7 @@ void main( string[] args ) {
 
 	hrpg = loadHRPG( dirName ~ "habitrpg.json" );
 	commands = addHabitRPGCommands( commands, dirName );
-
+	
 	commands = addStorageCommands( commands, gitRepo );
 	
 	ts = loadTodos( gitRepo );

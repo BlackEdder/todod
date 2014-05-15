@@ -114,8 +114,8 @@ void commitChanges( GitRepo gr, string fileName, string message ) {
 void gitPush( GitRepo gr ) {
 	git_repository *repo = gr.repo;
 	git_remote *remote;
-	if ( git_remote_load( &remote, repo, "origin") == 0 ) {
-		enforce( git_remote_connect(remote, GIT_DIRECTION_PUSH) == 0 );
+	if ( git_remote_load( &remote, repo, "origin" ) == 0 ) {
+		enforce( git_remote_connect(remote, GIT_DIRECTION_PUSH) == 0, "Connection failed" );
 		git_push *push;
     enforce(git_push_new(&push, remote) == 0);
     enforce(git_push_add_refspec(push,
@@ -162,7 +162,11 @@ Commands!( Todos delegate( Todos, string) ) addStorageCommands(
 
 	storageCommands.add( 
 			"push", delegate( Todos ts, string parameter ) {
-		gitPush( gitRepo );
+		try {
+			gitPush( gitRepo );
+		} catch {
+			writeln( "Git push failed. Did you set up a default remote called origin?" );
+		}
 		return ts;
 	}, "Push todos to remote git repository" );
 
