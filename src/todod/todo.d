@@ -259,7 +259,7 @@ class Todos {
 		return result;
 	}
 
-	size_t length() {
+	size_t length() const {
 		return myTodos.length;
 	}
 
@@ -318,7 +318,7 @@ unittest {
 						Tag("tag3"), Tag("tag4")] ) );
 }
 
-size_t[Tag] tagsWithCount( Todos ts ) {
+size_t[Tag] tagsWithCount( const Todos ts ) {
 	size_t[Tag] tags;
 	foreach( t; ts ) {
 		foreach( tag; t.tags ) {

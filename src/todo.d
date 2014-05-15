@@ -187,7 +187,7 @@ void initCommands() {
 				}
 				writeln();
 				writeln();
-				write( prettyStringTodos( selectedTodos ) );
+				write( prettyStringTodos( selectedTodos, ts, selected ) );
 				debug {
 					writeln( "Debug: Selected ", selected.add_tags );
 					writeln( "Debug: Deselected ", selected.delete_tags );

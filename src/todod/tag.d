@@ -307,7 +307,7 @@ struct Tags {
 		return tag;
 	}
 
-	size_t length() {
+	size_t length() const {
 		return myTags.length;
 	}
 

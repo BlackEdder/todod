@@ -33,9 +33,10 @@ import std.container;
 import std.algorithm;
 import std.conv;
 
-import todod.todo;
 import todod.date;
+import todod.random;
 import todod.tag;
+import todod.todo;
 
 auto addTagRegex = regex(r"(?:^|\s)\+(\w+)");
 auto delTagRegex = regex(r"(?:^|\s)\-(\w+)");
@@ -245,11 +246,15 @@ string prettyStringTodo( const Todo t ) {
 	return description;
 }
 
-string prettyStringTodos(RANGE)( const RANGE ts ) {
+string prettyStringTodos(RANGE)( const RANGE ts, const Todos allTodos, 
+		const TagDelta selected ) {
 	string str;
 	size_t id = 0;
 	foreach( t; ts ) {
-		str = str ~ to!string( id ) ~ "\t" ~ prettyStringTodo( t ) ~ "\n";
+		str = str ~ to!string( id ) ~ "\t" ~ prettyStringTodo( t );
+		debug str ~= "Weight: " ~ to!string( weight( t, selected, allTodos.length, 
+					allTodos.tagsWithCount ) ) ~ "\n";
+		str ~= "\n";
 		id++;
 	}
 	return str;

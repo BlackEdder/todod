@@ -70,7 +70,7 @@ unittest {
 }
 
 /// Weight due to tag selection
-auto tagWeightScalar( const Tags tags, TagDelta selected,
+auto tagWeightScalar( const Tags tags, const TagDelta selected,
 	size_t noTodos, size_t[Tag] tagNo ) {
 	foreach ( tag; tags ) {
 		if (selected.delete_tags.canFind( tag ))
@@ -87,7 +87,8 @@ auto tagWeightScalar( const Tags tags, TagDelta selected,
 }
 
 /// Associate a weight to a Todo depending on last progress and todo dates
-auto weight( const Todo t, TagDelta selected, size_t noTodos, size_t[Tag] tagNo ) {
+auto weight( const Todo t, const TagDelta selected, 
+		size_t noTodos, size_t[Tag] tagNo ) {
 	double tw = tagWeightScalar( t.tags, selected, noTodos, tagNo );
 	if ( t.due_date )
 		return tw * dueWeight( t.due_date.substract( Date.now ) );
