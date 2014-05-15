@@ -80,7 +80,7 @@ auto tagWeightScalar( const Tags tags, const TagDelta selected,
 	double scalar = 1;
 	foreach ( tag; tags ) {
 		if (selected.add_tags.canFind( tag ))
-			scalar = scalar*4*(to!double(noTodos))/tagNo[ tag ];
+			scalar = scalar*6.0*(to!double(noTodos))/tagNo[ tag ];
 	}
 
 	return scalar;
