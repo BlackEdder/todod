@@ -132,17 +132,20 @@ void gitPull( GitRepo gr ) {
 	git_repository *repo = gr.repo;
 	git_remote *remote;
 	if ( git_remote_load( &remote, repo, "origin") == 0 ) {
-		enforce( git_remote_fetch( remote ) == 0 );
-		/*git_merge_head* head;
-		git_oid *id;
-		git_merge_head_from_fetchhead(&head, repo, "master",
-				"/home/edwin/tmp/todos.git/", id);/*
-				//"origin", id);/*
-		git_merge_head* heads[1];
-		heads[0] = head;
+		enforce( git_remote_fetch( remote ) == 0 ); // Get fetch head
+		git_object* fetch_head;
+		enforce( git_revparse_single(&fetch_head, repo, "FETCH_HEAD") == 0 );
+		git_oid *fetch_head_id = cast(git_oid *)fetch_head; 
+		git_merge_head *merge_fetch_head;
+		//git_merge_head_from_oid(&merge_fetch_head, repo, fetch_head_id);
+		enforce( git_merge_head_from_fetchhead(&merge_fetch_head, repo, "master",
+				"origin", fetch_head_id) == 0 );
+
+		const(git_merge_head)* their_head = merge_fetch_head;
 		git_merge_result *result;
 		git_merge_opts *merge_opts;
-		git_merge(&result, repo, heads, cast(ulong)(1), merge_opts);*/
+		size_t length = 1;
+		enforce( git_merge(&result, repo, &their_head, length, null) == 0 );
 	} else {
 		debug writeln( "No remote found" );
 	}
