@@ -10,14 +10,14 @@ http://lifehacker.com/5704856/the-autofocus-productivity-method-stop-maintaining
 
 Main dependecies:
 
-	- linenoise
-	- libgit2
+- linenoise
+- libgit2
 
 ### Linenoise
 
 For command line Tab completion Todod depends on linenoise: 
 https://github.com/antirez/linenoise.git
-You need to create a static library as follows:
+After cloning the repository you need to create a static library as follows:
 
 		gcc -c -o linenoise.o linenoise.c
 		ar rcs liblinenoise.a linenoise.o
@@ -26,12 +26,16 @@ and move the resulting static library to somewhere D can find it (e.g. /usr/lib/
 
 ### Libgit2
 
-The config file containing your todos is stored in a git repository under (~/.config/todod/). This makes it easy to sync your todos over multiple machines by setting up a central repository. For this to work libgit2 needs to be installed, which is readily available in most linux distributions.
+The config file containing your todos is stored in a git repository under (~/.config/todod/). This makes it easy to sync your todos over multiple machines by setting up a central repository. For this to work libgit2 needs to be installed, which is readily available on most linux distributions.
 
 ### Installing todod itself
 
-Other than that you need dub and dmd installed. Then execute:
+_If you are upgrading from v0.1 make sure to backup todos.json file. This new version is incompatible with the old version and will overwrite it_
 
+You need dub and dmd installed. Then execute:
+
+		git clone http://github.com/BlackEdder/todod.git
+		cd todod/
 		dub -c shell -b release
 
 to create an executable: bin/todod. You can copy this to anywhere in your path.
@@ -69,6 +73,10 @@ __quit__ - Quit todod and save the todos
 ### Tags
 
 Tags are the main way to organise your todo list. You can search for specific tags and combinations of tags.
+
+### Random
+
+Todod will at most show you five "random" todos from your todo list. Which todos are more likely to be shown depends on their due data, last progress date and any active searches (tags). This behaviour is inspired by different gamification theories I've had experience with and it helps keeping your todo list a bit more interesting than just a long imposing list of really boring things to do.
 
 ## HabitRPG
 
