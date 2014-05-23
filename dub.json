@@ -8,7 +8,7 @@
 	"dependencies": {
 		"tested": "~master",
 		"linenoise": "~master",
-		"stochastic": "~master",
+		"stochastic": "0.2.0",
 		"libgit2": ">=0.20.1"
 	},
 	"configurations": [

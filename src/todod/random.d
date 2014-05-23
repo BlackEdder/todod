@@ -103,16 +103,16 @@ in {
 body {
 	Todo[] selectedTodos;
 	auto gen = Random( unpredictableSeed );
-	void eventTodo( Gillespie gillespie, ref Todo t, event_id id ) {
-		gillespie.del_event( id );
+	void eventTodo(T)( Gillespie!(T) gillespie, ref Todo t, EventId id ) {
+		gillespie.delEvent( id );
 		selectedTodos ~= t;
 	}
 
 	//Random gen = rndGen();
-	auto gillespie = new Gillespie();
+	auto gillespie = new Gillespie!(void delegate())();
 	foreach( ref t; ts ) {
-		auto e_id = gillespie.new_event_id;
-		gillespie.add_event( e_id, 
+		auto e_id = gillespie.newEventId;
+		gillespie.addEvent( e_id, 
 				to!real( weight( t, selected, ts.length, ts.tagsWithCount ) ),
 				delegate() => eventTodo( gillespie, t, e_id ) );
 	}
