@@ -277,7 +277,7 @@ body
 			if ( !("completed" in taskArray) 
 					|| taskArray["completed"].type == JSON_TYPE.FALSE) {
 				// Convert to Todo
-				auto todo = Todo( task["text"].str );
+				auto todo = new Todo( task["text"].str );
 				if ("dateCreated" in taskArray)
 					todo.creation_date = Date( taskArray["dateCreated"].str );
 				if ("date" in taskArray)

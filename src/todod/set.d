@@ -61,4 +61,5 @@ unittest {
 	assert( equal( set1.array, ["ab"] ) );
 	auto set2 = new Set!string();
 	assert( set2.length() == 0 );
+	set1._tree.removeKey( "ab" );
 }

@@ -195,7 +195,7 @@ unittest {
 
 
 
-Todo applyTags( ref Todo td, TagDelta delta ) {
+Todo applyTags( Todo td, TagDelta delta ) {
 	td.tags.add( delta.add_tags );
 	td.tags.remove( delta.delete_tags );
 	return td;
@@ -204,7 +204,7 @@ Todo applyTags( ref Todo td, TagDelta delta ) {
 unittest {
 	TagDelta delta;
 	delta.add_tags.add( [Tag("tag2"), Tag("tag1")] );
-	Todo td; 
+	Todo td = new Todo("Todo1"); 
 	td = applyTags( td, delta );
 	assert( equal( td.tags.array, [Tag("tag1"), Tag("tag2")] ) );
 	td = applyTags( td, delta );

@@ -80,7 +80,7 @@ auto commands = Commands!( Todos delegate( Todos, string) )( "Usage command [OPT
 void initCommands() {
 	commands.add(
 		"add", delegate( Todos ts, string parameter ) {
-			ts.add( Todo( parameter ) );
+			ts.add( new Todo( parameter ) );
 			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Add a new todo with provided title. One can respectively add tags with +tag and a due date with DYYYY-MM-DD or D+7 for a week from now." );

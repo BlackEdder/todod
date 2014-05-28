@@ -46,7 +46,7 @@ import todod.random;
 import todod.tag;
 import todod.storage;
 
-struct Todo {
+class Todo {
 	UUID id; /// id is mainly used for syncing with habitrpg
 
 	Date[] progress; /// Keep track of how long/often we've worked on this
@@ -55,6 +55,8 @@ struct Todo {
 
 	Date creation_date;
 	Date due_date;
+
+	private this() {}
 
 	this( string tle ) { 
 		auto tup = parseAndRemoveTags( tle );
@@ -71,14 +73,16 @@ struct Todo {
 		return mytitle;
 	}
 
-	bool opEquals(const Todo t) const {
-		return mytitle == t.mytitle;
+	override bool opEquals(Object t) const {
+		auto td = cast(Todo)(t);
+		return mytitle == td.mytitle;
 	}
 
-	int opCmp(ref const Todo otherTodo ) const { 
-		if ( this == otherTodo )
+	override int opCmp(Object t ) const { 
+		auto td = cast(Todo)(t);
+		if ( this == td )
 			return 0;
-		else if ( title < otherTodo.title )
+		else if ( title < td.title )
 			return -1;
 		return 1;
 	}
@@ -88,14 +92,14 @@ struct Todo {
 }
 
 unittest {
-	Todo t1 = Todo( "Todo 1" );
+	Todo t1 = new Todo( "Todo 1" );
 	assert( t1.title == "Todo 1" );
 
-	Todo t2 = Todo( "Bla 1 +tag1 -tag2" );
+	Todo t2 = new Todo( "Bla 1 +tag1 -tag2" );
 	assert( t2.title == "Bla 1" );
 	assert( t2.tags[0] == Tag("tag1") );
 
-	Todo t3 = Todo( "+tag1 Bla 1 -tag2" );
+	Todo t3 = new Todo( "+tag1 Bla 1 -tag2" );
 	assert( t3.title == "Bla 1" );
 	assert( t3.tags[0] == Tag("tag1") );
 }
@@ -123,7 +127,7 @@ JSONValue toJSON( const Todo t ) {
 }
 
 Todo toTodo( const JSONValue json ) {
-	Todo t;
+	Todo t = new Todo();
 	const JSONValue[string] jsonAA = json.object;
 	t.mytitle = jsonAA["title"].str;
 	foreach ( tag; jsonAA["tags"].array )
@@ -139,7 +143,7 @@ Todo toTodo( const JSONValue json ) {
 }
 
 unittest {
-	Todo t1 = Todo( "Todo 1 +tag" );
+	Todo t1 = new Todo( "Todo 1 +tag" );
 	assert( toJSON( t1 ).toTodo == t1 );
 
 	string missingDate = "{\"title\":\"Todo 1\",\"tags\":[{\"name\":\"tag\",\"id\":\"00000000-0000-0000-0000-000000000000\"}],\"progress\":[],\"creation_date\":\"2014-05-06\"}";
@@ -290,8 +294,8 @@ Todo[] random( Todos ts, TagDelta selected, size_t no = 5 ) {
 
 version(unittest) {
 	Todos generateSomeTodos() {
-		Todo t1 = Todo( "Todo 1 +tag1 +tag2 +tag3" );
-		Todo t2 = Todo( "Bla +tag2 +tag4" );
+		Todo t1 = new Todo( "Todo 1 +tag1 +tag2 +tag3" );
+		Todo t2 = new Todo( "Bla +tag2 +tag4" );
 		Todos mytodos = new Todos( [t2, t1] );
 		return mytodos;
 	}
