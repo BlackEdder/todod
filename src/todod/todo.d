@@ -67,6 +67,8 @@ class Todo {
 
 		creation_date = Date.now;
 		mytitle = date_tup[1];
+
+		id = randomUUID;
 	}
 
 	@property string title() const {
@@ -94,6 +96,7 @@ class Todo {
 unittest {
 	Todo t1 = new Todo( "Todo 1" );
 	assert( t1.title == "Todo 1" );
+	assert( !t1.id.empty );
 
 	Todo t2 = new Todo( "Bla 1 +tag1 -tag2" );
 	assert( t2.title == "Bla 1" );
