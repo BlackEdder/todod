@@ -204,13 +204,7 @@ class Todos {
 			remove( todo );
 	}
 
-	/*
-		Will need to take into account filters
-		Todo[] array() {
-		return myTodos;
-	}*/
-
-	public int opApply(int delegate(ref Todo) dg) {
+	public int opApply(int delegate(Todo) dg) {
 		int res = 0;
 		foreach( ref t; myTodos ) {
 			res = dg(t);
@@ -219,7 +213,7 @@ class Todos {
 		return res;
 	}
 
-	public int opApply(int delegate(ref int, ref const Todo) dg) const {
+	public int opApply(int delegate(ref int, const Todo) dg) const {
 		int res = 0;
 		int index = 0;
 		foreach( t; this ) {
@@ -230,10 +224,10 @@ class Todos {
 		return res;
 	}
 
-	public int opApply(int delegate(ref int, ref Todo) dg) {
+	public int opApply(int delegate(ref int, Todo) dg) {
 		int res = 0;
 		int index = 0;
-		foreach( ref t; this ) {
+		foreach( t; this ) {
 			res = dg(index, t);
 			if (res) return res;
 			++index;
@@ -241,7 +235,7 @@ class Todos {
 		return res;
 	}
 
-	public int opApply(int delegate(ref const Todo) dg) const {
+	public int opApply(int delegate(const Todo) dg) const {
 		int res = 0;
 		foreach( t; myTodos ) {
 			res = dg(t);
@@ -251,7 +245,7 @@ class Todos {
 	}
 
 	ref Todo find( Todo findTodo ) {
-		foreach( ref t; this ) {
+		foreach( t; this ) {
 			if ( t == findTodo ) {
 				return t;
 			}
@@ -260,10 +254,7 @@ class Todos {
 	}
 
 	Todo[] array() {
-		Todo[] result;
-		foreach( ref t; this )
-			result ~= t;
-		return result;
+		return myTodos;
 	}
 
 	size_t length() const {
@@ -271,9 +262,7 @@ class Todos {
 	}
 
 	/// Access by id. 
-	/// Performance: starts at the beginning every time, so if you need to access multiple then
-	/// using apply might be more performant 
-	ref Todo opIndex(size_t id) {
+	Todo opIndex(size_t id) {
 		return myTodos[id];
 	}
 

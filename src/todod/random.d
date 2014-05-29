@@ -110,7 +110,7 @@ body {
 
 	//Random gen = rndGen();
 	auto gillespie = new Gillespie!(void delegate())();
-	foreach( ref t; ts ) {
+	foreach( t; ts ) {
 		auto e_id = gillespie.newEventId;
 		gillespie.addEvent( e_id, 
 				to!real( weight( t, selected, ts.length, ts.tagsWithCount ) ),
