@@ -31,6 +31,8 @@ import std.range;
 import std.array;
 import std.algorithm;
 
+import todod.set;
+
 version (unittest) {
 	import std.stdio;
 }
@@ -189,128 +191,50 @@ struct TagDelta {
 /// A sorted, unique set implementation for Tags
 /// Currently based on simple list, so not very efficient
 struct Tags {
-	void add( Tag tag ) {
-		auto tags = myTags.find( tag );
-		if ( tags.empty ) {
-			myTags ~= tag;
-			sort( myTags );
-		} else if (!tag.id.empty) {
-			tags[0].id = tag.id; // Prefer the tag if it has an id attached to it
-		}
-	}
+	mixin Set!Tag;
+}
 
-	unittest { // Test for doubles
-		Tags tgs;
-		Tag tag3 = "tag3";
-		tgs.add( tag3 );
-		Tag tag4 = "tag4";
-		tgs.add( tag4 );
-		assert( equal( tgs.array, [ tag3, tag4 ] ) );
-		assert( tgs.length == 2 );
+unittest { // Test for doubles
+	Tags tgs;
+	Tag tag3 = "tag3";
+	tgs.add( tag3 );
+	Tag tag4 = "tag4";
+	tgs.add( tag4 );
+	assert( equal( tgs.array, [ tag3, tag4 ] ) );
+	assert( tgs.length == 2 );
 
-		// Doubles
-		tgs.add( tag3 );
-		assert( equal( tgs.array, [ tag3, tag4 ] ) );
-		assert( tgs.length == 2 );
+	// Doubles
+	tgs.add( tag3 );
+	assert( equal( tgs.array, [ tag3, tag4 ] ) );
+	assert( tgs.length == 2 );
 
-		// Sorted
-		Tag tag2 = "tag2";
-		tgs.add( tag2 );
-		assert( equal( tgs.array, [ tag2, tag3, tag4 ] ) );
-		assert( tgs.length == 3 );
+	// Sorted
+	Tag tag2 = "tag2";
+	tgs.add( tag2 );
+	assert( equal( tgs.array, [ tag2, tag3, tag4 ] ) );
+	assert( tgs.length == 3 );
 
-		tag2.id = randomUUID;
-		assert( tgs.array.front.id.empty );
-		tgs.add( tag2 );
-		assert( !tgs.array.front.id.empty );
-		assert( tgs.length == 3 );
-	}
+	tag2.id = randomUUID;
+	assert( tgs.array.front.id.empty );
+	tgs.add( tag2 );
+	assert( !tgs.array.front.id.empty );
+	assert( tgs.length == 3 );
+}
 
-	void add(RANGE)(RANGE tags ) {
-		// TODO optimize this since both ranges are sorted
-		foreach (tag; tags)
-			add( tag );
-	}
+unittest {
+	Tags tgs;
+	Tag tag3 = "tag3";
+	tgs.add( tag3 );
+	Tag tag4 = "tag4";
+	tgs.add( tag4 );
+	assert( equal( tgs.array, [ tag3, tag4 ] ) );
+	assert( tgs.length == 2 );
 
-	void remove( Tag tag ) {
-		auto i = countUntil( myTags, tag );
-		if (i != -1)
-			myTags = myTags[0..i] ~ myTags[i+1..$];
-	}
+	tgs.remove( tag4 );
+	assert( equal( tgs.array, [ tag3 ] ) );
+	assert( tgs.length == 1 );
 
-	void remove(RANGE)( RANGE tags ) {
-		// TODO optimize this since both ranges are sorted
-		foreach (tag; tags)
-			remove( tag );
-	}
-
-
-	Tag[] array() {
-		return myTags;
-	}
-
-	unittest {
-		Tags tgs;
-		Tag tag3 = "tag3";
-		tgs.add( tag3 );
-		Tag tag4 = "tag4";
-		tgs.add( tag4 );
-		assert( equal( tgs.array, [ tag3, tag4 ] ) );
-		assert( tgs.length == 2 );
-
-		tgs.remove( tag4 );
-		assert( equal( tgs.array, [ tag3 ] ) );
-		assert( tgs.length == 1 );
-
-		tgs.remove( tag4 );
-		assert( equal( tgs.array, [ tag3 ] ) );
-		assert( tgs.length == 1 );
-	
-	}
-
-	public int opApply(int delegate(ref Tag) dg) {
-		int res = 0;
-		foreach( ref tag; myTags ) {
-			res = dg(tag);
-			if (res) return res;
-		}
-		return res;
-	}
-
-	public int opApply(int delegate(ref const Tag) dg) const {
-		int res = 0;
-		foreach( tag; myTags ) {
-			res = dg(tag);
-			if (res) return res;
-		}
-		return res;
-	}
-
-	ref Tag opIndex(size_t id) {
-		return myTags[id];
-	}
-
-	bool canFind( const Tag compareTag ) const {
-		foreach ( const tag; this ) {
-			if (tag == compareTag )
-				return true;
-		}
-		return false;
-	}
-
-	Tag find( const Tag compareTag ) const {
-		foreach ( const tag; this ) {
-			if (tag == compareTag )
-				return tag;
-		}
-		Tag tag;
-		return tag;
-	}
-
-	size_t length() const {
-		return myTags.length;
-	}
-
-	private:
-		Tag[] myTags;
+	tgs.remove( tag4 );
+	assert( equal( tgs.array, [ tag3 ] ) );
+	assert( tgs.length == 1 );
 }

@@ -219,7 +219,7 @@ body
     "type": "todo"
   },
 	*/
-string toHabitRPGJSON( const Todo todo, const Tags tags ) {
+string toHabitRPGJSON( const Todo todo, Tags tags ) {
 	JSONValue[string] json;
 	json["text"] = todo.title;
 	//json["dateCreated"] = todo.creation_date.toString; // Need to convert to proper format

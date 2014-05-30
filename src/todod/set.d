@@ -96,13 +96,21 @@ mixin template Set(T) {
 		return res;
 	}
 
-	ref T find( T findT ) {
-		foreach( t; this ) {
+	const(T) find( const T findT ) {
+		foreach( const t; this ) {
 			if ( t == findT ) {
 				return t;
 			}
 		}
 		assert( 0 );
+	}
+
+	bool canFind( const T findT ) const {
+		foreach ( const t; this ) {
+			if (t == findT )
+				return true;
+		}
+		return false;
 	}
 
 	T[] array() {
