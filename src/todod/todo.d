@@ -172,7 +172,6 @@ class Todos {
 	this() {};
 
 	this( Todo[] ts ) {
-		myTodos = [];
 		foreach ( todo ; ts )
 			add( ts );
 	}
@@ -183,16 +182,13 @@ class Todos {
 		ts[1].tags.add( Tag( "tag5" ) );
 		assert( ts[1].tags.length == 4 );
 	}
-
-	private:
-		Todo[] myTodos;
 }
 
 Todo[] random( Todos ts, TagDelta selected, size_t no = 5 ) {
 	if (ts.length > no) {
 		return randomGillespie( ts, selected, no );
 	}	
-	return ts.myTodos;
+	return ts.array;
 }
 
 version(unittest) {
