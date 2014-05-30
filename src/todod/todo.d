@@ -40,11 +40,12 @@ import std.random;
 
 import std.uuid;
 
-import todod.shell;
 import todod.date;
 import todod.random;
-import todod.tag;
+import todod.set;
+import todod.shell;
 import todod.storage;
+import todod.tag;
 
 class Todo {
 	UUID id; /// id is mainly used for syncing with habitrpg
@@ -167,103 +168,13 @@ auto lastProgress( const Todo t ) {
 	Working on list of todos
 	*/
 class Todos {
+	mixin Set!Todo;
 	this() {};
 
 	this( Todo[] ts ) {
 		myTodos = [];
 		foreach ( todo ; ts )
 			add( ts );
-	}
-
-	void add( Todo todo ) {
-		auto todos = myTodos.find( todo  );
-		if ( todos.empty ) {
-			myTodos ~= todo;
-			sort( myTodos );
-		} else {
-			if (!todo.id.empty) // Will automatically cause sync to HabitRPG id
-				todos[0].id = todo.id;
-		}
-	}
-
-	void add(RANGE)(RANGE todos ) {
-		// TODO optimize this since both ranges are sorted
-		foreach (todo; todos)
-			add( todo );
-	}
-
-	void remove( Todo todo ) {
-		auto i = countUntil( myTodos, todo );
-		if (i != -1)
-			myTodos = myTodos[0..i] ~ myTodos[i+1..$];
-	}
-
-	void remove(RANGE)( RANGE todos ) {
-		// TODO optimize this since both ranges are sorted
-		foreach (todo; todos)
-			remove( todo );
-	}
-
-	public int opApply(int delegate(Todo) dg) {
-		int res = 0;
-		foreach( ref t; myTodos ) {
-			res = dg(t);
-			if (res) return res;
-		}
-		return res;
-	}
-
-	public int opApply(int delegate(ref int, const Todo) dg) const {
-		int res = 0;
-		int index = 0;
-		foreach( t; this ) {
-			res = dg(index, t);
-			if (res) return res;
-			++index;
-		}
-		return res;
-	}
-
-	public int opApply(int delegate(ref int, Todo) dg) {
-		int res = 0;
-		int index = 0;
-		foreach( t; this ) {
-			res = dg(index, t);
-			if (res) return res;
-			++index;
-		}
-		return res;
-	}
-
-	public int opApply(int delegate(const Todo) dg) const {
-		int res = 0;
-		foreach( t; myTodos ) {
-			res = dg(t);
-			if (res) return res;
-		}
-		return res;
-	}
-
-	ref Todo find( Todo findTodo ) {
-		foreach( t; this ) {
-			if ( t == findTodo ) {
-				return t;
-			}
-		}
-		assert( 0 );
-	}
-
-	Todo[] array() {
-		return myTodos;
-	}
-
-	size_t length() const {
-		return myTodos.length;
-	}
-
-	/// Access by id. 
-	Todo opIndex(size_t id) {
-		return myTodos[id];
 	}
 
 	unittest {

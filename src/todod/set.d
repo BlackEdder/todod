@@ -22,44 +22,114 @@
 	 */
 
 module todod.set;
+import std.algorithm;
+import std.array;
 
 import std.container;
-
-class Set(T) {
-	this() {
-		_tree = new RedBlackTree!(T)();
+mixin template Set(T) {
+	void add( T element ) {
+		auto elements = _array.find( element  );
+		if ( elements.empty ) {
+			_array ~= element;
+			sort( _array );
+		} else {
+			if (!element.id.empty) // Will automatically cause sync to HabitRPG id
+				elements[0].id = element.id;
+		}
 	}
 
-
-	void add( T item ) {
-		_tree.insert( item );
+	void add(RANGE)(RANGE elements ) {
+		// TODO optimize this since both ranges are sorted
+		foreach (element; elements)
+			add( element );
 	}
-	
+
+	void remove( T element ) {
+		auto i = countUntil( _array, element );
+		if (i != -1)
+			_array = _array[0..i] ~ _array[i+1..$];
+	}
+
+	void remove(RANGE)( RANGE elements ) {
+		// TODO optimize this since both ranges are sorted
+		foreach (element; elements)
+			remove( element );
+	}
+
+	public int opApply(int delegate(T) dg) {
+		int res = 0;
+		foreach( ref t; _array ) {
+			res = dg(t);
+			if (res) return res;
+		}
+		return res;
+	}
+
+	public int opApply(int delegate(ref int, const T) dg) const {
+		int res = 0;
+		int index = 0;
+		foreach( t; this ) {
+			res = dg(index, t);
+			if (res) return res;
+			++index;
+		}
+		return res;
+	}
+
+	public int opApply(int delegate(ref int, T) dg) {
+		int res = 0;
+		int index = 0;
+		foreach( t; this ) {
+			res = dg(index, t);
+			if (res) return res;
+			++index;
+		}
+		return res;
+	}
+
+	public int opApply(int delegate(const T) dg) const {
+		int res = 0;
+		foreach( t; _array ) {
+			res = dg(t);
+			if (res) return res;
+		}
+		return res;
+	}
+
+	ref T find( T findT ) {
+		foreach( t; this ) {
+			if ( t == findT ) {
+				return t;
+			}
+		}
+		assert( 0 );
+	}
+
 	T[] array() {
-		return _tree.array;
+		return _array;
 	}
 
-	auto length() {
-		return _tree.length();
+	size_t length() const {
+		return _array.length;
+	}
+
+	/// Access by id. 
+	T opIndex(size_t id) {
+		return _array[id];
 	}
 
 	private:
-		RedBlackTree!(T) _tree;
-}
-
-version( unittest ) {
-	import std.algorithm;
-	import std.array;
-	import std.conv;
-	import std.range;
-	import std.stdio;
+		T[] _array;
 }
 
 unittest {
-	auto set1 = new Set!string();
-	set1.add( "ab" );
-	assert( equal( set1.array, ["ab"] ) );
-	auto set2 = new Set!string();
-	assert( set2.length() == 0 );
-	set1._tree.removeKey( "ab" );
+	import std.uuid;
+	class Test {
+		UUID id;
+	}
+
+	class Tests {
+		mixin Set!(Test);
+	}
 }
+
