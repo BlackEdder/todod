@@ -290,7 +290,7 @@ struct Targets {
 	}
 
 	/// Apply a delegate to all todos specified by targets
-	Todos apply( void delegate( ref Todo ) dg, Todos ts, Todo[] selectedTodos  ) {
+	void apply( void delegate( ref Todo ) dg, Todo[] selectedTodos  ) {
 		// TODO this needs some refactoring so we don't need to find the todo
 		// specifically in ts 
 		// (ideally we shouldn't need to pass ts and selectedTodos both)
@@ -299,7 +299,6 @@ struct Targets {
 		popFront;
 		foreach ( ref t; selectedTodos ) {
 			if (count == first) {
-				dg( ts.find( t ) );
 				dg( t );
 				if ( empty )
 					break;
@@ -310,7 +309,6 @@ struct Targets {
 			}
 			count++;
 		}
-		return ts;
 	}
 }
 
