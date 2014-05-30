@@ -219,7 +219,7 @@ void initCommands() {
 			auto m = match( parameter, r"^(.*\s*)([+-])(\w*)$" );
 			if (m) {
 				auto matching_commands =
-					filter!( a => match( a.name, regex(m.captures[3]) ))( 
+					filter!( a => match( a.name, regex("^"~m.captures[3]) ))( 
 							ts.allTags.array );
 				foreach ( com; matching_commands ) {
 					result ~= [cmd ~ " " ~ m.captures[1] ~ m.captures[2] ~ com.name];
