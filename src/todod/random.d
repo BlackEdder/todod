@@ -136,6 +136,15 @@ body {
 }
 
 unittest {
+	size_t delegate()[size_t] events;
+	foreach( i; 1..4 ) {
+		events[i] = { return i; };
+	}
+	writeln( events[1]() );
+	assert( events[1]() == 1 );
+}
+
+unittest {
 	Todos ts;
 	ts.add( new Todo( "Todo1" ) );
 	ts.add( new Todo( "Todo2" ) );
