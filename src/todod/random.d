@@ -104,7 +104,8 @@ in {
 body {
 	Todo[] selectedTodos;
 	auto gen = Random( unpredictableSeed );
-	void eventTodo(T)( Gillespie!(T) gillespie, ref Todo t, EventId id ) {
+	void eventTodo(T)( Gillespie!(T) gillespie, Todo t, in EventId id ) {
+		debug writeln( "DEBUG: ", id, " ", t.id );
 		gillespie.delEvent( id );
 		selectedTodos ~= t;
 	}
@@ -112,7 +113,10 @@ body {
 	//Random gen = rndGen();
 	auto gillespie = new Gillespie!(void delegate())();
 	foreach( t; ts ) {
-		auto e_id = gillespie.newEventId;
+		immutable e_id = gillespie.newEventId;
+		debug writeln( "DEBUG id: ", e_id, " ", t.id, " ",
+				to!real( weight( t, selected, ts.length, ts.tagsWithCount ) ), " ",
+				gillespie.rate );
 		gillespie.addEvent( e_id, 
 				to!real( weight( t, selected, ts.length, ts.tagsWithCount ) ),
 				delegate() => eventTodo( gillespie, t, e_id ) );
@@ -125,6 +129,7 @@ body {
 
 	for (size_t i = 0; i < no; i++) {
 		auto state = sim.front;
+		debug writeln( "Executing event" );
 		state[1]();
 		if (gillespie.rate == 0)
 			break;

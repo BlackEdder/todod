@@ -246,8 +246,8 @@ string prettyStringTodo( Todo t ) {
 	return description;
 }
 
-string prettyStringTodos(RANGE)( const RANGE ts, const Todos allTodos, 
-		const TagDelta selected ) {
+string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos, 
+		TagDelta selected ) {
 	string str;
 	size_t id = 0;
 	foreach( t; ts ) {
