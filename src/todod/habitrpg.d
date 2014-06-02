@@ -219,7 +219,7 @@ body
     "type": "todo"
   },
 	*/
-string toHabitRPGJSON( const Todo todo, Tags tags ) {
+string toHabitRPGJSON( Todo todo, Tags tags ) {
 	JSONValue[string] json;
 	json["text"] = todo.title;
 	//json["dateCreated"] = todo.creation_date.toString; // Need to convert to proper format
@@ -227,7 +227,7 @@ string toHabitRPGJSON( const Todo todo, Tags tags ) {
 	// add tags
 	JSONValue[string] tagArray;
 	foreach ( tag; todo.tags ) {
-		auto id = tags.find( tag ).id;
+		auto id = find( tags, tag )[0].id;
 		tagArray[id.toString] = JSONValue(true);
 	}
 	json["tags"] = JSONValue( tagArray );
@@ -250,7 +250,7 @@ body
 	// Needed for tag ids for all todos 
 	Tags tags = syncTags( ts.allTags, hrpg );
 
-	auto hrpgTodos = new Todos();
+	Todos hrpgTodos;
 	debug writeln( "Debug: Adding existing Todos to hbrgTodos." );
 	foreach( todo; ts )
 		hrpgTodos.add( ts );

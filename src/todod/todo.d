@@ -112,7 +112,7 @@ string toString( const Todo t ) {
 	return t.title ~ " " ~ to!string( t.tags );
 }
 
-JSONValue toJSON( const Todo t ) {
+JSONValue toJSON( Todo t ) {
 	JSONValue[string] jsonTODO;
 	jsonTODO["title"] = t.title;
 	JSONValue[] tags;
@@ -167,21 +167,13 @@ auto lastProgress( const Todo t ) {
 /**
 	Working on list of todos
 	*/
-class Todos {
-	mixin Set!Todo;
-	this() {};
+alias Set!Todo Todos;
 
-	this( Todo[] ts ) {
-		foreach ( todo ; ts )
-			add( ts );
-	}
-
-	unittest {
-		auto ts = generateSomeTodos;
-		assert( ts[1].tags.length == 3 );
-		ts[1].tags.add( Tag( "tag5" ) );
-		assert( ts[1].tags.length == 4 );
-	}
+unittest {
+	auto ts = generateSomeTodos;
+	assert( ts[1].tags.length == 3 );
+	ts[1].tags.add( Tag( "tag5" ) );
+	assert( ts[1].tags.length == 4 );
 }
 
 Todo[] random( Todos ts, TagDelta selected, size_t no = 5 ) {
@@ -195,7 +187,8 @@ version(unittest) {
 	Todos generateSomeTodos() {
 		Todo t1 = new Todo( "Todo 1 +tag1 +tag2 +tag3" );
 		Todo t2 = new Todo( "Bla +tag2 +tag4" );
-		Todos mytodos = new Todos( [t2, t1] );
+		Todos mytodos;
+		mytodos.add( [t2,t1] );
 		return mytodos;
 	}
 }
@@ -221,7 +214,7 @@ unittest {
 						Tag("tag3"), Tag("tag4")] ) );
 }
 
-size_t[Tag] tagsWithCount( const Todos ts ) {
+size_t[Tag] tagsWithCount( Todos ts ) {
 	size_t[Tag] tags;
 	foreach( t; ts ) {
 		foreach( tag; t.tags ) {
@@ -241,15 +234,15 @@ unittest {
 	}
 }
 
-string toString( const Todos ts ) {
+string toString( Todos ts ) {
 	string str;
-	foreach( id, t; ts ) {
-		str = str ~ to!string( id ) ~ " " ~ toString( t ) ~ "\n";
+	foreach( t; ts ) {
+		str = str ~ toString( t ) ~ "\n";
 	}
 	return str;
 }
 
-JSONValue toJSON( const Todos ts ) {
+JSONValue toJSON( Todos ts ) {
 	JSONValue[] jsonTODOS;
 	foreach (t; ts) 
 		jsonTODOS ~= toJSON( t );
@@ -259,7 +252,7 @@ JSONValue toJSON( const Todos ts ) {
 }
 
 Todos toTodos( const JSONValue json ) {
-	Todos ts = new Todos;
+	Todos ts;
 	foreach ( js; json["todos"].array )
 		ts.add( toTodo( js ) );
 	return ts;
@@ -271,7 +264,7 @@ unittest {
 }
 
 Todos loadTodos( GitRepo gr ) {
-	Todos ts = new Todos;
+	Todos ts;
 	auto todosFileName = "todos.json";
 	auto content = readFile( gr.workPath, todosFileName );
 	if (content != "")

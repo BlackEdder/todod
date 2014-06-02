@@ -23,6 +23,7 @@
 
 module todod.random;
 
+import std.algorithm;
 import std.math;
 import std.conv;
 import std.random;
@@ -70,7 +71,7 @@ unittest {
 }
 
 /// Weight due to tag selection
-auto tagWeightScalar( const Tags tags, const TagDelta selected,
+auto tagWeightScalar( Tags tags, TagDelta selected,
 	size_t noTodos, size_t[Tag] tagNo ) {
 	foreach ( tag; tags ) {
 		if (selected.delete_tags.canFind( tag ))
@@ -87,7 +88,7 @@ auto tagWeightScalar( const Tags tags, const TagDelta selected,
 }
 
 /// Associate a weight to a Todo depending on last progress and todo dates
-auto weight( const Todo t, const TagDelta selected, 
+auto weight( Todo t, TagDelta selected, 
 		size_t noTodos, size_t[Tag] tagNo ) {
 	double tw = tagWeightScalar( t.tags, selected, noTodos, tagNo );
 	if ( t.due_date )

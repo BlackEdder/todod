@@ -222,7 +222,7 @@ string titleEmphasize( string str ) {
 	return "\033[3;32m" ~ str ~ "\033[0m";
 }
 
-string prettyStringTags( const Tags tags ) {
+string prettyStringTags( Tags tags ) {
 	string line;
 	foreach( tag; tags ) {
 		line ~= tag.name ~ " ";
@@ -230,7 +230,7 @@ string prettyStringTags( const Tags tags ) {
 	return tagColor( line );
 }
 
-string prettyStringTodo( const Todo t ) {
+string prettyStringTodo( Todo t ) {
 	Date currentDate = Date.now;
 	string description = titleEmphasize(t.title) ~ "\n";
 	description ~= "\t  Tags:       " ~ prettyStringTags( t.tags ) ~"\n";

@@ -190,9 +190,7 @@ struct TagDelta {
 
 /// A sorted, unique set implementation for Tags
 /// Currently based on simple list, so not very efficient
-struct Tags {
-	mixin Set!Tag;
-}
+alias Set!Tag Tags;
 
 unittest { // Test for doubles
 	Tags tgs;

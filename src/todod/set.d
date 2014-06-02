@@ -26,7 +26,7 @@ import std.algorithm;
 import std.array;
 
 import std.container;
-mixin template Set(T) {
+mixin template SetMixin(T) {
 	void add( T element ) {
 		auto elements = _array.find( element  );
 		if ( elements.empty ) {
@@ -56,61 +56,18 @@ mixin template Set(T) {
 			remove( element );
 	}
 
-	public int opApply(int delegate(T) dg) {
-		int res = 0;
-		foreach( ref t; _array ) {
-			res = dg(t);
-			if (res) return res;
-		}
-		return res;
+	T front() {
+		return _array.front;
 	}
 
-	public int opApply(int delegate(ref int, const T) dg) const {
-		int res = 0;
-		int index = 0;
-		foreach( t; this ) {
-			res = dg(index, t);
-			if (res) return res;
-			++index;
-		}
-		return res;
+	void popFront() {
+		_array.popFront;
 	}
 
-	public int opApply(int delegate(ref int, T) dg) {
-		int res = 0;
-		int index = 0;
-		foreach( t; this ) {
-			res = dg(index, t);
-			if (res) return res;
-			++index;
-		}
-		return res;
-	}
-
-	public int opApply(int delegate(const T) dg) const {
-		int res = 0;
-		foreach( t; _array ) {
-			res = dg(t);
-			if (res) return res;
-		}
-		return res;
-	}
-
-	const(T) find( const T findT ) {
-		foreach( const t; this ) {
-			if ( t == findT ) {
-				return t;
-			}
-		}
-		assert( 0 );
-	}
-
-	bool canFind( const T findT ) const {
-		foreach ( const t; this ) {
-			if (t == findT )
-				return true;
-		}
-		return false;
+	bool empty() const {
+		if (_array.length > 0)
+			return false;
+		return true;
 	}
 
 	T[] array() {
@@ -128,6 +85,10 @@ mixin template Set(T) {
 
 	private:
 		T[] _array;
+}
+
+struct Set(T) {
+	mixin SetMixin!T;
 }
 
 unittest {
