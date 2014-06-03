@@ -90,7 +90,7 @@ auto tagWeightScalar( Tags tags, TagDelta selected,
 /// Associate a weight to a Todo depending on last progress and todo dates
 auto weight( Todo t, TagDelta selected, 
 		size_t noTodos, size_t[Tag] tagNo ) {
-	double tw = tagWeightScalar( t.tags, selected, noTodos, tagNo );
+	double tw = t.weight*tagWeightScalar( t.tags, selected, noTodos, tagNo );
 	if ( t.due_date )
 		return tw * dueWeight( t.due_date.substract( Date.now ) );
 	return tw * progressWeight( lastProgress( t ) );

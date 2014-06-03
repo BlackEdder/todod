@@ -47,6 +47,7 @@ import todod.shell;
 import todod.storage;
 import todod.tag;
 
+/// A Todo
 class Todo {
 	UUID id; /// id is mainly used for syncing with habitrpg
 
@@ -56,6 +57,8 @@ class Todo {
 
 	Date creation_date;
 	Date due_date;
+
+	double weight = 1; /// Weight/priority of this Todo
 
 	private this() {}
 
@@ -106,6 +109,8 @@ unittest {
 	Todo t3 = new Todo( "+tag1 Bla 1 -tag2" );
 	assert( t3.title == "Bla 1" );
 	assert( t3.tags[0] == Tag("tag1") );
+
+	assert( t1.weight == 1 );
 }
 
 string toString( const Todo t ) {
@@ -127,6 +132,7 @@ JSONValue toJSON( Todo t ) {
 	jsonTODO["creation_date"] = t.creation_date.toStringDate;
 	jsonTODO["due_date"] = t.due_date.toStringDate;
 	jsonTODO["id"] = t.id.toString;
+	jsonTODO["weight"] = t.weight;
 	return JSONValue( jsonTODO );	
 }
 
@@ -143,6 +149,12 @@ Todo toTodo( const JSONValue json ) {
 		t.due_date = Date( jsonAA["due_date"].str );
 	if ("id" in jsonAA)
 		t.id = UUID( jsonAA["id"].str );
+	if ("weight" in jsonAA) {
+		if (jsonAA["weight"].type == JSON_TYPE.FLOAT) 
+			t.weight = jsonAA["weight"].floating;
+		else
+			t.weight = cast(double)(jsonAA["weight"].integer);
+	}
 	return t;
 }
 
