@@ -104,18 +104,18 @@ in {
 body {
 	Todo[] selectedTodos;
 	auto gen = Random( unpredictableSeed );
-	void eventTodo(T)( Gillespie!(T) gillespie, Todo t, in EventId id ) {
-		gillespie.delEvent( id );
-		selectedTodos ~= t;
+	auto eventTodo(T)( Gillespie!(T) gillespie, Todo t, EventId id ) {
+		return { gillespie.delEvent( id );
+			selectedTodos ~= t; };
 	}
 
 	//Random gen = rndGen();
 	auto gillespie = new Gillespie!(void delegate())();
 	foreach( t; ts ) {
-		immutable e_id = gillespie.newEventId;
+		auto e_id = gillespie.newEventId;
 		gillespie.addEvent( e_id, 
 				to!real( weight( t, selected, ts.length, ts.tagsWithCount ) ),
-				delegate() => eventTodo( gillespie, t, e_id ) );
+				eventTodo( gillespie, t, e_id ) );
 	}
 
 	if (gillespie.rate == 0)
@@ -133,15 +133,6 @@ body {
 
 
 	return selectedTodos;
-}
-
-unittest {
-	size_t delegate()[size_t] events;
-	foreach( i; 1..4 ) {
-		events[i] = { return i; };
-	}
-	writeln( events[1]() );
-	assert( events[1]() == 1 );
 }
 
 unittest {
