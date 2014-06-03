@@ -247,12 +247,13 @@ string prettyStringTodo( Todo t ) {
 }
 
 string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos, 
-		TagDelta selected ) {
+		TagDelta selected, bool showWeight = false ) {
 	string str;
 	size_t id = 0;
 	foreach( t; ts ) {
 		str = str ~ to!string( id ) ~ "\t" ~ prettyStringTodo( t );
-		debug str ~= "Weight: " ~ to!string( weight( t, selected, allTodos.length, 
+		if (showWeight)
+			str ~= "Weight: " ~ to!string( weight( t, selected, allTodos.length, 
 					allTodos.tagsWithCount ) ) ~ "\n";
 		str ~= "\n";
 		id++;

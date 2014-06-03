@@ -187,7 +187,10 @@ void initCommands() {
 				}
 				writeln();
 				writeln();
-				write( prettyStringTodos( selectedTodos, ts, selected ) );
+				bool show_weight = false;
+				if (parameter == "weight")
+					show_weight = true;
+				write( prettyStringTodos( selectedTodos, ts, selected, show_weight ) );
 				debug {
 					writeln( "Debug: Selected ", selected.add_tags );
 					writeln( "Debug: Deselected ", selected.delete_tags );
@@ -201,6 +204,13 @@ void initCommands() {
 			linenoiseClearScreen();
 			return ts;
 		}, "Clear the screen." );
+
+		commands.add( 
+				"weight", delegate( Todos ts, string parameter ) {
+			ts = commands["show"]( ts, "weight" ); 
+			return ts;
+		}, "Show the weights of the current Todos. Weight is dependent on selected tags, due date and last progress date." );
+
 
 		commands.add( 
 				"help", delegate( Todos ts, string parameter ) {
