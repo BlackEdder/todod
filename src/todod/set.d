@@ -26,7 +26,7 @@ import std.algorithm;
 import std.array;
 
 import std.container;
-mixin template SetMixin(T) {
+struct Set(T) {
 	void add( T element ) {
 		auto elements = _array.find( element  );
 		if ( elements.empty ) {
@@ -85,10 +85,6 @@ mixin template SetMixin(T) {
 
 	private:
 		T[] _array;
-}
-
-struct Set(T) {
-	mixin SetMixin!T;
 }
 
 unittest {
