@@ -207,9 +207,25 @@ void initCommands() {
 
 		commands.add( 
 				"weight", delegate( Todos ts, string parameter ) {
-			ts = commands["show"]( ts, "weight" ); 
+			if (parameter == "")
+				ts = commands["show"]( ts, "weight" );
+			else {
+				auto vs = parameter.split(" ");
+				if (vs.length != 2) {
+					writeln( "Expecting parameters: [WEIGHT] [TARGET]" );
+				} else {
+					auto targets = parseTarget( vs[1] );
+					if (targets.empty)
+						writeln( "Please provide a list of todos (1,3,..) or all" );
+					else {
+						double weight = vs[0].to!double;
+						targets.apply( delegate( ref Todo t ) { 
+							t.weight = weight; }, selectedTodos );
+					}
+				}
+			}
 			return ts;
-		}, "Show the weights of the current Todos. Weight is dependent on selected tags, due date and last progress date." );
+		}, "Usage: weight WEIGHT TARGETS. Set the weight/priority of the one of the Todos. The higher the weight the more likely the Todo will be shown/picked. Default weight value is 1." );
 
 
 		commands.add( 
