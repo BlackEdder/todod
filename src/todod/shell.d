@@ -214,14 +214,17 @@ unittest {
 	assert( equal( td.tags.array, [Tag("tag2")] ) );
 }
 
+/// Wrap string in color used for tags
 string tagColor( string str ) {
 	return "\033[1;31m" ~ str ~ "\033[0m";
 }
 
+/// Wrap string in color used for emphasizing titles 
 string titleEmphasize( string str ) {
 	return "\033[3;32m" ~ str ~ "\033[0m";
 }
 
+/// Produce colored string from tags
 string prettyStringTags( Tags tags ) {
 	string line;
 	foreach( tag; tags ) {
@@ -292,9 +295,6 @@ struct Targets {
 
 	/// Apply a delegate to all todos specified by targets
 	void apply( void delegate( ref Todo ) dg, Todo[] selectedTodos  ) {
-		// TODO this needs some refactoring so we don't need to find the todo
-		// specifically in ts 
-		// (ideally we shouldn't need to pass ts and selectedTodos both)
 		auto first = front;
 		size_t count = 0;
 		popFront;

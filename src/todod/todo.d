@@ -188,6 +188,9 @@ unittest {
 	assert( ts[1].tags.length == 4 );
 }
 
+/**
+	Select a weighted random set of Todos
+	*/
 Todo[] random( Todos ts, TagDelta selected, size_t no = 5 ) {
 	if (ts.length > no) {
 		return randomGillespie( ts, selected, no );
@@ -226,6 +229,9 @@ unittest {
 						Tag("tag3"), Tag("tag4")] ) );
 }
 
+/**
+	Tags and the number of Todos with that tag
+	*/
 size_t[Tag] tagsWithCount( Todos ts ) {
 	size_t[Tag] tags;
 	foreach( t; ts ) {
@@ -246,6 +252,9 @@ unittest {
 	}
 }
 
+/**
+	Turn Todos into a string
+	*/
 string toString( Todos ts ) {
 	string str;
 	foreach( t; ts ) {
@@ -254,6 +263,9 @@ string toString( Todos ts ) {
 	return str;
 }
 
+/**
+	Turn Todos into a JSONValue
+	*/
 JSONValue toJSON( Todos ts ) {
 	JSONValue[] jsonTODOS;
 	foreach (t; ts) 
