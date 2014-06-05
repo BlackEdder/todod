@@ -126,3 +126,31 @@ unittest {
 	assert( deps.length == 2 );
 	assert( removeUUID( deps, parent ).length == 1 );
 }
+
+JSONValue toJSON(T)( T[] range ) {
+	JSONValue[] json;
+	foreach (e; range) 
+		json ~= toJSON( e );
+	return JSONValue( json );
+}
+
+Dependencies toDependencies( JSONValue json ) {
+	Dependencies deps;
+	foreach ( js; json.array )
+		deps ~= toLink(js);
+	return deps;
+}
+
+unittest {
+	Dependencies deps;
+	auto child = randomUUID;
+	auto parent = randomUUID;
+	deps ~= Link( randomUUID, randomUUID );
+	deps ~= Link( parent, child );
+	deps ~= Link( randomUUID, randomUUID );
+	auto json = toJSON( deps );
+	auto dps = toDependencies( json );
+	assert( dps.length == 3 );
+	assert( dps[1]._parent == parent );
+	assert( dps[1]._child == child );
+}
