@@ -25,6 +25,7 @@
 module todod.dependency;
 
 import std.algorithm;
+import std.json;
 import std.uuid;
 
 version( unittest ) {
@@ -53,6 +54,31 @@ struct Link {
 		assert( lnk._parent == prnt );
 		assert( lnk._child == chld );
 	}
+}
+
+JSONValue toJSON( Link link ) {
+	JSONValue[string] jsonLink;
+	jsonLink["parent"] = link._parent.toString;
+	jsonLink["child"] = link._child.toString;
+	return JSONValue( jsonLink );	
+}
+
+Link toLink( const JSONValue json ) {
+	Link link = Link( UUID(), UUID() );
+	const JSONValue[string] jsonAA = json.object;
+	if ("parent" in jsonAA)
+		link._parent = UUID( jsonAA["parent"].str );
+	if ("child" in jsonAA)
+		link._child = UUID( jsonAA["child"].str );
+	return link;
+}
+
+unittest {
+	Link orig = Link( randomUUID, randomUUID );
+	auto json = toJSON( orig );
+	Link link = toLink( json );
+	assert( link._parent == orig._parent );
+	assert( link._child == orig._child );
 }
 
 alias Link[] Dependencies;
