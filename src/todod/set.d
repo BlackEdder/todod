@@ -27,7 +27,7 @@ import std.array;
 
 import std.container;
 struct Set(T) {
-	void add( T element ) {
+	void add( E : T )( E element ) {
 		auto elements = _array.find( element  );
 		if ( elements.empty ) {
 			_array ~= element;
@@ -44,7 +44,7 @@ struct Set(T) {
 			add( element );
 	}
 
-	void remove( T element ) {
+	void remove(E : T)( E element ) {
 		auto i = countUntil( _array, element );
 		if (i != -1)
 			_array = _array[0..i] ~ _array[i+1..$];
@@ -91,10 +91,19 @@ unittest {
 	import std.uuid;
 	class Test {
 		UUID id;
+		this() {
+			id = randomUUID;
+		}
+
+		override int opCmp( Object t ) const {
+			return this.id < (cast(Test)(t)).id;
+		}
 	}
 
-	class Tests {
-		mixin Set!(Test);
-	}
+	Set!Test set;
+	set.add( new Test );
+	assert( set.length == 1 );
+	set.add( [ new Test, new Test ] );
+	assert( set.length == 3 );
 }
 

@@ -84,7 +84,7 @@ class Todo {
 		return mytitle == td.mytitle;
 	}
 
-	override int opCmp(Object t ) const { 
+	override int opCmp(Object t) const { 
 		auto td = cast(Todo)(t);
 		if ( this == td )
 			return 0;
