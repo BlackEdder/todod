@@ -254,7 +254,7 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 				dependencies ~= Link( selectedTodos[targets[1]].id,
 					selectedTodos[targets[0]].id );
 			}
-			ts = commands["show"]( ts, "" );
+			ts = commands["reroll"]( ts, "" );
 			return ts;
 		}, "Usage: depend TODOID1 TODOID2. The first Todo depends on the second. Causing the first Todo to be hidden untill the second Todo is done." );
 
