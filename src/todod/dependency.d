@@ -28,6 +28,8 @@ import std.algorithm;
 import std.json;
 import std.uuid;
 
+import todod.storage;
+
 version( unittest ) {
 	import std.stdio;
 }
@@ -153,4 +155,19 @@ unittest {
 	assert( dps.length == 3 );
 	assert( dps[1]._parent == parent );
 	assert( dps[1]._child == child );
+}
+
+Dependencies loadDependencies( GitRepo gr ) {
+	Dependencies deps;
+	auto dependenciesFileName = "dependencies.json";
+	auto content = readFile( gr.workPath, dependenciesFileName );
+	if (content != "")
+		deps = toDependencies( parseJSON( content ) );
+	return deps;
+}
+
+void writeDependencies( Dependencies deps, GitRepo gr ) {
+	auto dependenciesFileName = "dependencies.json";
+	writeToFile( gr.workPath, dependenciesFileName, toJSON( deps ).toPrettyString );
+	commitChanges( gr, dependenciesFileName, "Updating dependencies file" );
 }

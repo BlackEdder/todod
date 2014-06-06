@@ -34,16 +34,16 @@ import std.algorithm;
 import core.stdc.string, core.stdc.stdlib, std.stdio;
 import deimos.linenoise;
 
-import todod.todo;
-import todod.tag;
+import todod.commandline;
 import todod.date;
+import todod.dependency;
+import todod.habitrpg;
 import todod.shell;
 import todod.storage;
-import todod.commandline;
-import todod.habitrpg;
+import todod.tag;
+import todod.todo;
 
 Todos ts; // Defined global to give C access to it in tab completion
-HabitRPG hrpg;
 
 TagDelta selected;
 
@@ -77,7 +77,8 @@ auto commands = Commands!( Todos delegate( Todos, string) )( "Usage command [OPT
 
 //Todos delegate( Todos, string)[string] commands;
 
-void initCommands() {
+void initCommands( ref Todos ts, ref Dependencies dependencies, 
+		ref HabitRPG hrpg ) {
 	commands.add(
 		"add", delegate( Todos ts, string parameter ) {
 			ts.add( new Todo( parameter ) );
@@ -227,6 +228,21 @@ void initCommands() {
 			return ts;
 		}, "Usage: weight WEIGHT TARGETS. Set the weight/priority of the one of the Todos. The higher the weight the more likely the Todo will be shown/picked. Default weight value is 1." );
 
+		commands.add(
+				"depend", delegate( Todos ts, string parameter ) {
+			auto targets = parameter.split.map!(to!int);
+			writeln( targets );
+			if ( targets.length != 2 ) {
+				writeln( "Expecting two parameters" );
+			} else {
+				dependencies ~= Link( selectedTodos[targets[1]].id,
+					selectedTodos[targets[0]].id );
+			}
+			ts = commands["show"]( ts, "" );
+			return ts;
+		}, "Usage: depend TODOID1 TODOID2. The first Todo depends on the second. Causing the first Todo to be hidden untill the second Todo is done." );
+
+
 
 		commands.add( 
 				"help", delegate( Todos ts, string parameter ) {
@@ -267,7 +283,6 @@ Todos handle_message( string command, string parameter, Todos ts ) {
 }
 
 void main( string[] args ) {
-	initCommands;
 
 	auto dirName = expandTilde( "~/.config/todod/" );
 	mkdirRecurse( dirName );
@@ -275,7 +290,7 @@ void main( string[] args ) {
 
 	scope( exit ) { writeTodos( ts, gitRepo ); }
 
-	hrpg = loadHRPG( dirName ~ "habitrpg.json" );
+	auto hrpg = loadHRPG( dirName ~ "habitrpg.json" );
 	commands = addHabitRPGCommands( commands, dirName );
 	
 	version( assert ) {
@@ -284,6 +299,10 @@ void main( string[] args ) {
 	
 	ts = loadTodos( gitRepo );
 	selectedTodos = random( ts, selected );
+
+	auto dependencies = loadDependencies( gitRepo );
+
+	initCommands( ts, dependencies, hrpg );
 	handle_message( "show", "", ts );
 
 	bool quit = false;
@@ -309,5 +328,6 @@ void main( string[] args ) {
 		}
 		free(line);
 		writeTodos( ts, gitRepo );
+		writeDependencies( dependencies, gitRepo );
 	}
 }
