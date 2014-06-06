@@ -33,6 +33,7 @@ import std.container;
 import std.algorithm;
 import std.conv;
 
+import todod.commandline;
 import todod.date;
 import todod.dependency;
 import todod.random;
@@ -263,6 +264,101 @@ string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos,
 		id++;
 	}
 	return str;
+}
+
+Commands!( Todos delegate( Todos, string) ) addShowCommands( 
+		ref Commands!( Todos delegate( Todos, string) ) main, 
+		ref Todo[] selectedTodos, ref TagDelta selected, 
+		in ref Dependencies dependencies ) {
+	auto showCommands = Commands!( Todos delegate( Todos, string) )(
+			"Show different views");
+
+	showCommands.add( 
+			"tags", delegate( Todos ts, string parameter ) {
+				writeln( prettyStringTags( ts.allTags ) );
+				return ts;
+			}, "List of tags" );
+
+	showCommands.add( 
+			"dependencies", delegate( Todos ts, string parameter ) {
+				auto groups = groupByChild( dependencies );
+				foreach ( child, parents; groups ) {
+					auto childT = ts.find!( (a) => a.id == child );
+					writeln( prettyStringTodo(childT[0]) );
+					writeln( "depends on:" );
+					foreach( parent; parents ) {
+						auto parentT = ts.find!( (a) => a.id == parent );
+						writeln( prettyStringTodo(parentT[0]) );
+					}
+					writeln("");
+				}
+			return ts;
+		}, "Show list of current dependencies." );
+
+	showCommands.add( 
+			"help", delegate( Todos ts, string parameter ) {
+			ts = main["clear"]( ts, "" ); 
+			writeln( showCommands.toString );
+			return ts;
+		}, "Print this help message" );
+
+	showCommands.add(
+			"weight", delegate( Todos ts, string parameter ) {
+			// Weight is actually captured in main["show"].
+			// This is a dummy for help and tabcompletion
+			return ts; }, "Show weights for selected Todos" );
+
+	main.add( 
+			"show", delegate( Todos ts, string parameter ) {
+			ts = main["clear"]( ts, "" );
+			writeln( parameter );
+			if ( parameter == "" || parameter == "weight" ) {
+				writeln( "Tags and number of todos associated with that tag." );
+				auto tags = ts.tagsWithCount();
+				foreach( tag, count; tags ) {
+					if (!selected.delete_tags.canFind( tag )) {
+						if (selected.add_tags.canFind( tag ))
+							write( tagColor(tag.name), " (", count, "),  " );
+						else
+							write( tag.name, " (", count, "),  " );
+					}
+				}
+				writeln();
+				writeln();
+				bool show_weight = false;
+				if (parameter == "weight")
+					show_weight = true;
+				write( prettyStringTodos( selectedTodos, ts, selected, dependencies,
+							show_weight ) );
+				debug {
+					writeln( "Debug: Selected ", selected.add_tags );
+					writeln( "Debug: Deselected ", selected.delete_tags );
+				}
+			}
+			else {
+				auto split = parameter.findSplit( " " );
+				ts = showCommands[split[0]]( ts, split[2] );
+			}
+			return ts;
+		}, "Show different views. By default shows a (randomly) selected list of Todos. See show help for more options" );
+
+	main.addCompletion( "show",
+		delegate( string cmd, string parameter ) {
+			string[] results;
+			auto m = match( parameter, "^([A-z]*)$" );
+			if (m) {
+				// Main commands
+				string[] command_keys = showCommands.commands;
+				auto matchingCommands =
+				filter!( a => match( a, m.captures[1] ))( command_keys );
+				foreach ( com; matchingCommands ) {
+					results ~= [cmd ~ " " ~ com];
+				}
+				}
+			return results;
+		}
+	);
+	return main;
 }
 
 /// Range that either returns elements from the array targets or returns infinitively increasing range (when all is set)

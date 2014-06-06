@@ -173,50 +173,6 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 		}, "Usage: due YYYY-MM-DD [TARGETS] or +days. Sets the given due date for the provided targets. Targets can either be a list of numbers (2,3,4) or all for all shown Todos" );
 
 		commands.add( 
-				"show", delegate( Todos ts, string parameter ) {
-			ts = commands["clear"]( ts, "" ); 
-			if (parameter == "tags")
-				writeln( prettyStringTags( ts.allTags ) );
-			else if (parameter == "dependencies") {
-				auto groups = groupByChild( dependencies );
-				foreach ( child, parents; groups ) {
-					auto childT = ts.find!( (a) => a.id == child );
-					writeln( childT[0].title );
-					writeln( "depends on:" );
-					foreach( parent; parents ) {
-						auto parentT = ts.find!( (a) => a.id == parent );
-						writeln( parentT[0].title );
-					}
-					writeln("");
-				}
-			}
-			else {
-				writeln( "Tags and number of todos associated with that tag." );
-				auto tags = ts.tagsWithCount();
-				foreach( tag, count; tags ) {
-					if (!selected.delete_tags.canFind( tag )) {
-						if (selected.add_tags.canFind( tag ))
-							write( tagColor(tag.name), " (", count, "),  " );
-						else
-							write( tag.name, " (", count, "),  " );
-					}
-				}
-				writeln();
-				writeln();
-				bool show_weight = false;
-				if (parameter == "weight")
-					show_weight = true;
-				write( prettyStringTodos( selectedTodos, ts, selected, dependencies,
-							show_weight ) );
-				debug {
-					writeln( "Debug: Selected ", selected.add_tags );
-					writeln( "Debug: Deselected ", selected.delete_tags );
-				}
-			}
-			return ts;
-		}, "Show a (random) subset of Todos. Subject to filters added throught the search command. Shows a list of tags present in the filtered list of Todos at the top of the output." );
-
-		commands.add( 
 				"clear", delegate( Todos ts, string parameter ) {
 			linenoiseClearScreen();
 			return ts;
@@ -257,8 +213,6 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 			ts = commands["reroll"]( ts, "" );
 			return ts;
 		}, "Usage: depend TODOID1 TODOID2. The first Todo depends on the second. Causing the first Todo to be hidden untill the second Todo is done." );
-
-
 
 		commands.add( 
 				"help", delegate( Todos ts, string parameter ) {
@@ -319,6 +273,9 @@ void main( string[] args ) {
 	selectedTodos = random( ts, selected, dependencies );
 
 	initCommands( ts, dependencies, hrpg );
+
+	commands = addShowCommands( commands, selectedTodos, selected, dependencies );
+
 	handle_message( "show", "", ts );
 
 	bool quit = false;
