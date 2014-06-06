@@ -34,6 +34,7 @@ import std.algorithm;
 import std.conv;
 
 import todod.date;
+import todod.dependency;
 import todod.random;
 import todod.tag;
 import todod.todo;
@@ -250,14 +251,14 @@ string prettyStringTodo( Todo t ) {
 }
 
 string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos, 
-		TagDelta selected, bool showWeight = false ) {
+		TagDelta selected, in Dependencies deps, bool showWeight = false ) {
 	string str;
 	size_t id = 0;
 	foreach( t; ts ) {
 		str = str ~ to!string( id ) ~ "\t" ~ prettyStringTodo( t );
 		if (showWeight)
 			str ~= "Weight: " ~ to!string( weight( t, selected, allTodos.length, 
-					allTodos.tagsWithCount ) ) ~ "\n";
+					allTodos.tagsWithCount, deps ) ) ~ "\n";
 		str ~= "\n";
 		id++;
 	}

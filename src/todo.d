@@ -90,6 +90,7 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 				"del", delegate( Todos ts, string parameter ) {
 			size_t id = to!size_t(parameter);
 			ts.remove( selectedTodos[id] );
+			dependencies = dependencies.removeUUID( selectedTodos[id].id );
 			ts = commands["reroll"]( ts, "" );
 			return ts;
 		}, "Usage del todo_id. Deletes Todo specified by id." );
@@ -101,6 +102,7 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 				doneTodo( todo, hrpg );
 				
 			ts.remove( todo );
+			dependencies = dependencies.removeUUID( todo.id );
 			ts = commands["reroll"]( ts, "" );
 			return ts;
 		}, "Usage done todo_id. Marks Todo specified by id as done." );
@@ -130,14 +132,14 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 				selected.add_tags.add( newTags.add_tags );
 				selected.delete_tags.add( newTags.delete_tags );
 			}
-			selectedTodos = random( ts, selected );
+			selectedTodos = random( ts, selected, dependencies );
 			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. search ... all will search through all Todos instead. Similarly, search without any further parameters resets the search (activates all Todos)." );
 
 		commands.add( 
 				"reroll", delegate( Todos ts, string parameter ) {
-			selectedTodos = random( ts, selected );
+			selectedTodos = random( ts, selected, dependencies );
 			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Reroll the Todos that are active. I.e. chooses up to five Todos from all the active Todos to show" );
@@ -175,6 +177,19 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 			ts = commands["clear"]( ts, "" ); 
 			if (parameter == "tags")
 				writeln( prettyStringTags( ts.allTags ) );
+			else if (parameter == "dependencies") {
+				auto groups = groupByChild( dependencies );
+				foreach ( child, parents; groups ) {
+					auto childT = ts.find!( (a) => a.id == child );
+					writeln( childT[0].title );
+					writeln( "depends on:" );
+					foreach( parent; parents ) {
+						auto parentT = ts.find!( (a) => a.id == parent );
+						writeln( parentT[0].title );
+					}
+					writeln("");
+				}
+			}
 			else {
 				writeln( "Tags and number of todos associated with that tag." );
 				auto tags = ts.tagsWithCount();
@@ -191,7 +206,8 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 				bool show_weight = false;
 				if (parameter == "weight")
 					show_weight = true;
-				write( prettyStringTodos( selectedTodos, ts, selected, show_weight ) );
+				write( prettyStringTodos( selectedTodos, ts, selected, dependencies,
+							show_weight ) );
 				debug {
 					writeln( "Debug: Selected ", selected.add_tags );
 					writeln( "Debug: Deselected ", selected.delete_tags );
@@ -296,11 +312,11 @@ void main( string[] args ) {
 	version( assert ) {
 		commands = addStorageCommands( commands, gitRepo );
 	}
-	
-	ts = loadTodos( gitRepo );
-	selectedTodos = random( ts, selected );
 
 	auto dependencies = loadDependencies( gitRepo );
+	
+	ts = loadTodos( gitRepo );
+	selectedTodos = random( ts, selected, dependencies );
 
 	initCommands( ts, dependencies, hrpg );
 	handle_message( "show", "", ts );

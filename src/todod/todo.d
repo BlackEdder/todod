@@ -41,6 +41,7 @@ import std.random;
 import std.uuid;
 
 import todod.date;
+import todod.dependency;
 import todod.random;
 import todod.set;
 import todod.shell;
@@ -191,9 +192,10 @@ unittest {
 /**
 	Select a weighted random set of Todos
 	*/
-Todo[] random( Todos ts, TagDelta selected, size_t no = 5 ) {
+Todo[] random( Todos ts, TagDelta selected, in Dependencies deps, 
+		size_t no = 5 ) {
 	if (ts.length > no) {
-		return randomGillespie( ts, selected, no );
+		return randomGillespie( ts, selected, deps, no );
 	}	
 	return ts.array;
 }

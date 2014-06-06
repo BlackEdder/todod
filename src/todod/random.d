@@ -32,6 +32,7 @@ import stochastic.gillespie;
 
 import todod.todo;
 import todod.date;
+import todod.dependency;
 import todod.tag;
 
 version( unittest ) {
@@ -89,7 +90,9 @@ auto tagWeightScalar( Tags tags, TagDelta selected,
 
 /// Associate a weight to a Todo depending on last progress and todo dates
 auto weight( Todo t, TagDelta selected, 
-		size_t noTodos, size_t[Tag] tagNo ) {
+		size_t noTodos, size_t[Tag] tagNo, in Dependencies deps ) {
+	if ( deps.isAChild( t.id ) )
+		return 0;
 	double tw = t.weight*tagWeightScalar( t.tags, selected, noTodos, tagNo );
 	if ( t.due_date )
 		return tw * dueWeight( t.due_date.substract( Date.now ) );
@@ -97,7 +100,8 @@ auto weight( Todo t, TagDelta selected,
 }
 
 
-Todo[] randomGillespie( Todos ts, TagDelta selected, size_t no = 5 ) 
+Todo[] randomGillespie( Todos ts, TagDelta selected, in Dependencies deps, 
+		size_t no = 5 ) 
 in {
 	assert( ts.length >= no );
 }
@@ -114,7 +118,7 @@ body {
 	foreach( t; ts ) {
 		auto e_id = gillespie.newEventId;
 		gillespie.addEvent( e_id, 
-				to!real( weight( t, selected, ts.length, ts.tagsWithCount ) ),
+				to!real( weight( t, selected, ts.length, ts.tagsWithCount, deps ) ),
 				eventTodo( gillespie, t, e_id ) );
 	}
 
@@ -141,5 +145,6 @@ unittest {
 	ts.add( new Todo( "Todo2" ) );
 	ts.add( new Todo( "Todo3" ) );
 	TagDelta selected;
-	assert( randomGillespie( ts, selected, 2 ).length == 2 );
+	Dependencies deps;
+	assert( randomGillespie( ts, selected, deps, 2 ).length == 2 );
 }

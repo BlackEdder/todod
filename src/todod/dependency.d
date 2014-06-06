@@ -86,7 +86,7 @@ unittest {
 alias Link[] Dependencies;
 
 /// Is given uuid a child of anyone
-bool isAChild( Dependencies deps, UUID child ) {
+bool isAChild( in Dependencies deps, in UUID child ) {
 	return canFind!( (a,b) => a._child == b )( deps, child );
 }
 
