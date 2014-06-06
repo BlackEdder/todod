@@ -271,7 +271,7 @@ Commands!( Todos delegate( Todos, string) ) addShowCommands(
 		ref Todo[] selectedTodos, ref TagDelta selected, 
 		in ref Dependencies dependencies ) {
 	auto showCommands = Commands!( Todos delegate( Todos, string) )(
-			"Show different views");
+			"Show different views. When called without parameters shows a (randomly) selected list of Todos.");
 
 	showCommands.add( 
 			"tags", delegate( Todos ts, string parameter ) {
@@ -340,7 +340,7 @@ Commands!( Todos delegate( Todos, string) ) addShowCommands(
 				ts = showCommands[split[0]]( ts, split[2] );
 			}
 			return ts;
-		}, "Show different views. By default shows a (randomly) selected list of Todos. See show help for more options" );
+		}, "Show different views. When called without parameters shows a (randomly) selected list of Todos. See show help for more options" );
 
 	main.addCompletion( "show",
 		delegate( string cmd, string parameter ) {
