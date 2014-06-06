@@ -129,7 +129,26 @@ unittest {
 	assert( removeUUID( deps, parent ).length == 1 );
 }
 
-JSONValue toJSON(T)( T[] range ) {
+/// Group the parents in the dependencies by child.
+UUID[][UUID] groupByChild( in Dependencies deps ) pure nothrow {
+	UUID[][UUID] groups;
+	foreach( link; deps )
+		groups[link._child] ~= link._parent;
+	return groups;
+}
+
+unittest {
+	Dependencies deps;
+	auto child = randomUUID;
+	deps ~= Link( randomUUID, child );
+	deps ~= Link( randomUUID, child );
+	deps ~= Link( randomUUID, randomUUID );
+	auto groups = groupByChild( deps );
+	assert( child in groups );
+	assert( groups[child].length == 2 );
+}
+
+JSONValue toJSON(T)( in T[] range ) {
 	JSONValue[] json;
 	foreach (e; range) 
 		json ~= toJSON( e );
