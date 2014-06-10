@@ -41,6 +41,10 @@ version( unittest ) {
 
 debug import std.stdio;
 
+double[string] defaultWeights() pure nothrow @safe { 
+	return [ "defaultTagWeight": 1.0, "selectedTagWeight": 8.0,
+				 "deselectedTagWeight": 0.0]; }
+
 /// Calculate due weight based on number of dates till due
 auto dueWeight( long days ) {
 	double baseDays = 7; // if days == baseDays weight should return 1
@@ -76,13 +80,14 @@ auto tagWeightScalar( Tags tags, TagDelta selected,
 	size_t noTodos, size_t[Tag] tagNo ) {
 	foreach ( tag; tags ) {
 		if (selected.delete_tags.canFind( tag ))
-			return 0.0;
+			return defaultWeights["deselectedTagWeight"];
 	}
 	
-	double scalar = 1;
+	double scalar = defaultWeights["defaultTagWeight"];
 	foreach ( tag; tags ) {
 		if (selected.add_tags.canFind( tag ))
-			scalar = scalar*6.0*(to!double(noTodos))/tagNo[ tag ];
+			scalar = scalar*defaultWeights["selectedTagWeight"]*
+				(to!double(noTodos))/tagNo[ tag ];
 	}
 
 	return scalar;
