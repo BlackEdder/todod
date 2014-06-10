@@ -41,7 +41,7 @@ version( unittest ) {
 
 debug import std.stdio;
 
-double[string] defaultWeights() pure nothrow @safe { 
+double[string] loadDefaultWeights() pure nothrow @safe { 
 	return [ "defaultTagWeight": 1.0, "selectedTagWeight": 8.0,
 				 "deselectedTagWeight": 0.0]; }
 
@@ -77,7 +77,7 @@ unittest {
 
 /// Weight due to tag selection
 auto tagWeightScalar( Tags tags, TagDelta selected,
-	size_t noTodos, size_t[Tag] tagNo ) {
+	size_t noTodos, size_t[Tag] tagNo, in double[string] defaultWeights ) {
 	foreach ( tag; tags ) {
 		if (selected.delete_tags.canFind( tag ))
 			return defaultWeights["deselectedTagWeight"];
@@ -95,17 +95,25 @@ auto tagWeightScalar( Tags tags, TagDelta selected,
 
 /// Associate a weight to a Todo depending on last progress and todo dates
 auto weight( Todo t, TagDelta selected, 
-		size_t noTodos, size_t[Tag] tagNo, in Dependencies deps ) {
+		size_t noTodos, size_t[Tag] tagNo, in Dependencies deps,
+		in double[string] defaultWeights ) {
 	if ( deps.isAChild( t.id ) )
 		return 0;
-	double tw = t.weight*tagWeightScalar( t.tags, selected, noTodos, tagNo );
+	double tw = t.weight*tagWeightScalar( t.tags, selected, noTodos, tagNo, 
+			defaultWeights );
 	if ( t.due_date )
 		return tw * dueWeight( t.due_date.substract( Date.now ) );
 	return tw * progressWeight( lastProgress( t ) );
 }
 
+/** 
+	Randomly draw todos from the given Todo list.
 
-Todo[] randomGillespie( Todos ts, TagDelta selected, in Dependencies deps, 
+	Todos with a higher weight (influenced by due date, currently selected tags and
+	last progress) have a higher probability of being drawn.
+	*/
+Todo[] randomGillespie( Todos ts, TagDelta selected, in Dependencies deps,
+		in double[string] defaultWeights,
 		size_t no = 5 ) 
 in {
 	assert( ts.length >= no );
@@ -123,7 +131,8 @@ body {
 	foreach( t; ts ) {
 		auto e_id = gillespie.newEventId;
 		gillespie.addEvent( e_id, 
-				to!real( weight( t, selected, ts.length, ts.tagsWithCount, deps ) ),
+				to!real( weight( t, selected, ts.length, ts.tagsWithCount, deps,
+						defaultWeights ) ),
 				eventTodo( gillespie, t, e_id ) );
 	}
 
@@ -151,5 +160,5 @@ unittest {
 	ts.add( new Todo( "Todo3" ) );
 	TagDelta selected;
 	Dependencies deps;
-	assert( randomGillespie( ts, selected, deps, 2 ).length == 2 );
+	assert( randomGillespie( ts, selected, deps, loadDefaultWeights, 2 ).length == 2 );
 }

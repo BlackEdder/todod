@@ -38,6 +38,7 @@ import todod.commandline;
 import todod.date;
 import todod.dependency;
 import todod.habitrpg;
+import todod.random;
 import todod.shell;
 import todod.storage;
 import todod.tag;
@@ -78,7 +79,7 @@ auto commands = Commands!( Todos delegate( Todos, string) )( "Usage command [OPT
 //Todos delegate( Todos, string)[string] commands;
 
 void initCommands( ref Todos ts, ref Dependencies dependencies, 
-		ref HabitRPG hrpg ) {
+		in ref double[string] defaultWeights, ref HabitRPG hrpg ) {
 	commands.add(
 		"add", delegate( Todos ts, string parameter ) {
 			ts.add( new Todo( parameter ) );
@@ -132,14 +133,14 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 				selected.add_tags.add( newTags.add_tags );
 				selected.delete_tags.add( newTags.delete_tags );
 			}
-			selectedTodos = random( ts, selected, dependencies );
+			selectedTodos = random( ts, selected, dependencies, defaultWeights );
 			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. search ... all will search through all Todos instead. Similarly, search without any further parameters resets the search (activates all Todos)." );
 
 		commands.add( 
 				"reroll", delegate( Todos ts, string parameter ) {
-			selectedTodos = random( ts, selected, dependencies );
+			selectedTodos = random( ts, selected, dependencies, defaultWeights );
 			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Reroll the Todos that are active. I.e. chooses up to five Todos from all the active Todos to show" );
@@ -268,13 +269,15 @@ void main( string[] args ) {
 	}
 
 	auto dependencies = loadDependencies( gitRepo );
+	auto defaultWeights = loadDefaultWeights();
 	
 	ts = loadTodos( gitRepo );
-	selectedTodos = random( ts, selected, dependencies );
+	selectedTodos = random( ts, selected, dependencies, defaultWeights );
 
-	initCommands( ts, dependencies, hrpg );
+	initCommands( ts, dependencies, defaultWeights, hrpg );
 
-	commands = addShowCommands( commands, selectedTodos, selected, dependencies );
+	commands = addShowCommands( commands, selectedTodos, selected, dependencies,
+			defaultWeights );
 
 	handle_message( "show", "", ts );
 

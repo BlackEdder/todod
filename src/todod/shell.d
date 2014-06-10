@@ -252,14 +252,15 @@ string prettyStringTodo( Todo t ) {
 }
 
 string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos, 
-		TagDelta selected, in Dependencies deps, bool showWeight = false ) {
+		TagDelta selected, in Dependencies deps, in double[string] defaultWeights,
+		bool showWeight = false ) {
 	string str;
 	size_t id = 0;
 	foreach( t; ts ) {
 		str = str ~ to!string( id ) ~ "\t" ~ prettyStringTodo( t );
 		if (showWeight)
 			str ~= "Weight: " ~ to!string( weight( t, selected, allTodos.length, 
-					allTodos.tagsWithCount, deps ) ) ~ "\n";
+					allTodos.tagsWithCount, deps, defaultWeights ) ) ~ "\n";
 		str ~= "\n";
 		id++;
 	}
@@ -269,7 +270,7 @@ string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos,
 Commands!( Todos delegate( Todos, string) ) addShowCommands( 
 		ref Commands!( Todos delegate( Todos, string) ) main, 
 		ref Todo[] selectedTodos, ref TagDelta selected, 
-		in ref Dependencies dependencies ) {
+		in ref Dependencies dependencies, in ref double[string] defaultWeights ) {
 	auto showCommands = Commands!( Todos delegate( Todos, string) )(
 			"Show different views. When called without parameters shows a (randomly) selected list of Todos.");
 
@@ -329,7 +330,7 @@ Commands!( Todos delegate( Todos, string) ) addShowCommands(
 				if (parameter == "weight")
 					show_weight = true;
 				write( prettyStringTodos( selectedTodos, ts, selected, dependencies,
-							show_weight ) );
+							defaultWeights, show_weight ) );
 				debug {
 					writeln( "Debug: Selected ", selected.add_tags );
 					writeln( "Debug: Deselected ", selected.delete_tags );
