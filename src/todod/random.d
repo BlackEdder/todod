@@ -27,6 +27,10 @@ import std.algorithm;
 import std.math;
 import std.conv;
 import std.random;
+import std.file;
+
+import std.json;
+
 
 import stochastic.gillespie;
 
@@ -41,9 +45,48 @@ version( unittest ) {
 
 debug import std.stdio;
 
-double[string] loadDefaultWeights() pure nothrow @safe { 
+double[string] setDefaultWeights() {
 	return [ "defaultTagWeight": 1.0, "selectedTagWeight": 8.0,
-				 "deselectedTagWeight": 0.0]; }
+				 "deselectedTagWeight": 0.0];
+}
+
+double[string] loadDefaultWeights( string fileName ) { 
+	auto weights = setDefaultWeights;
+	/*HabitRPG hrpg;*/
+	writeln( fileName );
+	bool needUpdate = !exists( fileName );
+	if (!needUpdate) {
+		File file = File( fileName, "r" );
+		string content;
+		foreach( line; file.byLine() )
+			content ~= line;
+		if (content != "") {
+			JSONValue[string] json = parseJSON( content ).object;
+			foreach( k, v ; weights ) {
+				if ( k in json ) {
+					if (json[k].type == JSON_TYPE.INTEGER)
+						weights[k] = to!double(json[k].integer);
+					else
+						weights[k] = json[k].floating;
+				} else {
+					needUpdate = true; // Missing value in weights file
+				}
+			}
+		} else {
+			needUpdate = true;
+		}
+	} 
+	if (needUpdate) {
+		// Create or update incomplete config file.
+		JSONValue[string] jsonW;
+		foreach( k, v ; weights ) {
+			jsonW[k] = JSONValue( v );
+		}
+		auto json = JSONValue( jsonW );
+		File file = File( fileName, "w" );
+		file.writeln( json.toPrettyString );
+	}
+	return weights; }
 
 /// Calculate due weight based on number of dates till due
 auto dueWeight( long days ) {
@@ -160,5 +203,5 @@ unittest {
 	ts.add( new Todo( "Todo3" ) );
 	TagDelta selected;
 	Dependencies deps;
-	assert( randomGillespie( ts, selected, deps, loadDefaultWeights, 2 ).length == 2 );
+	assert( randomGillespie( ts, selected, deps, setDefaultWeights() , 2 ).length == 2 );
 }

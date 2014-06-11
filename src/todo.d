@@ -269,7 +269,7 @@ void main( string[] args ) {
 	}
 
 	auto dependencies = loadDependencies( gitRepo );
-	auto defaultWeights = loadDefaultWeights();
+	auto defaultWeights = loadDefaultWeights( dirName ~ "weights.json" );
 	
 	ts = loadTodos( gitRepo );
 	selectedTodos = random( ts, selected, dependencies, defaultWeights );
