@@ -24,13 +24,12 @@
 module todod.random;
 
 import std.algorithm;
-import std.math;
 import std.conv;
-import std.random;
 import std.file;
-
 import std.json;
-
+import std.math;
+import std.random;
+import std.stdio;
 
 import stochastic.gillespie;
 
@@ -43,7 +42,6 @@ version( unittest ) {
 	import std.stdio;
 }
 
-debug import std.stdio;
 
 double[string] setDefaultWeights() {
 	return [ "defaultTagWeight": 1.0, "selectedTagWeight": 8.0,
@@ -53,7 +51,6 @@ double[string] setDefaultWeights() {
 double[string] loadDefaultWeights( string fileName ) { 
 	auto weights = setDefaultWeights;
 	/*HabitRPG hrpg;*/
-	writeln( fileName );
 	bool needUpdate = !exists( fileName );
 	if (!needUpdate) {
 		File file = File( fileName, "r" );
