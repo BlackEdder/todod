@@ -312,7 +312,6 @@ Commands!( Todos delegate( Todos, string) ) addShowCommands(
 	main.add( 
 			"show", delegate( Todos ts, string parameter ) {
 			ts = main["clear"]( ts, "" );
-			writeln( parameter );
 			if ( parameter == "" || parameter == "weight" ) {
 				writeln( "Tags and number of todos associated with that tag." );
 				auto tags = ts.tagsWithCount();

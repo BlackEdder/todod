@@ -114,11 +114,11 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 			if (targets.empty)
 				writeln( "Please provide a list of todos (1,3,..) or all" );
 			else {
-			targets.apply( delegate( ref Todo t ) { 
-				upHabit( hrpg, "productivity" );
-				t.progress ~= Date.now; }, selectedTodos );
+				targets.apply( delegate( ref Todo t ) { 
+					upHabit( hrpg, "productivity" );
+					t.progress ~= Date.now; }, selectedTodos );
+				ts = commands["show"]( ts, "" );
 			}
-			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Usage: progress TARGETS. Marks that you have made progress on the provided TARGETS. This will lower the weight of this todo and therefore lower the likelihood of it appearing in the randomly shown subset of todos. Targets can either be a list of numbers (2,3,4) or all for all shown Todos." );
 
@@ -154,8 +154,8 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 				auto td = parseTags( parameter );
 				targets.apply( delegate( ref Todo t ) { applyTags( t, td ); },
 					selectedTodos );
+				ts = commands["show"]( ts, "" );
 			}
-			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Usage: tag +tagtoadd -tagtoremove [TARGETS]. Adds or removes given tags for the provided targets. Targets can either be a list of numbe constrs (2,3,4) or all for all shown Todos" );
 
@@ -168,8 +168,8 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 				auto duedate = parseDate( parameter );
 				targets.apply( delegate( ref Todo t ) { t.due_date = duedate; },
 					selectedTodos );
+				ts = commands["show"]( ts, "" );
 			}
-			ts = commands["show"]( ts, "" );
 			return ts;
 		}, "Usage: due YYYY-MM-DD [TARGETS] or +days. Sets the given due date for the provided targets. Targets can either be a list of numbers (2,3,4) or all for all shown Todos" );
 
@@ -195,6 +195,7 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 						double weight = vs[0].to!double;
 						targets.apply( delegate( ref Todo t ) { 
 							t.weight = weight; }, selectedTodos );
+						ts = commands["show"]( ts, "" );
 					}
 				}
 			}
@@ -204,14 +205,13 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 		commands.add(
 				"depend", delegate( Todos ts, string parameter ) {
 			auto targets = parameter.split.map!(to!int);
-			writeln( targets );
 			if ( targets.length != 2 ) {
 				writeln( "Expecting two parameters" );
 			} else {
 				dependencies ~= Link( selectedTodos[targets[1]].id,
 					selectedTodos[targets[0]].id );
+				ts = commands["reroll"]( ts, "" );
 			}
-			ts = commands["reroll"]( ts, "" );
 			return ts;
 		}, "Usage: depend TODOID1 TODOID2. The first Todo depends on the second. Causing the first Todo to be hidden untill the second Todo is done." );
 
