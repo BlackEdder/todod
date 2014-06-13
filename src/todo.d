@@ -44,7 +44,10 @@ import todod.storage;
 import todod.tag;
 import todod.todo;
 
-Todos ts; // Defined global to give C access to it in tab completion
+/// Struct holding the program state
+class State {
+	Todos todos;
+}
 
 TagDelta selected;
 
@@ -54,9 +57,9 @@ extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 	string mybuf = to!string( buf );
 	if (match( mybuf, "^[A-z]+$" )) {
 		// Main commands
-		string[] command_keys = commands.commands;
+		string[] commandKeys = commands.commands;
 		auto regex_buf = "^" ~ mybuf;
-		auto matching_commands = filter!( a => match( a, regex_buf ))( command_keys );
+		auto matching_commands = filter!( a => match( a, regex_buf ))( commandKeys );
 		foreach ( com; matching_commands ) {
 			linenoiseAddCompletion(lc,std.string.toStringz(com));
 		}
@@ -72,44 +75,44 @@ extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 	}
 }
 
-auto commands = Commands!( Todos delegate( Todos, string) )( "Usage command [OPTIONS].
+auto commands = Commands!( State delegate( State, string) )( "Usage command [OPTIONS].
 		
   This todod manager allows you to keep track of large amounts of todos. Todos can be tagged and/or given due dates. A feature specific to this todo manager is that it will show at most 5 todos at a time. Todos that are due or are old have a higher probability of being shown. Limiting the view to the more important todos allows you to focus on high priority todos first.\n");
 
 //Todos delegate( Todos, string)[string] commands;
 
-void initCommands( ref Todos ts, ref Dependencies dependencies, 
+void initCommands( State state, ref Dependencies dependencies, 
 		in ref double[string] defaultWeights, ref HabitRPG hrpg ) {
 	commands.add(
-		"add", delegate( Todos ts, string parameter ) {
-			ts.add( new Todo( parameter ) );
-			ts = commands["show"]( ts, "" );
-			return ts;
+		"add", delegate( State state, string parameter ) {
+			state.todos.add( new Todo( parameter ) );
+			state = commands["show"]( state, "" );
+			return state;
 		}, "Add a new todo with provided title. One can respectively add tags with +tag and a due date with DYYYY-MM-DD or D+7 for a week from now." );
 
 		commands.add( 
-				"del", delegate( Todos ts, string parameter ) {
+				"del", delegate( State state, string parameter ) {
 			size_t id = to!size_t(parameter);
-			ts.remove( selectedTodos[id] );
+			state.todos.remove( selectedTodos[id] );
 			dependencies = dependencies.removeUUID( selectedTodos[id].id );
-			ts = commands["reroll"]( ts, "" );
-			return ts;
+			state = commands["reroll"]( state, "" );
+			return state;
 		}, "Usage del todo_id. Deletes Todo specified by id." );
 
 		commands.add( 
-				"done", delegate( Todos ts, string parameter ) {
+				"done", delegate( State state, string parameter ) {
 			auto todo = selectedTodos[to!size_t(parameter)];
 			if (hrpg)
 				doneTodo( todo, hrpg );
 				
-			ts.remove( todo );
+			state.todos.remove( todo );
 			dependencies = dependencies.removeUUID( todo.id );
-			ts = commands["reroll"]( ts, "" );
-			return ts;
+			state = commands["reroll"]( state, "" );
+			return state;
 		}, "Usage done todo_id. Marks Todo specified by id as done." );
 
 		commands.add( 
-				"progress", delegate( Todos ts, string parameter ) {
+				"progress", delegate( State state, string parameter ) {
 			auto targets = parseTarget( parameter );
 			if (targets.empty)
 				writeln( "Please provide a list of todos (1,3,..) or all" );
@@ -117,13 +120,13 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 				targets.apply( delegate( ref Todo t ) { 
 					upHabit( hrpg, "productivity" );
 					t.progress ~= Date.now; }, selectedTodos );
-				ts = commands["show"]( ts, "" );
+				state = commands["show"]( state, "" );
 			}
-			return ts;
+			return state;
 		}, "Usage: progress TARGETS. Marks that you have made progress on the provided TARGETS. This will lower the weight of this todo and therefore lower the likelihood of it appearing in the randomly shown subset of todos. Targets can either be a list of numbers (2,3,4) or all for all shown Todos." );
 
 		commands.add( 
-				"search", delegate( Todos ts, string parameter ) {
+				"search", delegate( State state, string parameter ) {
 			if ( parameter == "" )
 				selected = TagDelta();
 			else {
@@ -133,20 +136,20 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 				selected.add_tags.add( newTags.add_tags );
 				selected.delete_tags.add( newTags.delete_tags );
 			}
-			selectedTodos = random( ts, selected, dependencies, defaultWeights );
-			ts = commands["show"]( ts, "" );
-			return ts;
+			selectedTodos = random( state.todos, selected, dependencies, defaultWeights );
+			state = commands["show"]( state, "" );
+			return state;
 		}, "Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. search ... all will search through all Todos instead. Similarly, search without any further parameters resets the search (activates all Todos)." );
 
 		commands.add( 
-				"reroll", delegate( Todos ts, string parameter ) {
-			selectedTodos = random( ts, selected, dependencies, defaultWeights );
-			ts = commands["show"]( ts, "" );
-			return ts;
+				"reroll", delegate( State state, string parameter ) {
+			selectedTodos = random( state.todos, selected, dependencies, defaultWeights );
+			state = commands["show"]( state, "" );
+			return state;
 		}, "Reroll the Todos that are active. I.e. chooses up to five Todos from all the active Todos to show" );
 
 		commands.add(
-				"tag", delegate( Todos ts, string parameter ) {
+				"tag", delegate( State state, string parameter ) {
 			auto targets = parseTarget( parameter );
 			if (targets.empty)
 				writeln( "Please provide a list of todos (1,3,..) or all" );
@@ -154,13 +157,13 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 				auto td = parseTags( parameter );
 				targets.apply( delegate( ref Todo t ) { applyTags( t, td ); },
 					selectedTodos );
-				ts = commands["show"]( ts, "" );
+				state = commands["show"]( state, "" );
 			}
-			return ts;
+			return state;
 		}, "Usage: tag +tagtoadd -tagtoremove [TARGETS]. Adds or removes given tags for the provided targets. Targets can either be a list of numbe constrs (2,3,4) or all for all shown Todos" );
 
 		commands.add( 
-				"due", delegate( Todos ts, string parameter ) {
+				"due", delegate( State state, string parameter ) {
 			auto targets = parseTarget( parameter );
 			if (targets.empty)
 				writeln( "Please provide a list of todos (1,3,..) or all" );
@@ -168,21 +171,21 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 				auto duedate = parseDate( parameter );
 				targets.apply( delegate( ref Todo t ) { t.due_date = duedate; },
 					selectedTodos );
-				ts = commands["show"]( ts, "" );
+				state = commands["show"]( state, "" );
 			}
-			return ts;
+			return state;
 		}, "Usage: due YYYY-MM-DD [TARGETS] or +days. Sets the given due date for the provided targets. Targets can either be a list of numbers (2,3,4) or all for all shown Todos" );
 
 		commands.add( 
-				"clear", delegate( Todos ts, string parameter ) {
+				"clear", delegate( State state, string parameter ) {
 			linenoiseClearScreen();
-			return ts;
+			return state;
 		}, "Clear the screen." );
 
 		commands.add( 
-				"weight", delegate( Todos ts, string parameter ) {
+				"weight", delegate( State state, string parameter ) {
 			if (parameter == "")
-				ts = commands["show"]( ts, "weight" );
+				state = commands["show"]( state, "weight" );
 			else {
 				auto vs = parameter.split(" ");
 				if (vs.length != 2) {
@@ -195,36 +198,36 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 						double weight = vs[0].to!double;
 						targets.apply( delegate( ref Todo t ) { 
 							t.weight = weight; }, selectedTodos );
-						ts = commands["show"]( ts, "" );
+						state = commands["show"]( state, "" );
 					}
 				}
 			}
-			return ts;
+			return state;
 		}, "Usage: weight WEIGHT TARGETS. Set the weight/priority of the one of the Todos. The higher the weight the more likely the Todo will be shown/picked. Default weight value is 1." );
 
 		commands.add(
-				"depend", delegate( Todos ts, string parameter ) {
+				"depend", delegate( State state, string parameter ) {
 			auto targets = parameter.split.map!(to!int);
 			if ( targets.length != 2 ) {
 				writeln( "Expecting two parameters" );
 			} else {
 				dependencies ~= Link( selectedTodos[targets[1]].id,
 					selectedTodos[targets[0]].id );
-				ts = commands["reroll"]( ts, "" );
+				state = commands["reroll"]( state, "" );
 			}
-			return ts;
+			return state;
 		}, "Usage: depend TODOID1 TODOID2. The first Todo depends on the second. Causing the first Todo to be hidden untill the second Todo is done." );
 
 		commands.add( 
-				"help", delegate( Todos ts, string parameter ) {
-			ts = commands["clear"]( ts, "" ); 
+				"help", delegate( State state, string parameter ) {
+			state = commands["clear"]( state, "" ); 
 			writeln( commands.toString );
-			return ts;
+			return state;
 		}, "Print this help message" );
 
 		commands.add( 
-				"quit", delegate( Todos ts, string parameter ) {
-			return ts;
+				"quit", delegate( State state, string parameter ) {
+			return state;
 		}, "Quit todod and save the todos" );
 
 		auto tagCompletion = delegate( string cmd, string parameter ) {
@@ -233,7 +236,7 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 			if (m) {
 				auto matching_commands =
 					filter!( a => match( a.name, regex("^"~m.captures[3]) ))( 
-							ts.allTags.array );
+							state.todos.allTags.array );
 				foreach ( com; matching_commands ) {
 					result ~= [cmd ~ " " ~ m.captures[1] ~ m.captures[2] ~ com.name];
 				}
@@ -244,22 +247,23 @@ void initCommands( ref Todos ts, ref Dependencies dependencies,
 		commands.defaultCompletion( tagCompletion );
 }
 
-Todos handle_message( string command, string parameter, Todos ts ) {
+State handleMessage( string command, string parameter, State state ) {
 	if ( commands.exists( command ) ) {
-		ts = commands[command]( ts, parameter );
+		state = commands[command]( state, parameter );
 	} else {
-		ts = commands["help"]( ts, "" );
+		state = commands["help"]( state, "" );
 	}
-	return ts;
+	return state;
 }
 
 void main( string[] args ) {
+	auto state = new State;
 
 	auto dirName = expandTilde( "~/.config/todod/" );
 	mkdirRecurse( dirName );
 	auto gitRepo = openRepo( dirName );
 
-	scope( exit ) { writeTodos( ts, gitRepo ); }
+	scope( exit ) { writeTodos( state.todos, gitRepo ); }
 
 	auto hrpg = loadHRPG( dirName ~ "habitrpg.json" );
 	commands = addHabitRPGCommands( commands, dirName );
@@ -271,15 +275,15 @@ void main( string[] args ) {
 	auto dependencies = loadDependencies( gitRepo );
 	auto defaultWeights = loadDefaultWeights( dirName ~ "weights.json" );
 	
-	ts = loadTodos( gitRepo );
-	selectedTodos = random( ts, selected, dependencies, defaultWeights );
+	state.todos = loadTodos( gitRepo );
+	selectedTodos = random( state.todos, selected, dependencies, defaultWeights );
 
-	initCommands( ts, dependencies, defaultWeights, hrpg );
+	initCommands( state, dependencies, defaultWeights, hrpg );
 
 	commands = addShowCommands( commands, selectedTodos, selected, dependencies,
 			defaultWeights );
 
-	handle_message( "show", "", ts );
+	handleMessage( "show", "", state );
 
 	bool quit = false;
 
@@ -297,13 +301,13 @@ void main( string[] args ) {
 				quit = true;
 			} else {
 				auto commands = to!string( line ).chomp().findSplit( " " );
-				ts = handle_message( commands[0], commands[2], ts );
+				state = handleMessage( commands[0], commands[2], state );
 			}
 			linenoiseHistoryAdd(line); /* Add to the history. */
 			linenoiseHistorySave(std.string.toStringz(historyFile)); /* Save the history on disk. */
 		}
 		free(line);
-		writeTodos( ts, gitRepo );
+		writeTodos( state.todos, gitRepo );
 		writeDependencies( dependencies, gitRepo );
 	}
 }
