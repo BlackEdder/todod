@@ -3,4 +3,5 @@
 docs*
 __*
 .*.swp
+.*.swo
 bin/
