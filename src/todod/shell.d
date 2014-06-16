@@ -37,6 +37,7 @@ import todod.commandline;
 import todod.date;
 import todod.dependency;
 import todod.random;
+import todod.state;
 import todod.tag;
 import todod.todo;
 
@@ -267,54 +268,54 @@ string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos,
 	return str;
 }
 
-Commands!( Todos delegate( Todos, string) ) addShowCommands( 
-		ref Commands!( Todos delegate( Todos, string) ) main, 
+Commands!( State delegate( State, string) ) addShowCommands( 
+		ref Commands!( State delegate( State, string) ) main, 
 		ref Todo[] selectedTodos, ref TagDelta selected, 
 		in ref Dependencies dependencies, in ref double[string] defaultWeights ) {
-	auto showCommands = Commands!( Todos delegate( Todos, string) )(
+	auto showCommands = Commands!( State delegate( State, string) )(
 			"Show different views. When called without parameters shows a (randomly) selected list of Todos.");
 
 	showCommands.add( 
-			"tags", delegate( Todos ts, string parameter ) {
-				writeln( prettyStringTags( ts.allTags ) );
-				return ts;
+			"tags", delegate( State state, string parameter ) {
+				writeln( prettyStringTags( state.todos.allTags ) );
+				return state;
 			}, "List of tags" );
 
 	showCommands.add( 
-			"dependencies", delegate( Todos ts, string parameter ) {
+			"dependencies", delegate( State state, string parameter ) {
 				auto groups = groupByChild( dependencies );
 				foreach ( child, parents; groups ) {
-					auto childT = ts.find!( (a) => a.id == child );
+					auto childT = state.todos.find!( (a) => a.id == child );
 					writeln( prettyStringTodo(childT[0]) );
 					writeln( "depends on:" );
 					foreach( parent; parents ) {
-						auto parentT = ts.find!( (a) => a.id == parent );
+						auto parentT = state.todos.find!( (a) => a.id == parent );
 						writeln( prettyStringTodo(parentT[0]) );
 					}
 					writeln("");
 				}
-			return ts;
+			return state;
 		}, "Show list of current dependencies." );
 
 	showCommands.add( 
-			"help", delegate( Todos ts, string parameter ) {
-			ts = main["clear"]( ts, "" ); 
+			"help", delegate( State state, string parameter ) {
+			state = main["clear"]( state, "" ); 
 			writeln( showCommands.toString );
-			return ts;
+			return state;
 		}, "Print this help message" );
 
 	showCommands.add(
-			"weight", delegate( Todos ts, string parameter ) {
+			"weight", delegate( State state, string parameter ) {
 			// Weight is actually captured in main["show"].
 			// This is a dummy for help and tabcompletion
-			return ts; }, "Show weights for selected Todos" );
+			return state; }, "Show weights for selected Todos" );
 
 	main.add( 
-			"show", delegate( Todos ts, string parameter ) {
-			ts = main["clear"]( ts, "" );
+			"show", delegate( State state, string parameter ) {
+			state = main["clear"]( state, "" ); 
 			if ( parameter == "" || parameter == "weight" ) {
 				writeln( "Tags and number of todos associated with that tag." );
-				auto tags = ts.tagsWithCount();
+				auto tags = state.todos.tagsWithCount();
 				foreach( tag, count; tags ) {
 					if (!selected.delete_tags.canFind( tag )) {
 						if (selected.add_tags.canFind( tag ))
@@ -328,7 +329,7 @@ Commands!( Todos delegate( Todos, string) ) addShowCommands(
 				bool show_weight = false;
 				if (parameter == "weight")
 					show_weight = true;
-				write( prettyStringTodos( selectedTodos, ts, selected, dependencies,
+				write( prettyStringTodos( selectedTodos, state.todos, selected, dependencies,
 							defaultWeights, show_weight ) );
 				debug {
 					writeln( "Debug: Selected ", selected.add_tags );
@@ -337,9 +338,9 @@ Commands!( Todos delegate( Todos, string) ) addShowCommands(
 			}
 			else {
 				auto split = parameter.findSplit( " " );
-				ts = showCommands[split[0]]( ts, split[2] );
+				state = showCommands[split[0]]( state, split[2] );
 			}
-			return ts;
+			return state;
 		}, "Show different views. When called without parameters shows a (randomly) selected list of Todos. See show help for more options" );
 
 	main.addCompletion( "show",
