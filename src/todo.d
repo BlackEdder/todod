@@ -40,14 +40,10 @@ import todod.dependency;
 import todod.habitrpg;
 import todod.random;
 import todod.shell;
+import todod.state;
 import todod.storage;
 import todod.tag;
 import todod.todo;
-
-/// Struct holding the program state
-class State {
-	Todos todos;
-}
 
 TagDelta selected;
 
