@@ -36,12 +36,13 @@ import std.stdio;
 import std.file;
 
 import std.json;
-
 import std.uuid;
-import todod.tag;
-import todod.commandline;
-import todod.todo;
+
 import todod.date;
+import todod.commandline;
+import todod.state;
+import todod.tag;
+import todod.todo;
 
 version (unittest) {
 	import std.stdio;
@@ -319,36 +320,36 @@ Todo doneTodo( Todo todo, const HabitRPG hrpg ) {
 	return todo;
 }
 
-Commands!( Todos delegate( Todos, string) ) addHabitRPGCommands( 
-		ref Commands!( Todos delegate( Todos, string) ) main, string dirName ) {
+Commands!( State delegate( State, string) ) addHabitRPGCommands( 
+		ref Commands!( State delegate( State, string) ) main, string dirName ) {
 	HabitRPG hrpg = loadHRPG( dirName ~ "habitrpg.json" );
 	if (hrpg) {
-		auto habitrpg_commands = Commands!( Todos delegate( Todos, string) )("Commands specifically used to interact with HabitRPG");
+		auto habitRPGCommands = Commands!( State delegate( State, string) )("Commands specifically used to interact with HabitRPG");
 
-		habitrpg_commands.add( 
-				"tags", delegate( Todos ts, string parameter ) {
-			syncTags( ts.allTags, hrpg );
-			return ts;
+		habitRPGCommands.add( 
+				"tags", delegate( State state, string parameter ) {
+			syncTags( state.todos.allTags, hrpg );
+			return state;
 		}, "Sync tags with HabitRPG" );
 
-		habitrpg_commands.add( 
-				"todos", delegate( Todos ts, string parameter ) {
-			ts = syncTodos( ts, hrpg );
-			return ts;
+		habitRPGCommands.add( 
+				"todos", delegate( State state, string parameter ) {
+			state.todos = syncTodos( state.todos, hrpg );
+			return state;
 		}, "Sync todos (and tags) with HabitRPG" );
 
-		habitrpg_commands.add( 
-				"help", delegate( Todos ts, string parameter ) {
-			ts = main["clear"]( ts, "" ); 
-			writeln( habitrpg_commands.toString );
-			return ts;
+		habitRPGCommands.add( 
+				"help", delegate( State state, string parameter ) {
+			state = main["clear"]( state, "" ); 
+			writeln( habitRPGCommands.toString );
+			return state;
 		}, "Print this help message" );
 
 		main.add( 
-				"habitrpg", delegate( Todos ts, string parameter ) {
+				"habitrpg", delegate( State state, string parameter ) {
 				auto split = parameter.findSplit( " " );
-				ts = habitrpg_commands[split[0]]( ts, split[2] );
-				return ts;
+				state = habitRPGCommands[split[0]]( state, split[2] );
+				return state;
 				}, "Syncing with HabitRPG. Use habitrpg help for more help." );
 
 		main.addCompletion( "habitrpg",
@@ -357,7 +358,7 @@ Commands!( Todos delegate( Todos, string) ) addHabitRPGCommands(
 				auto m = match( parameter, "^([A-z]*)$" );
 				if (m) {
 					// Main commands
-					string[] command_keys = habitrpg_commands.commands;
+					string[] command_keys = habitRPGCommands.commands;
 					auto matching_commands =
 						filter!( a => match( a, m.captures[1] ))( command_keys );
 					foreach ( com; matching_commands ) {
