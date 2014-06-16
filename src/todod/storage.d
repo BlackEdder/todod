@@ -12,7 +12,7 @@ import std.uuid;
 import deimos.git2.all;
 
 import todod.commandline;
-import todod.todo;
+import todod.state;
 
 void writeToFile( string path, string name, string contents ) {
 	auto fileName = path ~ "/" ~ name;
@@ -152,39 +152,39 @@ void gitPull( GitRepo gr ) {
 
 }
 
-Commands!( Todos delegate( Todos, string) ) addStorageCommands( 
-		ref Commands!( Todos delegate( Todos, string) ) main, GitRepo gitRepo ) {
+Commands!( State delegate( State, string) ) addStorageCommands( 
+		ref Commands!( State delegate( State, string) ) main, GitRepo gitRepo ) {
 
-	auto storageCommands = Commands!( Todos delegate( Todos, string) )("Commands specifically used to interact with stored config files");
+	auto storageCommands = Commands!( State delegate( State, string) )("Commands specifically used to interact with stored config files");
 
 	storageCommands.add( 
-			"pull", delegate( Todos ts, string parameter ) {
+			"pull", delegate( State state, string parameter ) {
 		gitPull( gitRepo );
-		return ts;
+		return state;
 	}, "Pull todos from remote git repository" );
 
 	storageCommands.add( 
-			"push", delegate( Todos ts, string parameter ) {
+			"push", delegate( State state, string parameter ) {
 		try {
 			gitPush( gitRepo );
 		} catch {
 			writeln( "Git push failed. Did you set up a default remote called origin?" );
 		}
-		return ts;
+		return state;
 	}, "Push todos to remote git repository" );
 
 	storageCommands.add( 
-			"help", delegate( Todos ts, string parameter ) {
-			ts = main["clear"]( ts, "" ); 
+			"help", delegate( State state, string parameter ) {
+			state = main["clear"]( state, "" ); 
 			writeln( storageCommands.toString );
-			return ts;
+			return state;
 			}, "Print this help message" );
 
 	main.add( 
-			"git", delegate( Todos ts, string parameter ) {
+			"git", delegate( State state, string parameter ) {
 		auto split = parameter.findSplit( " " );
-		ts = storageCommands[split[0]]( ts, split[2] );
-		return ts;
+		state = storageCommands[split[0]]( state, split[2] );
+		return state;
 	}, "Storage and git related commands. Use git help for more help." );
 
 	main.addCompletion( "git",
