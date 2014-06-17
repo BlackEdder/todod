@@ -20,16 +20,17 @@
 
 	 -------------------------------------------------------------------
 	 */
-import std.stdio;
-
-import std.path;
-import std.file;
-
-import std.string;
-import std.regex;
-
-import std.conv;
 import std.algorithm;
+import std.conv;
+
+import std.file;
+import std.path;
+
+import std.regex;
+import std.stdio;
+import std.string;
+import std.uuid;
+
 
 import core.stdc.string, core.stdc.stdlib, std.stdio;
 import deimos.linenoise;
@@ -81,7 +82,24 @@ void initCommands( State state, ref Dependencies dependencies,
 		in ref double[string] defaultWeights, ref HabitRPG hrpg ) {
 	commands.add(
 		"add", delegate( State state, string parameter ) {
-			state.todos.add( new Todo( parameter ) );
+
+			auto tup = parseAndRemoveTags( parameter );
+			auto tags = tup[0].add_tags;
+			auto todo = new Todo( tup[1] );
+
+			// TODO check whether tags in state.tags
+			foreach ( tag; tags ) {
+				auto found = state.tags.find!"a.name == b.name"( tag );
+				if ( found.length == 1 )
+					todo.tags.add( found[0] );
+				else {
+				  tag.id = randomUUID;
+					state.tags.add( tag );
+					todo.tags.add( tag );
+				}
+			}
+
+			state.todos.add( todo );
 			state = commands["show"]( state, "" );
 			return state;
 		}, "Add a new todo with provided title. One can respectively add tags with +tag and a due date with DYYYY-MM-DD or D+7 for a week from now." );
@@ -151,6 +169,18 @@ void initCommands( State state, ref Dependencies dependencies,
 				writeln( "Please provide a list of todos (1,3,..) or all" );
 			else {
 				auto td = parseTags( parameter );
+
+				foreach ( tag; td.add_tags ) {
+					auto found = state.tags.find!"a.name == b.name"( tag );
+					if ( found.length == 1 )
+						td.add_tags.add( found[0] );
+					else {
+						tag.id = randomUUID;
+						state.tags.add( tag );
+						td.add_tags.add( found[0] );
+					}
+				}
+
 				targets.apply( delegate( ref Todo t ) { applyTags( t, td ); },
 					selectedTodos );
 				state = commands["show"]( state, "" );
@@ -232,7 +262,7 @@ void initCommands( State state, ref Dependencies dependencies,
 			if (m) {
 				auto matching_commands =
 					filter!( a => match( a.name, regex("^"~m.captures[3]) ))( 
-							state.todos.allTags.array );
+							state.tags.array );
 				foreach ( com; matching_commands ) {
 					result ~= [cmd ~ " " ~ m.captures[1] ~ m.captures[2] ~ com.name];
 				}
@@ -272,6 +302,9 @@ void main( string[] args ) {
 	auto defaultWeights = loadDefaultWeights( dirName ~ "weights.json" );
 	
 	state.todos = loadTodos( gitRepo );
+	state.tags = state.todos.allTags;
+
+
 	selectedTodos = random( state.todos, selected, dependencies, defaultWeights );
 
 	initCommands( state, dependencies, defaultWeights, hrpg );

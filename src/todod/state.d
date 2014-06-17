@@ -22,9 +22,11 @@
 	 */
 module todod.state;
 
+import todod.tag;
 import todod.todo;
 
 /// Struct holding the program state
 class State {
-	Todos todos;
+	Todos todos; /// All todos
+	Tags tags; /// All tags
 }

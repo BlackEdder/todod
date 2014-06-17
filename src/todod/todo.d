@@ -64,10 +64,7 @@ class Todo {
 	private this() {}
 
 	this( string tle ) { 
-		auto tup = parseAndRemoveTags( tle );
-		tags = tup[0].add_tags;
-
-		auto date_tup = parseAndRemoveDueDate( tup[1] );
+		auto date_tup = parseAndRemoveDueDate( tle );
 		due_date = date_tup[0];
 
 		creation_date = Date.now;
@@ -102,14 +99,6 @@ unittest {
 	Todo t1 = new Todo( "Todo 1" );
 	assert( t1.title == "Todo 1" );
 	assert( !t1.id.empty );
-
-	Todo t2 = new Todo( "Bla 1 +tag1 -tag2" );
-	assert( t2.title == "Bla 1" );
-	assert( t2.tags[0] == Tag("tag1") );
-
-	Todo t3 = new Todo( "+tag1 Bla 1 -tag2" );
-	assert( t3.title == "Bla 1" );
-	assert( t3.tags[0] == Tag("tag1") );
 
 	assert( t1.weight == 1 );
 }
@@ -181,6 +170,17 @@ auto lastProgress( const Todo t ) {
 	Working on list of todos
 	*/
 alias Set!Todo Todos;
+version(unittest) {
+	Todos generateSomeTodos() {
+		Todo t1 = new Todo( "Todo 1" );
+		t1.tags.add( [ Tag( "tag1" ), Tag( "tag2" ), Tag( "tag3" ) ] );
+		Todo t2 = new Todo( "Bla" );
+		t2.tags.add( [ Tag( "tag2" ), Tag( "tag4" ) ] );
+		Todos mytodos;
+		mytodos.add( [t2,t1] );
+		return mytodos;
+	}
+}
 
 unittest {
 	auto ts = generateSomeTodos;
@@ -198,16 +198,6 @@ Todo[] random( Todos ts, TagDelta selected, in Dependencies deps,
 		return randomGillespie( ts, selected, deps, defaultWeights, no );
 	}	
 	return ts.array;
-}
-
-version(unittest) {
-	Todos generateSomeTodos() {
-		Todo t1 = new Todo( "Todo 1 +tag1 +tag2 +tag3" );
-		Todo t2 = new Todo( "Bla +tag2 +tag4" );
-		Todos mytodos;
-		mytodos.add( [t2,t1] );
-		return mytodos;
-	}
 }
 
 unittest {
