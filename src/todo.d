@@ -90,7 +90,7 @@ void initCommands( State state, ref Dependencies dependencies,
 			// TODO check whether tags in state.tags
 			foreach ( tag; tags ) {
 				auto found = state.tags.find!"a.name == b.name"( tag );
-				if ( found.length == 1 )
+				if ( found.length >= 1 )
 					todo.tags.add( found[0] );
 				else {
 				  tag.id = randomUUID;
@@ -172,12 +172,12 @@ void initCommands( State state, ref Dependencies dependencies,
 
 				foreach ( tag; td.add_tags ) {
 					auto found = state.tags.find!"a.name == b.name"( tag );
-					if ( found.length == 1 )
+					if ( found.length >= 1 )
 						td.add_tags.add( found[0] );
 					else {
 						tag.id = randomUUID;
 						state.tags.add( tag );
-						td.add_tags.add( found[0] );
+						td.add_tags.add( tag );
 					}
 				}
 
