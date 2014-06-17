@@ -240,7 +240,7 @@ string toHabitRPGJSON( Todo todo, Tags tags ) {
 	return JSONValue( json ).toString;
 }
 
-Todos syncTodos( Todos ts, HabitRPG hrpg ) 
+Todos syncTodos( Todos ts, Tags allTags, HabitRPG hrpg ) 
 in 
 {
 	assert( hrpg );
@@ -249,7 +249,7 @@ body
 {
 	debug writeln( "Debug: Starting Todo sync." );
 	// Needed for tag ids for all todos 
-	Tags tags = syncTags( ts.allTags, hrpg );
+	Tags tags = syncTags( allTags, hrpg );
 
 	Todos hrpgTodos;
 	debug writeln( "Debug: Adding existing Todos to hbrgTodos." );
@@ -334,7 +334,7 @@ Commands!( State delegate( State, string) ) addHabitRPGCommands(
 
 		habitRPGCommands.add( 
 				"todos", delegate( State state, string parameter ) {
-			state.todos = syncTodos( state.todos, hrpg );
+			state.todos = syncTodos( state.todos, state.tags, hrpg );
 			return state;
 		}, "Sync todos (and tags) with HabitRPG" );
 
