@@ -152,7 +152,8 @@ auto weight( Todo t, TagDelta selected,
 	Todos with a higher weight (influenced by due date, currently selected tags and
 	last progress) have a higher probability of being drawn.
 	*/
-Todo[] randomGillespie( Todos ts, TagDelta selected, in Dependencies deps,
+Todo[] randomGillespie( Todos ts, Tags allTags, TagDelta selected, 
+		in Dependencies deps,
 		in double[string] defaultWeights,
 		size_t no = 5 ) 
 in {
@@ -171,7 +172,7 @@ body {
 	foreach( t; ts ) {
 		auto e_id = gillespie.newEventId;
 		gillespie.addEvent( e_id, 
-				to!real( weight( t, selected, ts.length, ts.tagsWithCount, deps,
+				to!real( weight( t, selected, ts.length, ts.tagOccurence( allTags ), deps,
 						defaultWeights ) ),
 				eventTodo( gillespie, t, e_id ) );
 	}
@@ -200,5 +201,5 @@ unittest {
 	ts.add( new Todo( "Todo3" ) );
 	TagDelta selected;
 	Dependencies deps;
-	assert( randomGillespie( ts, selected, deps, setDefaultWeights() , 2 ).length == 2 );
+	assert( randomGillespie( ts, ts.allTags, selected, deps, setDefaultWeights() , 2 ).length == 2 );
 }

@@ -328,7 +328,7 @@ Commands!( State delegate( State, string) ) addHabitRPGCommands(
 
 		habitRPGCommands.add( 
 				"tags", delegate( State state, string parameter ) {
-			syncTags( state.todos.allTags, hrpg );
+			syncTags( state.tags, hrpg );
 			return state;
 		}, "Sync tags with HabitRPG" );
 

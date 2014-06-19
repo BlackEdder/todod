@@ -252,7 +252,7 @@ string prettyStringTodo( Todo t ) {
 	return description;
 }
 
-string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos, 
+string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos, Tags allTags,
 		TagDelta selected, in Dependencies deps, in double[string] defaultWeights,
 		bool showWeight = false ) {
 	string str;
@@ -261,7 +261,7 @@ string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos,
 		str = str ~ to!string( id ) ~ "\t" ~ prettyStringTodo( t );
 		if (showWeight)
 			str ~= "Weight: " ~ to!string( weight( t, selected, allTodos.length, 
-					allTodos.tagsWithCount, deps, defaultWeights ) ) ~ "\n";
+					allTodos.tagOccurence( allTags ), deps, defaultWeights ) ) ~ "\n";
 		str ~= "\n";
 		id++;
 	}
@@ -277,7 +277,7 @@ Commands!( State delegate( State, string) ) addShowCommands(
 
 	showCommands.add( 
 			"tags", delegate( State state, string parameter ) {
-				writeln( prettyStringTags( state.todos.allTags ) );
+				writeln( prettyStringTags( state.tags ) );
 				return state;
 			}, "List of tags" );
 
@@ -315,7 +315,7 @@ Commands!( State delegate( State, string) ) addShowCommands(
 			state = main["clear"]( state, "" ); 
 			if ( parameter == "" || parameter == "weight" ) {
 				writeln( "Tags and number of todos associated with that tag." );
-				auto tags = state.todos.tagsWithCount();
+				auto tags = state.todos.tagOccurence( state.tags );
 				foreach( tag, count; tags ) {
 					if (!selected.delete_tags.canFind( tag )) {
 						if (selected.add_tags.canFind( tag ))
@@ -329,8 +329,8 @@ Commands!( State delegate( State, string) ) addShowCommands(
 				bool show_weight = false;
 				if (parameter == "weight")
 					show_weight = true;
-				write( prettyStringTodos( selectedTodos, state.todos, selected, dependencies,
-							defaultWeights, show_weight ) );
+				write( prettyStringTodos( selectedTodos, state.todos, state.tags, 
+						selected, dependencies, defaultWeights, show_weight ) );
 				debug {
 					writeln( "Debug: Selected ", selected.add_tags );
 					writeln( "Debug: Deselected ", selected.delete_tags );
