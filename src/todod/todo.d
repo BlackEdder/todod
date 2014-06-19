@@ -214,8 +214,22 @@ unittest {
 /// Return all existing tags
 Tags allTags( Todos ts ) {
 	Tags tags;
-	foreach( t; ts )
-		tags.add( t.tags );
+	foreach( t; ts ) {
+		foreach( tag; t.tags ) {
+			auto found = tags.find( tag );
+			if (found.empty)
+				tags.add( tag );
+			else {
+				if (tag.id.empty) {
+					t.tags.remove( tag );
+					t.tags.add( found[0] );
+				} else {
+					tags.remove( tag );
+					tags.add( tag );
+				}
+			}
+		}
+	}
 
 	return tags;
 }
