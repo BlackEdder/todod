@@ -150,14 +150,16 @@ void initCommands( State state, ref Dependencies dependencies,
 				selected.add_tags.add( newTags.add_tags );
 				selected.delete_tags.add( newTags.delete_tags );
 			}
-			selectedTodos = random( state.todos, selected, dependencies, defaultWeights );
+			selectedTodos = random( state.todos, state.tags, 
+				selected, dependencies, defaultWeights );
 			state = commands["show"]( state, "" );
 			return state;
 		}, "Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. search ... all will search through all Todos instead. Similarly, search without any further parameters resets the search (activates all Todos)." );
 
 		commands.add( 
 				"reroll", delegate( State state, string parameter ) {
-			selectedTodos = random( state.todos, selected, dependencies, defaultWeights );
+			selectedTodos = random( state.todos, state.tags,
+				selected, dependencies, defaultWeights );
 			state = commands["show"]( state, "" );
 			return state;
 		}, "Reroll the Todos that are active. I.e. chooses up to five Todos from all the active Todos to show" );
@@ -305,7 +307,8 @@ void main( string[] args ) {
 	state.tags = state.todos.allTags;
 
 
-	selectedTodos = random( state.todos, selected, dependencies, defaultWeights );
+	selectedTodos = random( state.todos, state.tags,
+		selected, dependencies, defaultWeights );
 
 	initCommands( state, dependencies, defaultWeights, hrpg );
 

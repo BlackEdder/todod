@@ -192,10 +192,10 @@ unittest {
 /**
 	Select a weighted random set of Todos
 	*/
-Todo[] random( Todos ts, TagDelta selected, in Dependencies deps, 
+Todo[] random( Todos ts, Tags allTags, TagDelta selected, in Dependencies deps, 
 		in double[string] defaultWeights, size_t no = 5 ) {
 	if (ts.length > no) {
-		return randomGillespie( ts, selected, deps, defaultWeights, no );
+		return randomGillespie( ts, allTags, selected, deps, defaultWeights, no );
 	}	
 	return ts.array;
 }
@@ -222,24 +222,27 @@ unittest {
 }
 
 /**
-	Tags and the number of Todos with that tag
+	Number of occurences of each given tag
 	*/
-size_t[Tag] tagsWithCount( Todos ts ) {
-	size_t[Tag] tags;
+size_t[Tag] tagOccurence( Todos ts, Tags tags ) {
+	size_t[Tag] tagsCounts;
 	foreach( t; ts ) {
 		foreach( tag; t.tags ) {
-			tags[tag]++;
+			if (tags.canFind( tag ) ) {
+				tagsCounts[tag]++;
+			}
 		}
 		if (t.tags.length == 0)
-			tags[Tag("untagged")]++;
+			tagsCounts[Tag("untagged")]++;
 	}
-	return tags;
+	return tagsCounts;
 }
+
 
 unittest {
 	auto ts = generateSomeTodos();
 	auto expected = ["tag2":2, "tag3":1, "tag4":1, "tag1":1];
-	foreach( k, v; ts.tagsWithCount() ) {
+	foreach( k, v; ts.tagOccurence( ts.allTags ) ) {
 		assert( v == expected[k.name] );
 	}
 }
