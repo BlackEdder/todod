@@ -37,7 +37,7 @@ version (unittest) {
 	import std.stdio;
 }
 
-struct Tag {
+class Tag {
 	string name;
 	UUID id; /// id is mainly used for syncing with habitrpg
 
@@ -45,33 +45,30 @@ struct Tag {
 		name = tag_name;
 	}
 
+	unittest {
+		Tag tag = new Tag("tag1");
+		tag.id = randomUUID;
+		assert( tag.name == "tag1" );
+		assert( !tag.id.empty );
+	}
+
 	void opAssign( string tag_name ) {
 		name = tag_name;
 		id = UUID();
 	}
 
-	unittest {
-		Tag tag;
-		tag.id = randomUUID;
-		tag = "tag1";
-		assert( tag.name == "tag1" );
-		assert( tag.id.empty );
-	}
-
 	/// If either id is uninitialized (empty) compare on name, otherwise on id
-	bool opEquals()(auto ref const Tag other_tag) const {
-		if (id.empty || other_tag.id.empty)
-			return name == other_tag.name;
+	override bool opEquals(Object t) const {
+		auto otherTag = cast(Tag)(t);
+		if (id.empty || otherTag.id.empty)
+			return name == otherTag.name;
 		else
-			return id == other_tag.id;
+			return id == otherTag.id;
 	}
 
 	unittest {
-		Tag tag1;
-		tag1 = "tag1";
-
-		Tag tag2;
-		tag2 = "tag2";
+		Tag tag1 = new Tag( "tag1" ); 
+		Tag tag2 = new Tag( "tag2" );
 
 		assert( tag1 != tag2 );
 		tag1.id = randomUUID;
@@ -79,8 +76,8 @@ struct Tag {
 		tag2.id = tag1.id;
 		assert( tag1 == tag2 );
 
-		tag1 = "tag1";
-		tag2 = "tag1";
+		tag1 = new Tag( "tag1" );
+		tag2 = new Tag( "tag1" );
 
 		assert( tag1 == tag2 );
 		tag1.id = randomUUID;
@@ -89,20 +86,18 @@ struct Tag {
 		assert( tag1 != tag2 );
 	}
 
-	int opCmp(ref const Tag other_tag ) const { 
-		if ( this == other_tag )
+	override int opCmp(Object t) const { 
+		auto otherTag = cast(Tag)(t);
+		if ( this == otherTag )
 			return 0;
-		else if ( name < other_tag.name )
+		else if ( name < otherTag.name )
 			return -1;
 		return 1;
 	}
 
 	unittest {
-		Tag tag1;
-		tag1 = "tag1";
-
-		Tag tag2;
-		tag2 = "tag2";
+		Tag tag1 = new Tag( "tag1" ); 
+		Tag tag2 = new Tag( "tag2" );
 
 		assert( tag1 < tag2 );
 
@@ -120,7 +115,7 @@ struct Tag {
 	/// Note that in rare cases (i.e. where one tag is id is initialized 
 	/// and the other isn't this can lead to different hashes even though
 	/// opEquals returns equal.
-	const nothrow size_t toHash()
+	override const nothrow size_t toHash()
 	{ 
 		size_t hash;
 		if ( id.empty  )
@@ -134,10 +129,9 @@ struct Tag {
 	
 	unittest {
 		// Do uniq and sort work properly?
-		Tag tag1;
-		tag1 = "tag1";
-		Tag tag2;
-		tag2 = "tag2";
+		Tag tag1 = new Tag( "tag1" ); 
+		Tag tag2 = new Tag( "tag2" );
+
 		Tag[] ts = [ tag2, tag1 ];
 		sort( ts );
 		assert( equal( ts, [ tag1, tag2 ] ) );
@@ -164,21 +158,19 @@ struct Tag {
 	}
 
 	unittest {
-		Tag tag1;
+		Tag tag1 = new Tag( "tag1" ); 
 		tag1 = "tag1";
 		assert( to!JSONValue( tag1 )["name"].str == "tag1" );
 	}
 
 	static Tag parseJSON( const JSONValue json ) {
-		Tag tag;
+		Tag tag = new Tag( json["name"].str ); 
 		tag.id = parseUUID( json["id"].str );
-		tag.name = json["name"].str;
 		return tag;
 	}
 
 	unittest {
-		Tag tag1;
-		tag1 = "tag1";
+		Tag tag1 = new Tag( "tag1" );
 		assert( parseJSON(to!JSONValue( tag1 )).name == "tag1" );
 	}
 }
@@ -194,9 +186,9 @@ alias Set!Tag Tags;
 
 unittest { // Test for doubles
 	Tags tgs;
-	Tag tag3 = "tag3";
+	Tag tag3 = new Tag("tag3");
 	tgs.add( tag3 );
-	Tag tag4 = "tag4";
+	Tag tag4 = new Tag("tag4");
 	tgs.add( tag4 );
 	assert( equal( tgs.array, [ tag3, tag4 ] ) );
 	assert( tgs.length == 2 );
@@ -207,23 +199,25 @@ unittest { // Test for doubles
 	assert( tgs.length == 2 );
 
 	// Sorted
-	Tag tag2 = "tag2";
+	Tag tag2 = new Tag("tag2");
 	tgs.add( tag2 );
 	assert( equal( tgs.array, [ tag2, tag3, tag4 ] ) );
 	assert( tgs.length == 3 );
 
-	tag2.id = randomUUID;
+	// Add tag with same name, but with id set
+	Tag tag5 = new Tag("tag2");
+	tag5.id = randomUUID;
 	assert( tgs.array.front.id.empty );
-	tgs.add( tag2 );
+	tgs.add( tag5 );
 	assert( !tgs.array.front.id.empty );
 	assert( tgs.length == 3 );
 }
 
 unittest {
 	Tags tgs;
-	Tag tag3 = "tag3";
+	Tag tag3 = new Tag("tag3");
 	tgs.add( tag3 );
-	Tag tag4 = "tag4";
+	Tag tag4 = new Tag("tag4");
 	tgs.add( tag4 );
 	assert( equal( tgs.array, [ tag3, tag4 ] ) );
 	assert( tgs.length == 2 );

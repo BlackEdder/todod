@@ -103,8 +103,12 @@ unittest {
 	assert( t1.weight == 1 );
 }
 
-string toString( const Todo t ) {
-	return t.title ~ " " ~ to!string( t.tags );
+string toString( Todo t ) {
+	string str = t.title ~ " [ ";
+	foreach ( tag; t.tags )
+		str ~= tag.name ~ ", ";
+	str ~= "]";
+	return str;
 }
 
 JSONValue toJSON( Todo t ) {
@@ -173,9 +177,9 @@ alias Set!Todo Todos;
 version(unittest) {
 	Todos generateSomeTodos() {
 		Todo t1 = new Todo( "Todo 1" );
-		t1.tags.add( [ Tag( "tag1" ), Tag( "tag2" ), Tag( "tag3" ) ] );
+		t1.tags.add( [ new Tag( "tag1" ),new Tag( "tag2" ), new Tag( "tag3" ) ] );
 		Todo t2 = new Todo( "Bla" );
-		t2.tags.add( [ Tag( "tag2" ), Tag( "tag4" ) ] );
+		t2.tags.add( [ new Tag( "tag2" ), new Tag( "tag4" ) ] );
 		Todos mytodos;
 		mytodos.add( [t2,t1] );
 		return mytodos;
@@ -185,14 +189,15 @@ version(unittest) {
 unittest {
 	auto ts = generateSomeTodos;
 	assert( ts[1].tags.length == 3 );
-	ts[1].tags.add( Tag( "tag5" ) );
+	ts[1].tags.add( new Tag( "tag5" ) );
 	assert( ts[1].tags.length == 4 );
 }
 
 /**
 	Select a weighted random set of Todos
 	*/
-Todo[] random( Todos ts, Tags allTags, TagDelta selected, in Dependencies deps, 
+Todo[] random( Todos ts, Tags allTags, TagDelta selected, 
+		in Dependencies deps, 
 		in double[string] defaultWeights, size_t no = 5 ) {
 	if (ts.length > no) {
 		return randomGillespie( ts, allTags, selected, deps, defaultWeights, no );
@@ -217,8 +222,8 @@ Tags allTags( Todos ts ) {
 
 unittest {
 	auto ts = generateSomeTodos();
-	assert( equal( ts.allTags().array, [Tag("tag1"), Tag("tag2"), 
-						Tag("tag3"), Tag("tag4")] ) );
+	assert( equal( ts.allTags().array, [new Tag("tag1"), new Tag("tag2"), 
+					new	Tag("tag3"), new Tag("tag4")] ) );
 }
 
 /**
@@ -233,7 +238,7 @@ size_t[Tag] tagOccurence( Todos ts, Tags tags ) {
 			}
 		}
 		if (t.tags.length == 0)
-			tagsCounts[Tag("untagged")]++;
+			tagsCounts[new Tag("untagged")]++;
 	}
 	return tagsCounts;
 }

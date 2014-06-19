@@ -306,7 +306,6 @@ void main( string[] args ) {
 	state.todos = loadTodos( gitRepo );
 	state.tags = state.todos.allTags;
 
-
 	selectedTodos = random( state.todos, state.tags,
 		selected, dependencies, defaultWeights );
 
