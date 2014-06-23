@@ -152,6 +152,31 @@ Todo toTodo( const JSONValue json ) {
 	return t;
 }
 
+Todo toTodo( const JSONValue json, Tags tags ) {
+	Todo t = new Todo();
+	const JSONValue[string] jsonAA = json.object;
+	t.mytitle = jsonAA["title"].str;
+	foreach ( tag; jsonAA["tags"].array ) {
+		auto newTag = Tag.parseJSON( tag );
+		if (tags.canFind( newTag ))
+			t.tags.add( newTag );
+	}
+	foreach ( js; jsonAA["progress"].array )
+		t.progress ~= Date( js.str );
+	t.creation_date = Date( jsonAA["creation_date"].str );
+	if ("due_date" in jsonAA)
+		t.due_date = Date( jsonAA["due_date"].str );
+	if ("id" in jsonAA)
+		t.id = UUID( jsonAA["id"].str );
+	if ("weight" in jsonAA) {
+		if (jsonAA["weight"].type == JSON_TYPE.FLOAT) 
+			t.weight = jsonAA["weight"].floating;
+		else
+			t.weight = cast(double)(jsonAA["weight"].integer);
+	}
+	return t;
+}
+
 unittest {
 	Todo t1 = new Todo( "Todo 1 +tag" );
 	assert( toJSON( t1 ).toTodo == t1 );
@@ -308,6 +333,16 @@ Todos loadTodos( GitRepo gr ) {
 	if (content != "")
 		ts = toTodos( parseJSON( content ) );
 	return ts;
+}
+
+Todos loadTodos( GitRepo gr, Tags tags ) {
+	Todos todos;
+	auto todosFileName = "todos.json";
+	auto content = readFile( gr.workPath, todosFileName );
+	if (content != "")
+		todos = jsonToSet!(Todo)( std.json.parseJSON( content )["todos"], 
+				(js) => toTodo( js, tags ) );
+	return todos;
 }
 
 void writeTodos( Todos ts, GitRepo gr ) {

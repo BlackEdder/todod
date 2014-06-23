@@ -100,6 +100,7 @@ void initCommands( State state, ref Dependencies dependencies,
 			}
 
 			state.todos.add( todo );
+			selectedTodos ~= todo;
 			state = commands["show"]( state, "" );
 			return state;
 		}, "Add a new todo with provided title. One can respectively add tags with +tag and a due date with DYYYY-MM-DD or D+7 for a week from now." );
@@ -291,7 +292,8 @@ void main( string[] args ) {
 	mkdirRecurse( dirName );
 	auto gitRepo = openRepo( dirName );
 
-	scope( exit ) { writeTodos( state.todos, gitRepo ); }
+	scope( exit ) { writeTodos( state.todos, gitRepo );
+		writeTags( state.tags, gitRepo ); }
 
 	auto hrpg = loadHRPG( dirName ~ "habitrpg.json" );
 	commands = addHabitRPGCommands( commands, dirName );
@@ -303,8 +305,14 @@ void main( string[] args ) {
 	auto dependencies = loadDependencies( gitRepo );
 	auto defaultWeights = loadDefaultWeights( dirName ~ "weights.json" );
 	
-	state.todos = loadTodos( gitRepo );
-	state.tags = state.todos.allTags;
+	state.tags = loadTags( gitRepo );
+	if (state.tags.empty) { // Something went wrong with loading the tag file
+													// This provides backward compatibility
+		state.todos = loadTodos( gitRepo );
+		state.tags = state.todos.allTags;
+	} else
+		state.todos = loadTodos( gitRepo, state.tags );
+
 
 	selectedTodos = random( state.todos, state.tags,
 		selected, dependencies, defaultWeights );

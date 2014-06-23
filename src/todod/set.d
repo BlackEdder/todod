@@ -24,8 +24,9 @@
 module todod.set;
 import std.algorithm;
 import std.array;
-
 import std.container;
+import std.json;
+
 struct Set(T) {
 	void add( E : T )( E element ) {
 		auto elements = _array.find( element  );
@@ -107,3 +108,27 @@ unittest {
 	assert( set.length == 3 );
 }
 
+JSONValue[] toJSON(T)( Set!T set ) {
+	JSONValue[] json;
+	foreach (t; set) 
+		json ~= t.toJSON;
+	return json;	
+}
+
+/// Load set from JSON, needs delegate to convert json into the set type
+Set!T jsonToSet(T)( in JSONValue json, T delegate( in JSONValue ) convert ) {
+	Set!T set;
+	assert( json.type == JSON_TYPE.ARRAY );
+	foreach ( js; json.array )
+		set.add( convert( js ) );
+	return set;
+}
+
+/// Convert Set to JSON
+JSONValue setToJSON( T )( Set!T set, JSONValue delegate( in T  ) convert ) {
+	JSONValue[] json;
+	foreach ( el; set ) {
+		json ~= convert( el );
+	}
+	return JSONValue(json);
+}

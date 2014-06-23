@@ -32,6 +32,7 @@ import std.array;
 import std.algorithm;
 
 import todod.set;
+import todod.storage;
 
 version (unittest) {
 	import std.stdio;
@@ -163,7 +164,7 @@ class Tag {
 		assert( to!JSONValue( tag1 )["name"].str == "tag1" );
 	}
 
-	static Tag parseJSON( const JSONValue json ) {
+	static Tag parseJSON( in JSONValue json ) {
 		Tag tag = new Tag( json["name"].str ); 
 		tag.id = parseUUID( json["id"].str );
 		return tag;
@@ -229,4 +230,23 @@ unittest {
 	tgs.remove( tag4 );
 	assert( equal( tgs.array, [ tag3 ] ) );
 	assert( tgs.length == 1 );
+}
+
+Tags loadTags( GitRepo gr ) {
+	Tags tags;
+
+	auto tagsFileName = "tags.json";
+	auto content = readFile( gr.workPath, tagsFileName );
+	if (content != "")
+		tags = jsonToSet!(Tag)( std.json.parseJSON( content ), 
+				(js) => Tag.parseJSON(js) );
+	return tags;
+}
+
+void writeTags( Tags tags, GitRepo gr ) {
+	auto tagsFileName = "tags.json";
+	JSONValue json = setToJSON!Tag( tags, 
+			delegate( in Tag t ) {return t.to!JSONValue();} );
+	writeToFile( gr.workPath, tagsFileName, json.toPrettyString );
+	commitChanges( gr, tagsFileName, "Updating tags file" );
 }
