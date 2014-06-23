@@ -158,8 +158,9 @@ Todo toTodo( const JSONValue json, Tags tags ) {
 	t.mytitle = jsonAA["title"].str;
 	foreach ( tag; jsonAA["tags"].array ) {
 		auto newTag = Tag.parseJSON( tag );
-		if (tags.canFind( newTag ))
-			t.tags.add( newTag );
+		auto found = tags.find( newTag );
+		if (found.length>0)
+			t.tags.add( found[0] );
 	}
 	foreach ( js; jsonAA["progress"].array )
 		t.progress ~= Date( js.str );
