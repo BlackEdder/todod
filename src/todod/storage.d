@@ -204,14 +204,3 @@ Commands!( State delegate( State, string) ) addStorageCommands(
 	} );
 	return main;
 }
-
-
-/*unittest {
-	auto repoPath = "/home/edwin/tmp/test_libgit2/";
-	auto gr = openRepo( repoPath );
-	string uuid = randomUUID.toString;
-	auto fileName = "b.txt";
-	writeToFile( repoPath, fileName, uuid );
-
-	commitChanges( gr, fileName, "Test commit" );
-}*/

@@ -46,9 +46,9 @@ import todod.storage;
 import todod.tag;
 import todod.todo;
 
-TagDelta selected;
+TagDelta selectedTags; /// Currently selected Tags
 
-Todo[] selectedTodos;
+Todo[] selectedTodos; /// Currently shown/selected Todos
 
 extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 	string mybuf = to!string( buf );
@@ -143,16 +143,16 @@ void initCommands( State state, ref Dependencies dependencies,
 		commands.add( 
 				"search", delegate( State state, string parameter ) {
 			if ( parameter == "" )
-				selected = TagDelta();
+				selectedTags = TagDelta();
 			else {
 				if ( match( parameter, r" all$" ) ) // Search through all todos
-					selected = TagDelta();
+					selectedTags = TagDelta();
 				TagDelta newTags = parseTags( parameter );
-				selected.add_tags.add( newTags.add_tags );
-				selected.delete_tags.add( newTags.delete_tags );
+				selectedTags.add_tags.add( newTags.add_tags );
+				selectedTags.delete_tags.add( newTags.delete_tags );
 			}
 			selectedTodos = random( state.todos, state.tags, 
-				selected, dependencies, defaultWeights );
+				selectedTags, dependencies, defaultWeights );
 			state = commands["show"]( state, "" );
 			return state;
 		}, "Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. search ... all will search through all Todos instead. Similarly, search without any further parameters resets the search (activates all Todos)." );
@@ -160,7 +160,7 @@ void initCommands( State state, ref Dependencies dependencies,
 		commands.add( 
 				"reroll", delegate( State state, string parameter ) {
 			selectedTodos = random( state.todos, state.tags,
-				selected, dependencies, defaultWeights );
+				selectedTags, dependencies, defaultWeights );
 			state = commands["show"]( state, "" );
 			return state;
 		}, "Reroll the Todos that are active. I.e. chooses up to five Todos from all the active Todos to show" );
@@ -318,12 +318,12 @@ void main( string[] args ) {
 
 
 	selectedTodos = random( state.todos, state.tags,
-		selected, dependencies, defaultWeights );
+		selectedTags, dependencies, defaultWeights );
 
 	initCommands( state, dependencies, defaultWeights, hrpg );
 
-	commands = addShowCommands( commands, selectedTodos, selected, dependencies,
-			defaultWeights );
+	commands = addShowCommands( commands, selectedTodos, selectedTags, 
+			dependencies, defaultWeights );
 
 	handleMessage( "show", "", state );
 
