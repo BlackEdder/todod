@@ -292,8 +292,11 @@ void main( string[] args ) {
 	mkdirRecurse( dirName );
 	auto gitRepo = openRepo( dirName );
 
-	scope( exit ) { writeTodos( state.todos, gitRepo );
-		writeTags( state.tags, gitRepo ); }
+	scope( exit ) { 
+		writeTodos( state.todos, gitRepo );
+		writeTags( state.tags, gitRepo );
+		writeDependencies( dependencies, gitRepo );
+	}
 
 	auto hrpg = loadHRPG( dirName ~ "habitrpg.json" );
 	commands = addHabitRPGCommands( commands, dirName );
@@ -347,6 +350,7 @@ void main( string[] args ) {
 		}
 		free(line);
 		writeTodos( state.todos, gitRepo );
+		writeTags( state.tags, gitRepo );
 		writeDependencies( dependencies, gitRepo );
 	}
 }
