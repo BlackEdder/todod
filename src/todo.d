@@ -78,7 +78,7 @@ auto commands = Commands!( State delegate( State, string) )( "Usage command [OPT
 
 //Todos delegate( Todos, string)[string] commands;
 
-void initCommands( State state, ref Dependencies dependencies, 
+void initCommands( State state, 
 		in ref double[string] defaultWeights, ref HabitRPG hrpg ) {
 	commands.add(
 		"add", delegate( State state, string parameter ) {
@@ -109,7 +109,7 @@ void initCommands( State state, ref Dependencies dependencies,
 				"del", delegate( State state, string parameter ) {
 			size_t id = to!size_t(parameter);
 			state.todos.remove( selectedTodos[id] );
-			dependencies = dependencies.removeUUID( selectedTodos[id].id );
+			state.dependencies = state.dependencies.removeUUID( selectedTodos[id].id );
 			state = commands["reroll"]( state, "" );
 			return state;
 		}, "Usage del todo_id. Deletes Todo specified by id." );
@@ -121,7 +121,7 @@ void initCommands( State state, ref Dependencies dependencies,
 				doneTodo( todo, hrpg );
 				
 			state.todos.remove( todo );
-			dependencies = dependencies.removeUUID( todo.id );
+			state.dependencies = state.dependencies.removeUUID( todo.id );
 			state = commands["reroll"]( state, "" );
 			return state;
 		}, "Usage done todo_id. Marks Todo specified by id as done." );
@@ -152,7 +152,7 @@ void initCommands( State state, ref Dependencies dependencies,
 				selectedTags.delete_tags.add( newTags.delete_tags );
 			}
 			selectedTodos = random( state.todos, state.tags, 
-				selectedTags, dependencies, defaultWeights );
+				selectedTags, state.dependencies, defaultWeights );
 			state = commands["show"]( state, "" );
 			return state;
 		}, "Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. search ... all will search through all Todos instead. Similarly, search without any further parameters resets the search (activates all Todos)." );
@@ -160,7 +160,7 @@ void initCommands( State state, ref Dependencies dependencies,
 		commands.add( 
 				"reroll", delegate( State state, string parameter ) {
 			selectedTodos = random( state.todos, state.tags,
-				selectedTags, dependencies, defaultWeights );
+				selectedTags, state.dependencies, defaultWeights );
 			state = commands["show"]( state, "" );
 			return state;
 		}, "Reroll the Todos that are active. I.e. chooses up to five Todos from all the active Todos to show" );
@@ -240,7 +240,7 @@ void initCommands( State state, ref Dependencies dependencies,
 			if ( targets.length != 2 ) {
 				writeln( "Expecting two parameters" );
 			} else {
-				dependencies ~= Link( selectedTodos[targets[1]].id,
+				state.dependencies ~= Link( selectedTodos[targets[1]].id,
 					selectedTodos[targets[0]].id );
 				state = commands["reroll"]( state, "" );
 			}
@@ -295,7 +295,7 @@ void main( string[] args ) {
 	scope( exit ) { 
 		writeTodos( state.todos, gitRepo );
 		writeTags( state.tags, gitRepo );
-		writeDependencies( dependencies, gitRepo );
+		writeDependencies( state.dependencies, gitRepo );
 	}
 
 	auto hrpg = loadHRPG( dirName ~ "habitrpg.json" );
@@ -305,7 +305,7 @@ void main( string[] args ) {
 		commands = addStorageCommands( commands, gitRepo );
 	}
 
-	auto dependencies = loadDependencies( gitRepo );
+	state.dependencies = loadDependencies( gitRepo );
 	auto defaultWeights = loadDefaultWeights( dirName ~ "weights.json" );
 	
 	state.tags = loadTags( gitRepo );
@@ -318,12 +318,12 @@ void main( string[] args ) {
 
 
 	selectedTodos = random( state.todos, state.tags,
-		selectedTags, dependencies, defaultWeights );
+		selectedTags, state.dependencies, defaultWeights );
 
-	initCommands( state, dependencies, defaultWeights, hrpg );
+	initCommands( state, defaultWeights, hrpg );
 
 	commands = addShowCommands( commands, selectedTodos, selectedTags, 
-			dependencies, defaultWeights );
+			defaultWeights );
 
 	handleMessage( "show", "", state );
 
@@ -351,6 +351,6 @@ void main( string[] args ) {
 		free(line);
 		writeTodos( state.todos, gitRepo );
 		writeTags( state.tags, gitRepo );
-		writeDependencies( dependencies, gitRepo );
+		writeDependencies( state.dependencies, gitRepo );
 	}
 }
