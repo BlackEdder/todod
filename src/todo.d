@@ -48,8 +48,6 @@ import todod.todo;
 
 TagDelta selectedTags; /// Currently selected Tags
 
-Todo[] selectedTodos; /// Currently shown/selected Todos
-
 extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 	string mybuf = to!string( buf );
 	if (match( mybuf, "^[A-z]+$" )) {
@@ -100,7 +98,7 @@ void initCommands( State state,
 			}
 
 			state.todos.add( todo );
-			selectedTodos ~= todo;
+			state.selectedTodos ~= todo;
 			state = commands["show"]( state, "" );
 			return state;
 		}, "Add a new todo with provided title. One can respectively add tags with +tag and a due date with DYYYY-MM-DD or D+7 for a week from now." );
@@ -108,15 +106,16 @@ void initCommands( State state,
 		commands.add( 
 				"del", delegate( State state, string parameter ) {
 			size_t id = to!size_t(parameter);
-			state.todos.remove( selectedTodos[id] );
-			state.dependencies = state.dependencies.removeUUID( selectedTodos[id].id );
+			state.todos.remove( state.selectedTodos[id] );
+			state.dependencies = state.dependencies.removeUUID( 
+				state.selectedTodos[id].id );
 			state = commands["reroll"]( state, "" );
 			return state;
 		}, "Usage del todo_id. Deletes Todo specified by id." );
 
 		commands.add( 
 				"done", delegate( State state, string parameter ) {
-			auto todo = selectedTodos[to!size_t(parameter)];
+			auto todo = state.selectedTodos[to!size_t(parameter)];
 			if (hrpg)
 				doneTodo( todo, hrpg );
 				
@@ -134,7 +133,7 @@ void initCommands( State state,
 			else {
 				targets.apply( delegate( ref Todo t ) { 
 					upHabit( hrpg, "productivity" );
-					t.progress ~= Date.now; }, selectedTodos );
+					t.progress ~= Date.now; }, state.selectedTodos );
 				state = commands["show"]( state, "" );
 			}
 			return state;
@@ -151,7 +150,7 @@ void initCommands( State state,
 				selectedTags.add_tags.add( newTags.add_tags );
 				selectedTags.delete_tags.add( newTags.delete_tags );
 			}
-			selectedTodos = random( state.todos, state.tags, 
+			state.selectedTodos = random( state.todos, state.tags, 
 				selectedTags, state.dependencies, defaultWeights );
 			state = commands["show"]( state, "" );
 			return state;
@@ -159,7 +158,7 @@ void initCommands( State state,
 
 		commands.add( 
 				"reroll", delegate( State state, string parameter ) {
-			selectedTodos = random( state.todos, state.tags,
+			state.selectedTodos = random( state.todos, state.tags,
 				selectedTags, state.dependencies, defaultWeights );
 			state = commands["show"]( state, "" );
 			return state;
@@ -185,7 +184,7 @@ void initCommands( State state,
 				}
 
 				targets.apply( delegate( ref Todo t ) { applyTags( t, td ); },
-					selectedTodos );
+					state.selectedTodos );
 				state = commands["show"]( state, "" );
 			}
 			return state;
@@ -199,7 +198,7 @@ void initCommands( State state,
 			else {
 				auto duedate = parseDate( parameter );
 				targets.apply( delegate( ref Todo t ) { t.due_date = duedate; },
-					selectedTodos );
+					state.selectedTodos );
 				state = commands["show"]( state, "" );
 			}
 			return state;
@@ -226,7 +225,7 @@ void initCommands( State state,
 					else {
 						double weight = vs[0].to!double;
 						targets.apply( delegate( ref Todo t ) { 
-							t.weight = weight; }, selectedTodos );
+							t.weight = weight; }, state.selectedTodos );
 						state = commands["show"]( state, "" );
 					}
 				}
@@ -240,8 +239,8 @@ void initCommands( State state,
 			if ( targets.length != 2 ) {
 				writeln( "Expecting two parameters" );
 			} else {
-				state.dependencies ~= Link( selectedTodos[targets[1]].id,
-					selectedTodos[targets[0]].id );
+				state.dependencies ~= Link( state.selectedTodos[targets[1]].id,
+					state.selectedTodos[targets[0]].id );
 				state = commands["reroll"]( state, "" );
 			}
 			return state;
@@ -317,12 +316,12 @@ void main( string[] args ) {
 		state.todos = loadTodos( gitRepo, state.tags );
 
 
-	selectedTodos = random( state.todos, state.tags,
+	state.selectedTodos = random( state.todos, state.tags,
 		selectedTags, state.dependencies, defaultWeights );
 
 	initCommands( state, defaultWeights, hrpg );
 
-	commands = addShowCommands( commands, selectedTodos, selectedTags, 
+	commands = addShowCommands( commands, selectedTags, 
 			defaultWeights );
 
 	handleMessage( "show", "", state );
