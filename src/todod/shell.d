@@ -255,14 +255,14 @@ string prettyStringTodo( Todo t ) {
 }
 
 string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos, Tags allTags,
-		TagDelta selected, in Dependencies deps, in double[string] defaultWeights,
+		TagDelta selectedTags, in Dependencies deps, in double[string] defaultWeights,
 		bool showWeight = false ) {
 	string str;
 	size_t id = 0;
 	foreach( t; ts ) {
 		str = str ~ to!string( id ) ~ "\t" ~ prettyStringTodo( t );
 		if (showWeight)
-			str ~= "Weight: " ~ to!string( weight( t, selected, allTodos.length, 
+			str ~= "Weight: " ~ to!string( weight( t, selectedTags, allTodos.length, 
 					allTodos.tagOccurence( allTags ), deps, defaultWeights ) ) ~ "\n";
 		str ~= "\n";
 		id++;
@@ -271,7 +271,7 @@ string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos, Tags allTags,
 }
 
 Commands!( State delegate( State, string) ) addShowCommands( 
-		ref Commands!( State delegate( State, string) ) main, ref TagDelta selected, 
+		ref Commands!( State delegate( State, string) ) main, 
 		in ref double[string] defaultWeights ) {
 	auto showCommands = Commands!( State delegate( State, string) )(
 			"Show different views. When called without parameters shows a (randomly) selected list of Todos.");
@@ -318,8 +318,8 @@ Commands!( State delegate( State, string) ) addShowCommands(
 				writeln( "Tags and number of todos associated with that tag." );
 				auto tags = state.todos.tagOccurence( state.tags );
 				foreach( tag, count; tags ) {
-					if (!selected.delete_tags.canFind( tag )) {
-						if (selected.add_tags.canFind( tag ))
+					if (!state.selectedTags.delete_tags.canFind( tag )) {
+						if (state.selectedTags.add_tags.canFind( tag ))
 							write( tagColor(tag.name), " (", count, "),  " );
 						else
 							write( tag.name, " (", count, "),  " );
@@ -331,10 +331,10 @@ Commands!( State delegate( State, string) ) addShowCommands(
 				if (parameter == "weight")
 					show_weight = true;
 				write( prettyStringTodos( state.selectedTodos, state.todos, state.tags, 
-						selected, state.dependencies, defaultWeights, show_weight ) );
+						state.selectedTags, state.dependencies, defaultWeights, show_weight ) );
 				debug {
-					writeln( "Debug: Selected ", selected.add_tags );
-					writeln( "Debug: Deselected ", selected.delete_tags );
+					writeln( "Debug: Selected ", state.selectedTags.add_tags );
+					writeln( "Debug: Deselected ", state.selectedTags.delete_tags );
 				}
 			}
 			else {

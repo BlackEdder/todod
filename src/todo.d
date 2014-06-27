@@ -46,8 +46,6 @@ import todod.storage;
 import todod.tag;
 import todod.todo;
 
-TagDelta selectedTags; /// Currently selected Tags
-
 extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 	string mybuf = to!string( buf );
 	if (match( mybuf, "^[A-z]+$" )) {
@@ -142,16 +140,16 @@ void initCommands( State state,
 		commands.add( 
 				"search", delegate( State state, string parameter ) {
 			if ( parameter == "" )
-				selectedTags = TagDelta();
+				state.selectedTags = TagDelta();
 			else {
 				if ( match( parameter, r" all$" ) ) // Search through all todos
-					selectedTags = TagDelta();
+					state.selectedTags = TagDelta();
 				TagDelta newTags = parseTags( parameter );
-				selectedTags.add_tags.add( newTags.add_tags );
-				selectedTags.delete_tags.add( newTags.delete_tags );
+				state.selectedTags.add_tags.add( newTags.add_tags );
+				state.selectedTags.delete_tags.add( newTags.delete_tags );
 			}
 			state.selectedTodos = random( state.todos, state.tags, 
-				selectedTags, state.dependencies, defaultWeights );
+				state.selectedTags, state.dependencies, defaultWeights );
 			state = commands["show"]( state, "" );
 			return state;
 		}, "Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. search ... all will search through all Todos instead. Similarly, search without any further parameters resets the search (activates all Todos)." );
@@ -159,7 +157,7 @@ void initCommands( State state,
 		commands.add( 
 				"reroll", delegate( State state, string parameter ) {
 			state.selectedTodos = random( state.todos, state.tags,
-				selectedTags, state.dependencies, defaultWeights );
+				state.selectedTags, state.dependencies, defaultWeights );
 			state = commands["show"]( state, "" );
 			return state;
 		}, "Reroll the Todos that are active. I.e. chooses up to five Todos from all the active Todos to show" );
@@ -317,12 +315,11 @@ void main( string[] args ) {
 
 
 	state.selectedTodos = random( state.todos, state.tags,
-		selectedTags, state.dependencies, defaultWeights );
+		state.selectedTags, state.dependencies, defaultWeights );
 
 	initCommands( state, defaultWeights, hrpg );
 
-	commands = addShowCommands( commands, selectedTags, 
-			defaultWeights );
+	commands = addShowCommands( commands, defaultWeights );
 
 	handleMessage( "show", "", state );
 
