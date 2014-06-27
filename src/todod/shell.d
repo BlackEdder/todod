@@ -271,8 +271,7 @@ string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos, Tags allTags,
 }
 
 Commands!( State delegate( State, string) ) addShowCommands( 
-		ref Commands!( State delegate( State, string) ) main, 
-		in ref double[string] defaultWeights ) {
+		ref Commands!( State delegate( State, string) ) main ) {
 	auto showCommands = Commands!( State delegate( State, string) )(
 			"Show different views. When called without parameters shows a (randomly) selected list of Todos.");
 
@@ -331,7 +330,7 @@ Commands!( State delegate( State, string) ) addShowCommands(
 				if (parameter == "weight")
 					show_weight = true;
 				write( prettyStringTodos( state.selectedTodos, state.todos, state.tags, 
-						state.selectedTags, state.dependencies, defaultWeights, show_weight ) );
+						state.selectedTags, state.dependencies, state.defaultWeights, show_weight ) );
 				debug {
 					writeln( "Debug: Selected ", state.selectedTags.add_tags );
 					writeln( "Debug: Deselected ", state.selectedTags.delete_tags );

@@ -74,8 +74,7 @@ auto commands = Commands!( State delegate( State, string) )( "Usage command [OPT
 
 //Todos delegate( Todos, string)[string] commands;
 
-void initCommands( State state, 
-		in ref double[string] defaultWeights, ref HabitRPG hrpg ) {
+void initCommands( State state, ref HabitRPG hrpg ) {
 	commands.add(
 		"add", delegate( State state, string parameter ) {
 
@@ -149,7 +148,7 @@ void initCommands( State state,
 				state.selectedTags.delete_tags.add( newTags.delete_tags );
 			}
 			state.selectedTodos = random( state.todos, state.tags, 
-				state.selectedTags, state.dependencies, defaultWeights );
+				state.selectedTags, state.dependencies, state.defaultWeights );
 			state = commands["show"]( state, "" );
 			return state;
 		}, "Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. search ... all will search through all Todos instead. Similarly, search without any further parameters resets the search (activates all Todos)." );
@@ -157,7 +156,7 @@ void initCommands( State state,
 		commands.add( 
 				"reroll", delegate( State state, string parameter ) {
 			state.selectedTodos = random( state.todos, state.tags,
-				state.selectedTags, state.dependencies, defaultWeights );
+				state.selectedTags, state.dependencies, state.defaultWeights );
 			state = commands["show"]( state, "" );
 			return state;
 		}, "Reroll the Todos that are active. I.e. chooses up to five Todos from all the active Todos to show" );
@@ -303,7 +302,7 @@ void main( string[] args ) {
 	}
 
 	state.dependencies = loadDependencies( gitRepo );
-	auto defaultWeights = loadDefaultWeights( dirName ~ "weights.json" );
+	state.defaultWeights = loadDefaultWeights( dirName ~ "weights.json" );
 	
 	state.tags = loadTags( gitRepo );
 	if (state.tags.empty) { // Something went wrong with loading the tag file
@@ -315,11 +314,11 @@ void main( string[] args ) {
 
 
 	state.selectedTodos = random( state.todos, state.tags,
-		state.selectedTags, state.dependencies, defaultWeights );
+		state.selectedTags, state.dependencies, state.defaultWeights );
 
-	initCommands( state, defaultWeights, hrpg );
+	initCommands( state, hrpg );
 
-	commands = addShowCommands( commands, defaultWeights );
+	commands = addShowCommands( commands );
 
 	handleMessage( "show", "", state );
 
