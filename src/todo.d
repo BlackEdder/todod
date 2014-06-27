@@ -74,7 +74,7 @@ auto commands = Commands!( State delegate( State, string) )( "Usage command [OPT
 
 //Todos delegate( Todos, string)[string] commands;
 
-void initCommands( State state, ref HabitRPG hrpg ) {
+void initCommands( State state ) {
 	commands.add(
 		"add", delegate( State state, string parameter ) {
 
@@ -113,8 +113,8 @@ void initCommands( State state, ref HabitRPG hrpg ) {
 		commands.add( 
 				"done", delegate( State state, string parameter ) {
 			auto todo = state.selectedTodos[to!size_t(parameter)];
-			if (hrpg)
-				doneTodo( todo, hrpg );
+			if (state.hrpg)
+				doneTodo( todo, state.hrpg );
 				
 			state.todos.remove( todo );
 			state.dependencies = state.dependencies.removeUUID( todo.id );
@@ -129,7 +129,7 @@ void initCommands( State state, ref HabitRPG hrpg ) {
 				writeln( "Please provide a list of todos (1,3,..) or all" );
 			else {
 				targets.apply( delegate( ref Todo t ) { 
-					upHabit( hrpg, "productivity" );
+					upHabit( state.hrpg, "productivity" );
 					t.progress ~= Date.now; }, state.selectedTodos );
 				state = commands["show"]( state, "" );
 			}
@@ -294,7 +294,7 @@ void main( string[] args ) {
 		writeDependencies( state.dependencies, gitRepo );
 	}
 
-	auto hrpg = loadHRPG( dirName ~ "habitrpg.json" );
+	state.hrpg = loadHRPG( dirName ~ "habitrpg.json" );
 	commands = addHabitRPGCommands( commands, dirName );
 	
 	version( assert ) {
@@ -316,7 +316,7 @@ void main( string[] args ) {
 	state.selectedTodos = random( state.todos, state.tags,
 		state.selectedTags, state.dependencies, state.defaultWeights );
 
-	initCommands( state, hrpg );
+	initCommands( state );
 
 	commands = addShowCommands( commands );
 
