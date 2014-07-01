@@ -30,6 +30,7 @@ import std.regex;
 
 /// Convenience struct around datetime.Date
 struct Date {
+	/// Return Date from given string
 	this( string dateStr ) {
 		if ( dateStr != "-1" ) {
 			if (dateStr.match( r"^\d\d\d\d-\d\d-\d\d$" ) ) {
@@ -42,10 +43,12 @@ struct Date {
 		}
 	}
 
+	/// Convert date to bool (used to test if date is initialized)
 	bool opCast( T : bool )() const {
 		return init;
 	}
 
+	/// Return today's date
 	static Date now() {
 		Date dt;
 		dt.mytime = datetime.Clock.currTime;
@@ -77,6 +80,7 @@ struct Date {
 		assert( dt.mytime.month == 2 );
 	}
 
+	/// Create copy of the date
 	Date dup() {
 		Date dt;
 		dt.mytime = mytime;
@@ -114,7 +118,7 @@ unittest {
 	assert( dt.substract( Date( "2013-01-12T00:02:01" ) ) == 365 );
 }
 
-
+/// Convert date to ISO string
 string toString( const Date dt ) {
 	if (dt)
 		return dt.mytime.toISOExtString();
@@ -122,6 +126,7 @@ string toString( const Date dt ) {
 		return "-1";
 }
 
+/// Convert date to simple string
 string toStringDate( const Date dt ) {
 	return toString( dt );
 }
