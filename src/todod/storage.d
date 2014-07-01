@@ -14,6 +14,7 @@ import deimos.git2.all;
 import todod.commandline;
 import todod.state;
 
+/// Write string contents to file at the given path
 void writeToFile( string path, string name, string contents ) {
 	auto fileName = path ~ "/" ~ name;
 	File file = File( fileName, "w" );
@@ -21,6 +22,7 @@ void writeToFile( string path, string name, string contents ) {
 	file.close;
 }
 
+/// Read a whole file into a string
 string readFile( string path, string name ) {
 	auto fileName = path ~ "/" ~ name;
 	string content;
@@ -32,9 +34,11 @@ string readFile( string path, string name ) {
 	return content;
 }
 
+/// git repository
 struct GitRepo {
 	git_repository *repo;
 
+	/// Return the path of the repo
 	string workPath() {
 		return to!string( git_repository_workdir( repo ) );
 	}
@@ -47,6 +51,7 @@ GitRepo openRepo( string repoPath ) {
 	return gr;
 }
 
+/// Commit changes in the provided filename with the provided message
 void commitChanges( GitRepo gr, string fileName, string message ) {
 	git_repository *repo = gr.repo;
 	git_index *my_repo_index;
@@ -111,6 +116,7 @@ void commitChanges( GitRepo gr, string fileName, string message ) {
 	}
 }
 
+// Not working correctly yet
 void gitPush( GitRepo gr ) {
 	git_repository *repo = gr.repo;
 	git_remote *remote;
@@ -128,6 +134,7 @@ void gitPush( GitRepo gr ) {
 	}
 }
 
+// Not working correctly yet
 void gitPull( GitRepo gr ) {
 	git_repository *repo = gr.repo;
 	git_remote *remote;
@@ -152,6 +159,7 @@ void gitPull( GitRepo gr ) {
 
 }
 
+/// Add storage sub commands to the command list
 Commands!( State delegate( State, string) ) addStorageCommands( 
 		ref Commands!( State delegate( State, string) ) main, GitRepo gitRepo ) {
 
