@@ -27,7 +27,9 @@ import std.array;
 import std.container;
 import std.json;
 
+/// Set implemented on top of ranges. Unique and ordered (at time of adding)
 struct Set(T) {
+	/// Add an element to the set
 	void add( E : T )( E element ) {
 		auto elements = _array.find( element  );
 		if ( elements.empty ) {
@@ -39,42 +41,50 @@ struct Set(T) {
 		}
 	}
 
+	/// Add a range of elements
 	void add(RANGE)(RANGE elements ) {
 		// TODO optimize this since both ranges are sorted
 		foreach (element; elements)
 			add( element );
 	}
 
+	/// Remove an element from the set
 	void remove(E : T)( E element ) {
 		auto i = countUntil( _array, element );
 		if (i != -1)
 			_array = _array[0..i] ~ _array[i+1..$];
 	}
 
+	/// Remove a range of elements
 	void remove(RANGE)( RANGE elements ) {
 		// TODO optimize this since both ranges are sorted
 		foreach (element; elements)
 			remove( element );
 	}
 
+	/// Returns the front/first element of the set
 	T front() {
 		return _array.front;
 	}
 
+	/// Removes the front element from the set
 	void popFront() {
 		_array.popFront;
 	}
 
+	/// Returns true when the set is empty
 	bool empty() const {
 		if (_array.length > 0)
 			return false;
 		return true;
 	}
 
+	/// Return an array version of the set
 	T[] array() {
 		return _array;
 	}
 
+	/// Number of elements in the set
 	size_t length() const {
 		return _array.length;
 	}
@@ -108,6 +118,8 @@ unittest {
 	assert( set.length == 3 );
 }
 
+
+/// Convert set to json array. The element needs to implement a toJSON function
 JSONValue[] toJSON(T)( Set!T set ) {
 	JSONValue[] json;
 	foreach (t; set) 
@@ -115,7 +127,7 @@ JSONValue[] toJSON(T)( Set!T set ) {
 	return json;	
 }
 
-/// Load set from JSON, needs delegate to convert json into the set type
+/// Load set from JSON, needs delegate to convert json into the element type
 Set!T jsonToSet(T)( in JSONValue json, T delegate( in JSONValue ) convert ) {
 	Set!T set;
 	assert( json.type == JSON_TYPE.ARRAY );
@@ -124,7 +136,7 @@ Set!T jsonToSet(T)( in JSONValue json, T delegate( in JSONValue ) convert ) {
 	return set;
 }
 
-/// Convert Set to JSON
+/// Convert Set to JSON given a function to convert the element type to JSON
 JSONValue setToJSON( T )( Set!T set, JSONValue delegate( in T  ) convert ) {
 	JSONValue[] json;
 	foreach ( el; set ) {
