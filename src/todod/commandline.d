@@ -26,6 +26,8 @@ module todod.commandline;
 import std.algorithm;
 import std.string;
 
+import colorize;
+
 /// Manage command line arguments
 struct Commands(COMMAND) {
 	alias string[] delegate( string, string ) Completion;
@@ -58,7 +60,8 @@ struct Commands(COMMAND) {
 	string toString() {
 		string description = myintroduction ~ "\n";
 		foreach( comm; addition_order ) {
-			description ~= "    \033[1;31m" ~ comm.leftJustify( 15 ) ~ "\033[0m " 
+			description ~= 
+				color( "    " ~ comm.leftJustify( 15 ) ~ " ", fg.red ) 
 				~ myhelp[comm] ~ "\n\n";
 		}
 		return description;

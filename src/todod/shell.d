@@ -33,6 +33,8 @@ import std.container;
 import std.algorithm;
 import std.conv;
 
+import colorize;
+
 import todod.commandline;
 import todod.date;
 import todod.dependency;
@@ -221,12 +223,12 @@ unittest {
 
 /// Wrap string in color used for tags
 string tagColor( string str ) {
-	return "\033[1;31m" ~ str ~ "\033[0m";
+	return color( str, fg.red );
 }
 
 /// Wrap string in color used for emphasizing titles 
 string titleEmphasize( string str ) {
-	return "\033[3;32m" ~ str ~ "\033[0m";
+	return color( str, fg.green );
 }
 
 /// Produce colored string from tags
