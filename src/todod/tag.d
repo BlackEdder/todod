@@ -118,14 +118,14 @@ class Tag {
 	/// opEquals returns equal.
 	override const nothrow size_t toHash()
 	{ 
-		size_t hash;
-		if ( id.empty  )
+		if ( id.empty  ) {
+			size_t hash;
 			foreach (char c; name)
 				hash = (hash * 9) + c;
+			return hash;
+		}
 		else
-			id.toHash;
-	
-		return hash;
+			return id.toHash;
 	}
 	
 	unittest {
