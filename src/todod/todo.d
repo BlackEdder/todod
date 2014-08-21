@@ -116,7 +116,7 @@ JSONValue toJSON( Todo t ) {
 	jsonTODO["title"] = t.title;
 	JSONValue[] tags;
 	foreach( tag; t.tags )
-		tags ~= tag.to!JSONValue();
+		tags ~= tag.toJSON();
 	jsonTODO["tags"] = JSONValue(tags);
 
 	string[] progress_array;

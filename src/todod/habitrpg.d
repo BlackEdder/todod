@@ -153,7 +153,7 @@ void postNewTag( HabitRPG hrpg, Tag tag )
 	}
 body {
 	postMessage( hrpg, "https://habitrpg.com/api/v2/user/tags",
-			tag.to!JSONValue.toString);
+			tag.toJSON.toString);
 }
 
 /// Sync tags with habitrpg. Ensures all tag ids are set properly and returns

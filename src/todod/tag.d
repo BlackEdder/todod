@@ -127,6 +127,30 @@ class Tag {
 		else
 			return id.toHash;
 	}
+
+	JSONValue toJSON() const {
+		JSONValue[string] json;
+		json["name"] = name;
+		json["id"] = id.toString;
+		return JSONValue( json );
+	}
+
+	unittest {
+		Tag tag1 = new Tag( "tag1" ); 
+		tag1 = "tag1";
+		assert( tag1.toJSON["name"].str == "tag1" );
+	}
+
+	unittest {
+		Tag tag1 = new Tag( "tag1" );
+		assert( parseJSON(tag1.toJSON()).name == "tag1" );
+	}
+
+	static Tag parseJSON( in JSONValue json ) {
+		Tag tag = new Tag( json["name"].str ); 
+		tag.id = parseUUID( json["id"].str );
+		return tag;
+	}
 	
 	unittest {
 		// Do uniq and sort work properly?
@@ -151,29 +175,6 @@ class Tag {
 		assert( equal( uniq(ts).array, [ tag1 ] ) );
 	}
 
-	JSONValue opCast( T : JSONValue )() const {
-		JSONValue[string] json;
-		json["name"] = name;
-		json["id"] = id.toString;
-		return JSONValue( json );
-	}
-
-	unittest {
-		Tag tag1 = new Tag( "tag1" ); 
-		tag1 = "tag1";
-		assert( to!JSONValue( tag1 )["name"].str == "tag1" );
-	}
-
-	static Tag parseJSON( in JSONValue json ) {
-		Tag tag = new Tag( json["name"].str ); 
-		tag.id = parseUUID( json["id"].str );
-		return tag;
-	}
-
-	unittest {
-		Tag tag1 = new Tag( "tag1" );
-		assert( parseJSON(to!JSONValue( tag1 )).name == "tag1" );
-	}
 }
 
 struct TagDelta {
@@ -246,7 +247,7 @@ Tags loadTags( GitRepo gr ) {
 void writeTags( Tags tags, GitRepo gr ) {
 	auto tagsFileName = "tags.json";
 	JSONValue json = setToJSON!Tag( tags, 
-			delegate( in Tag t ) {return t.to!JSONValue();} );
+			delegate( in Tag t ) {return t.toJSON();} );
 	writeToFile( gr.workPath, tagsFileName, json.toPrettyString );
 	commitChanges( gr, tagsFileName, "Updating tags file" );
 }
