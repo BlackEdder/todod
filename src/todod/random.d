@@ -123,12 +123,20 @@ auto tagWeightScalar( Tags tags, TagDelta selected,
 			return defaultWeights["deselectedTagWeight"];
 	}
 	
-	double scalar = defaultWeights["defaultTagWeight"];
+	double scalar = 0;
 	foreach ( tag; tags ) {
-		if (selected.add_tags.canFind( tag ))
-			scalar = scalar*defaultWeights["selectedTagWeight"]*
-				(to!double(noTodos))/tagNo[ tag ];
+		if (selected.add_tags.canFind( tag )) {
+			if (scalar == 0) {
+				scalar = defaultWeights["selectedTagWeight"]*
+					(to!double(noTodos))/tagNo[ tag ];
+			} else {
+				scalar = scalar*defaultWeights["selectedTagWeight"]*
+					(to!double(noTodos))/tagNo[ tag ];
+			}
+		}
 	}
+	if (scalar == 0)
+		scalar = defaultWeights["defaultTagWeight"];
 
 	return scalar;
 }
