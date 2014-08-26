@@ -122,10 +122,15 @@ auto tagWeightScalar( Tags tags, TagDelta selected,
 		if (selected.delete_tags.canFind( tag ))
 			return defaultWeights["deselectedTagWeight"];
 	}
+
 	
 	double scalar = 0;
 	foreach ( tag; tags ) {
-		if (selected.add_tags.canFind( tag )) {
+		// If no tags are selected and default weight is zero set tag weight to 1. This means that if nothing is selected we will get
+		// random normal flags
+		if (selected.add_tags.length == 0 && defaultWeights["defaultTagWeight"] == 0) {
+			scalar = 1;
+		} else if (selected.add_tags.canFind( tag )) {
 			if (scalar == 0) {
 				scalar = defaultWeights["selectedTagWeight"]*
 					(to!double(noTodos))/tagNo[ tag ];
