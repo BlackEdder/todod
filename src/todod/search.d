@@ -30,11 +30,12 @@ version( unittest ) {
 	import std.stdio;
 }
 
-double weightSearchString( string searchString, string compare ) {
-	double scalar = levenshteinDistance( searchString, compare );
+/// Match term to word  and return a weight based on match
+double weightSearchWord( string searchString, string compareWord ) {
+	double scalar = levenshteinDistance( searchString, compareWord );
 	double scalarLowercase = levenshteinDistance( 
-			searchString.toLower, compare.toLower );
-	size_t maxWeight = max( searchString.length, compare.length);
+			searchString.toLower, compareWord.toLower );
+	size_t maxWeight = max( searchString.length, compareWord.length);
 	// Weigh to be between 1 and 12.0. 
 	// 6.0 is actually 12/2, with the 2 due to averaging lowercasing
 	return 11.0 - 5.5*(scalar+scalarLowercase)/(maxWeight)+1;
@@ -42,24 +43,31 @@ double weightSearchString( string searchString, string compare ) {
 
 // Simple comparisons
 unittest {
-	double w1 = weightSearchString( "bla", "bla" );
+	double w1 = weightSearchWord( "bla", "bla" );
 	assert( w1 > 1.0 );
-	double w2 = weightSearchString( "Bla", "bla" );
+	double w2 = weightSearchWord( "Bla", "bla" );
 	assert( w2 < w1 );
-	double w3 = weightSearchString( "vla", "bla" );
+	double w3 = weightSearchWord( "vla", "bla" );
 	assert( w3 < w2 );
 }
 
 // Lower limit >= 1
 unittest {
-	double w = weightSearchString( "abcdefghijklmnopqrstuvwxyz", 
+	double w = weightSearchWord( "abcdefghijklmnopqrstuvwxyz", 
 			"123456789012345678901234567890" );
 	assert( w == 1.0 );
-	w = weightSearchString( 
+	w = weightSearchWord( 
 			"123456789012345678901234567890", "abcdefghijklmnopqrstuvwxyz" );
 	assert( w == 1.0 );
 }
 	
-// Search in sentence ( compare every word of sentence separate )
+/// Search for term in sentence and return a weight based on match
+///
+/// Split sentence into words and apply weightSearchWord
+double weightSearchSentence( string searchString, string compareSentence ) {
+	return 1.0;
+}
+
+// Test search in sentence
 
 // Multiple search terms
