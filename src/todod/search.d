@@ -34,7 +34,10 @@ double weightSearchString( string searchString, string compare ) {
 	double scalar = levenshteinDistance( searchString, compare );
 	double scalarLowercase = levenshteinDistance( 
 			searchString.toLower, compare.toLower );
-	return 12.0 - (scalar+scalarLowercase)/2.0;
+	size_t maxWeight = max( searchString.length, compare.length);
+	// Weigh to be between 0 and 12.0. 
+	// 6.0 is actually 12/2, with the 2 due to averaging lowercasing
+	return 12.0 - 6.0*(scalar+scalarLowercase)/(maxWeight);
 }
 
 // Simple comparisons
@@ -49,12 +52,14 @@ unittest {
 
 // Lower limit >= 0
 unittest {
-	double w1 = weightSearchString( "abcdefghijklmnopqrstuvwxyz", 
+	double w = weightSearchString( "abcdefghijklmnopqrstuvwxyz", 
 			"123456789012345678901234567890" );
-	writeln( w1 );
-	assert( w1 == 0.0 );
+	assert( w == 0.0 );
+	w = weightSearchString( 
+			"123456789012345678901234567890", "abcdefghijklmnopqrstuvwxyz" );
+	assert( w == 0.0 );
 }
 	
-// Search in sentence
+// Search in sentence ( compare every word of sentence separate )
 
 // Multiple search terms
