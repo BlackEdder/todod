@@ -31,7 +31,7 @@ version( unittest ) {
 }
 
 /// Match term to word  and return a weight based on match
-double weightSearchWord( string searchString, string compareWord ) {
+double weightTermWord( string searchString, string compareWord ) {
 	double scalar = levenshteinDistance( searchString, compareWord );
 	double scalarLowercase = levenshteinDistance( 
 			searchString.toLower, compareWord.toLower );
@@ -43,31 +43,61 @@ double weightSearchWord( string searchString, string compareWord ) {
 
 // Simple comparisons
 unittest {
-	double w1 = weightSearchWord( "bla", "bla" );
+	double w1 = weightTermWord( "bla", "bla" );
 	assert( w1 > 1.0 );
-	double w2 = weightSearchWord( "Bla", "bla" );
+	double w2 = weightTermWord( "Bla", "bla" );
 	assert( w2 < w1 );
-	double w3 = weightSearchWord( "vla", "bla" );
+	double w3 = weightTermWord( "vla", "bla" );
 	assert( w3 < w2 );
 }
 
 // Lower limit >= 1
 unittest {
-	double w = weightSearchWord( "abcdefghijklmnopqrstuvwxyz", 
+	double w = weightTermWord( "abcdefghijklmnopqrstuvwxyz", 
 			"123456789012345678901234567890" );
 	assert( w == 1.0 );
-	w = weightSearchWord( 
+	w = weightTermWord( 
 			"123456789012345678901234567890", "abcdefghijklmnopqrstuvwxyz" );
 	assert( w == 1.0 );
+}
+
+/// Break sentence into words
+string[] byWord( string sentence ) {
+	return sentence.split( " " );
 }
 	
 /// Search for term in sentence and return a weight based on match
 ///
-/// Split sentence into words and apply weightSearchWord
-double weightSearchSentence( string searchString, string compareSentence ) {
-	return 1.0;
+/// Split sentence into words and apply weightTermWord
+double weightTermSentence( string searchString, string compareSentence ) {
+	double scalar = 1.0;
+	foreach( word; compareSentence.byWord ) {
+		scalar *= weightTermWord( searchString, word );
+	}
+	return scalar;
 }
 
 // Test search in sentence
+unittest {
+	assert( weightTermWord( "bla", "bla" ) ==
+			weightTermSentence( "bla", "How is bla" ) );
+	assert( weightTermWord( "bla", "bla" )*weightTermWord( "bla", "Bla" ) ==
+			weightTermSentence( "bla", "Bla is bla" ) );
+
+	assert( weightTermSentence( "abc", "def fgh" ) == 1.0 );
+}
+
+/// Search for term(s) in sentence and return a weight based on match
+double weightSearchSentence( string searchString, string compareSentence ) {
+	double scalar = 1.0;
+	foreach( term; searchString.byWord ) {
+		scalar *= weightTermSentence( term, compareSentence );
+	}
+	return scalar;
+}
 
 // Multiple search terms
+unittest {
+	assert( weightTermWord( "bla", "bla" )*weightTermWord( "is", "is" ) ==
+			weightSearchSentence( "bla is", "How is bla" ) );
+}
