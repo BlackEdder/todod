@@ -156,7 +156,7 @@ auto weight( Todo t, TagDelta selected, string searchString,
 	double tw = t.weight*tagWeightScalar( t.tags, selected, noTodos, tagNo, 
 			defaultWeights );
 	// Search by string;
-	tw *= weightSearchSentence( searchString, t.title );
+	tw *= pow( defaultWeights["selectedTagWeight"], weightSearchSentence( searchString, t.title ) );
 
 	if ( t.due_date )
 		return tw * dueWeight( t.due_date.substract( Date.now ) );
