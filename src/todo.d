@@ -138,17 +138,20 @@ void initCommands( State state ) {
 
 		commands.add( 
 				"search", delegate( State state, string parameter ) {
-			if ( parameter == "" )
+			if ( parameter == "" || match( parameter, r" all$" ) ) { // Reset search
 				state.selectedTags = TagDelta();
-			else {
-				if ( match( parameter, r" all$" ) ) // Search through all todos
-					state.selectedTags = TagDelta();
-				TagDelta newTags = parseTags( parameter );
+				state.searchString = "";
+			} else {
+			  auto tuple = parseAndRemoveTags( parameter );
+				TagDelta newTags = tuple[0];
 				state.selectedTags.add_tags.add( newTags.add_tags );
 				state.selectedTags.delete_tags.add( newTags.delete_tags );
+				
+				state.searchString = tuple[1];
 			}
 			state.selectedTodos = random( state.todos, state.tags, 
-				state.selectedTags, state.dependencies, state.defaultWeights );
+				state.selectedTags, state.searchString, state.dependencies,
+				state.defaultWeights );
 			state = commands["show"]( state, "" );
 			return state;
 		}, "Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. search ... all will search through all Todos instead. Similarly, search without any further parameters resets the search (activates all Todos)." );
@@ -156,7 +159,8 @@ void initCommands( State state ) {
 		commands.add( 
 				"reroll", delegate( State state, string parameter ) {
 			state.selectedTodos = random( state.todos, state.tags,
-				state.selectedTags, state.dependencies, state.defaultWeights );
+				state.selectedTags, state.searchString, 
+				state.dependencies, state.defaultWeights );
 			state = commands["show"]( state, "" );
 			return state;
 		}, "Reroll the Todos that are active. I.e. chooses up to five Todos from all the active Todos to show" );
@@ -314,7 +318,8 @@ void main( string[] args ) {
 
 
 	state.selectedTodos = random( state.todos, state.tags,
-		state.selectedTags, state.dependencies, state.defaultWeights );
+		state.selectedTags, state.searchString, state.dependencies, 
+		state.defaultWeights );
 
 	initCommands( state );
 

@@ -36,6 +36,7 @@ import stochastic.gillespie;
 import todod.todo;
 import todod.date;
 import todod.dependency;
+import todod.search;
 import todod.tag;
 
 version( unittest ) {
@@ -147,13 +148,16 @@ auto tagWeightScalar( Tags tags, TagDelta selected,
 }
 
 /// Associate a weight to a Todo depending on last progress and todo dates
-auto weight( Todo t, TagDelta selected, 
+auto weight( Todo t, TagDelta selected, string searchString,
 		size_t noTodos, size_t[Tag] tagNo, in Dependencies deps,
 		in double[string] defaultWeights ) {
 	if ( deps.isAChild( t.id ) )
 		return 0;
 	double tw = t.weight*tagWeightScalar( t.tags, selected, noTodos, tagNo, 
 			defaultWeights );
+	// Search by string;
+	tw *= weightSearchSentence( searchString, t.title );
+
 	if ( t.due_date )
 		return tw * dueWeight( t.due_date.substract( Date.now ) );
 	return tw * progressWeight( lastProgress( t ) );
@@ -165,7 +169,8 @@ auto weight( Todo t, TagDelta selected,
 	Todos with a higher weight (influenced by due date, currently selected tags and
 	last progress) have a higher probability of being drawn.
 	*/
-Todo[] randomGillespie( Todos ts, Tags allTags, TagDelta selected, 
+Todo[] randomGillespie( Todos ts, Tags allTags, TagDelta selected,
+		string searchString,
 		in Dependencies deps,
 		in double[string] defaultWeights,
 		size_t no = 5 ) 
@@ -185,7 +190,8 @@ body {
 	foreach( t; ts ) {
 		auto e_id = gillespie.newEventId;
 		gillespie.addEvent( e_id, 
-				to!real( weight( t, selected, ts.length, ts.tagOccurence( allTags ), deps,
+				to!real( weight( t, selected, searchString, ts.length, 
+						ts.tagOccurence( allTags ), deps,
 						defaultWeights ) ),
 				eventTodo( gillespie, t, e_id ) );
 	}
@@ -214,5 +220,6 @@ unittest {
 	ts.add( new Todo( "Todo3" ) );
 	TagDelta selected;
 	Dependencies deps;
-	assert( randomGillespie( ts, ts.allTags, selected, deps, setDefaultWeights() , 2 ).length == 2 );
+	assert( randomGillespie( ts, ts.allTags, selected, "", deps, 
+				setDefaultWeights() , 2 ).length == 2 );
 }

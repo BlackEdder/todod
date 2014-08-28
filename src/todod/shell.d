@@ -64,6 +64,7 @@ unittest {
 	assert( !match( "bla-tag", allTagRegex ) );
 }
 
+/// parse a string and return a tuple with TagDelta and the rest of the string
 auto parseAndRemoveTags( string str ) {
 	TagDelta td;
 	auto m = matchAll( str, addTagRegex );
@@ -257,15 +258,16 @@ string prettyStringTodo( Todo t ) {
 }
 
 string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos, Tags allTags,
-		TagDelta selectedTags, in Dependencies deps, in double[string] defaultWeights,
+		TagDelta selectedTags, string searchString, in Dependencies deps, in double[string] defaultWeights,
 		bool showWeight = false ) {
 	string str;
 	size_t id = 0;
 	foreach( t; ts ) {
 		str = str ~ to!string( id ) ~ "\t" ~ prettyStringTodo( t );
 		if (showWeight)
-			str ~= "Weight: " ~ to!string( weight( t, selectedTags, allTodos.length, 
-					allTodos.tagOccurence( allTags ), deps, defaultWeights ) ) ~ "\n";
+			str ~= "Weight: " ~ to!string( weight( t, selectedTags, searchString,
+						allTodos.length, allTodos.tagOccurence( allTags ), deps, 
+						defaultWeights ) ) ~ "\n";
 		str ~= "\n";
 		id++;
 	}
@@ -332,7 +334,8 @@ Commands!( State delegate( State, string) ) addShowCommands(
 				if (parameter == "weight")
 					show_weight = true;
 				write( prettyStringTodos( state.selectedTodos, state.todos, state.tags, 
-						state.selectedTags, state.dependencies, state.defaultWeights, show_weight ) );
+						state.selectedTags, state.searchString, state.dependencies, 
+						state.defaultWeights, show_weight ) );
 				debug {
 					writeln( "Debug: Selected ", state.selectedTags.add_tags );
 					writeln( "Debug: Deselected ", state.selectedTags.delete_tags );

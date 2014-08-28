@@ -35,6 +35,8 @@ class State {
 	Tags tags; /// All tags
 	TagDelta selectedTags; /// Currently selected Tags
 
+	string searchString; /// String containing current search terms
+
 	Dependencies dependencies; /// Dependencies between Todos
 
 	double[string] defaultWeights; /// Default weights used for selecting Todos to show

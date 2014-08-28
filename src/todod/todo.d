@@ -223,10 +223,12 @@ unittest {
 	Select a weighted random set of Todos
 	*/
 Todo[] random( Todos ts, Tags allTags, TagDelta selected, 
+		string searchString, 
 		in Dependencies deps, 
 		in double[string] defaultWeights, size_t no = 5 ) {
 	if (ts.length > no) {
-		return randomGillespie( ts, allTags, selected, deps, defaultWeights, no );
+		return randomGillespie( ts, allTags, selected, searchString, deps, 
+				defaultWeights, no );
 	}	
 	return ts.array;
 }
