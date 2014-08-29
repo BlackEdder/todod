@@ -274,6 +274,28 @@ string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos, Tags allTags,
 	return str;
 }
 
+string prettyStringState( State state, bool showWeight = false ) {
+	string str = "Tags and number of todos associated with that tag.\n";
+	auto tags = state.todos.tagOccurence( state.tags );
+	foreach( tag, count; tags ) {
+		if (!state.selectedTags.delete_tags.canFind( tag )) {
+			if (state.selectedTags.add_tags.canFind( tag ))
+				str ~= tagColor(tag.name) ~ " (" ~ count.to!string ~ "),  ";
+			else
+				str ~= tag.name ~ " (" ~ count.to!string ~ "),  ";
+		}
+	}
+	str ~= "\n\n";
+	str ~= prettyStringTodos( state.selectedTodos, state.todos, state.tags, 
+				state.selectedTags, state.searchString, state.dependencies, 
+				state.defaultWeights, showWeight );
+	debug {
+		str ~= "Debug: Selected " ~ state.selectedTags.add_tags.to!string ~ "\n";
+		str ~= "Debug: Deselected " ~ state.selectedTags.delete_tags.to!string ~ "\n";
+	}
+	return str;
+}
+
 Commands!( State delegate( State, string) ) addShowCommands( 
 		ref Commands!( State delegate( State, string) ) main ) {
 	auto showCommands = Commands!( State delegate( State, string) )(
@@ -316,37 +338,17 @@ Commands!( State delegate( State, string) ) addShowCommands(
 
 	main.add( 
 			"show", delegate( State state, string parameter ) {
-			state = main["clear"]( state, "" ); 
-			if ( parameter == "" || parameter == "weight" ) {
-				writeln( "Tags and number of todos associated with that tag." );
-				auto tags = state.todos.tagOccurence( state.tags );
-				foreach( tag, count; tags ) {
-					if (!state.selectedTags.delete_tags.canFind( tag )) {
-						if (state.selectedTags.add_tags.canFind( tag ))
-							write( tagColor(tag.name), " (", count, "),  " );
-						else
-							write( tag.name, " (", count, "),  " );
-					}
+				state = main["clear"]( state, "" ); 
+				if ( parameter == "" ) {
+					writeln( prettyStringState( state ) );
+				} else if (parameter == "weight") {
+					writeln( prettyStringState( state, true ) );
+				} else {
+					auto split = parameter.findSplit( " " );
+					state = showCommands[split[0]]( state, split[2] );
 				}
-				writeln();
-				writeln();
-				bool show_weight = false;
-				if (parameter == "weight")
-					show_weight = true;
-				write( prettyStringTodos( state.selectedTodos, state.todos, state.tags, 
-						state.selectedTags, state.searchString, state.dependencies, 
-						state.defaultWeights, show_weight ) );
-				debug {
-					writeln( "Debug: Selected ", state.selectedTags.add_tags );
-					writeln( "Debug: Deselected ", state.selectedTags.delete_tags );
-				}
-			}
-			else {
-				auto split = parameter.findSplit( " " );
-				state = showCommands[split[0]]( state, split[2] );
-			}
-			return state;
-		}, "Show different views. When called without parameters shows a (randomly) selected list of Todos. See show help for more options" );
+				return state;
+			}, "Show different views. When called without parameters shows a (randomly) selected list of Todos. See show help for more options" );
 
 	main.addCompletion( "show",
 		delegate( string cmd, string parameter ) {
