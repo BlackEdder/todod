@@ -54,7 +54,7 @@ extern(C) void completion(const char *buf, linenoiseCompletions *lc) {
 		auto regex_buf = "^" ~ mybuf;
 		auto matching_commands = filter!( a => match( a, regex_buf ))( commandKeys );
 		foreach ( com; matching_commands ) {
-			linenoiseAddCompletion(lc,std.string.toStringz(com));
+			linenoiseAddCompletion(lc,std.string.toStringz(com ~ " "));
 		}
 	} else {
 		auto m = match( mybuf, r"^([A-z]+) (.*)$" );

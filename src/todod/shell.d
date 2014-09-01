@@ -358,11 +358,11 @@ Commands!( State delegate( State, string) ) addShowCommands(
 				// Main commands
 				string[] command_keys = showCommands.commands;
 				auto matchingCommands =
-				filter!( a => match( a, m.captures[1] ))( command_keys );
+					filter!( a => match( a, m.captures[1] ))( command_keys );
 				foreach ( com; matchingCommands ) {
 					results ~= [cmd ~ " " ~ com];
 				}
-				}
+			}
 			return results;
 		}
 	);
