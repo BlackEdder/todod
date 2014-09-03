@@ -67,7 +67,12 @@ unittest {
 
 /// Break sentence into words
 string[] byWord( string sentence ) {
-	return sentence.split( " " );
+	return sentence.chomp.chomp(" ").split( " " );
+}
+
+unittest {
+	// Trailing space
+	assert( "a b ".byWord.length == 2 );
 }
 	
 /// Search for term in sentence and return a weight based on match
