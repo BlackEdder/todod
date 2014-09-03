@@ -138,10 +138,15 @@ void initCommands( State state ) {
 
 		commands.add( 
 				"search", delegate( State state, string parameter ) {
-			if ( parameter == "" || match( parameter, r" all$" ) ) { // Reset search
+			if ( parameter == "" ) { // Reset search
 				state.selectedTags = TagDelta();
 				state.searchString = "";
 			} else {
+				if ( match( parameter, r" all$" ) ) {
+					state.selectedTags = TagDelta();
+					state.searchString = "";
+					parameter = parameter[0..$-4];
+				}
 			  auto tuple = parseAndRemoveTags( parameter );
 				TagDelta newTags = tuple[0];
 				state.selectedTags.add_tags.add( newTags.add_tags );
