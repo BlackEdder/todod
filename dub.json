@@ -12,16 +12,16 @@
 		"libgit2": ">=0.20.1",
 		"colorize": ">=1.0.5"
 	},
-	"configurations": [
+	"configurations": [ {
+		"name": "shell",
+		"targetType": "executable",
+		"targetPath": "bin",
+		"mainSourceFile": "src/todo.d",
+	},
 	{
 		"name": "todod",
 		"targetType": "library",
 		"excludedSourceFiles": [ "src/todo.d" ],
-	},
-	{
-		"name": "shell",
-		"targetType": "executable",
-		"targetPath": "bin",
-		"mainSourceFile": "todo.d",
-	}]
+	}
+	]
 }
