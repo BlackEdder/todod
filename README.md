@@ -44,8 +44,6 @@ to create an executable: bin/todod. You can copy this to anywhere in your path.
 
 Start the command line interface by running todod. This will open a shell that allows you to work with your todo list.
 
-The todod manager allows you to keep track of large amounts of todos. Todos can be tagged and/or given due dates. 
-
 Usage command [OPTIONS].
 		
 This todod manager allows you to keep track of large amounts of todos. Todos can be tagged and/or given due dates. A feature specific to this todo manager is that it will show at most 5 todos at a time. Todos that are due or are old have a higher probability of being shown. Limiting the view to the more important todos allows you to focus on high priority todos first.
