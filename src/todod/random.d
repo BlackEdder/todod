@@ -45,7 +45,7 @@ version( unittest ) {
 
 
 double[string] setDefaultWeights() {
-	return [ "defaultTagWeight": 1.0, "selectedTagWeight": 8.0,
+	return [ "defaultTagWeight": 0.0, "selectedTagWeight": 12.0,
 				 "deselectedTagWeight": 0.0];
 }
 
