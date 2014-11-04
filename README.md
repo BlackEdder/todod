@@ -66,7 +66,7 @@ __search__ Usage search terms +tag1 -tag2. Search for matching terms in the todo
 
 __reroll__ Reroll the Todos that are active. I.e. chooses up to five Todos from all the active Todos to show
 
-__tag__ Usage: tag +tagtoadd -tagtoremove [TARGETS]. Adds or removes given tags for the provided targets. Targets can either be a list of numbe constrs (2,3,4) or all for all shown Todos
+__tag__ Usage: tag +tagtoadd -tagtoremove [TARGETS]. Adds or removes given tags for the provided targets. Targets can either be a list of numbers (2,3,4) or all for all shown Todos
 
 __due__ Usage: due YYYY-MM-DD [TARGETS] or +days. Sets the given due date for the provided targets. Targets can either be a list of numbers (2,3,4) or all for all shown Todos
 
