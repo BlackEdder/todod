@@ -159,7 +159,7 @@ void initCommands( State state ) {
 				state.defaultWeights );
 			state = commands["show"]( state, "" );
 			return state;
-		}, "Usage search +tag1 -tag2. Activates only the todos that have the specified todos. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. search ... all will search through all Todos instead. Similarly, search without any further parameters resets the search (activates all Todos)." );
+		}, "Usage search terms +tag1 -tag2. Search for matching terms in the todod title and/or tags. Search is incremental, i.e. search +tag1 activates all todos with tag1, then search -tag2 will deactivate the Todos with tag2 from the list of Todos with tag1. search ... all will search through all Todos instead. Similarly, search without any further parameters resets the search (activates all Todos)." );
 
 		commands.add( 
 				"reroll", delegate( State state, string parameter ) {
@@ -250,7 +250,7 @@ void initCommands( State state ) {
 				state = commands["reroll"]( state, "" );
 			}
 			return state;
-		}, "Usage: depend TODOID1 TODOID2. The first Todo depends on the second. Causing the first Todo to be hidden untill the second Todo is done." );
+		}, "Usage: depend TODOID1 TODOID2. The first Todo depends on the second. Causing the first Todo to be hidden until the second Todo is done." );
 
 		commands.add( 
 				"help", delegate( State state, string parameter ) {
