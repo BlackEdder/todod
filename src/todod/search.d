@@ -72,7 +72,7 @@ string[] byWord( string sentence ) {
 
 unittest {
 	// Trailing space
-	assert( "a b ".byWord.length == 2 );
+	assert( ("a b ").byWord.length == 2 );
 }
 	
 /// Search for term in sentence and return a weight based on match

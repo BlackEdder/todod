@@ -199,7 +199,7 @@ auto lastProgress( const Todo t ) {
 /**
 	Working on list of todos
 	*/
-alias Set!Todo Todos;
+alias Todos = Set!Todo;
 version(unittest) {
 	Todos generateSomeTodos() {
 		Todo t1 = new Todo( "Todo 1" );

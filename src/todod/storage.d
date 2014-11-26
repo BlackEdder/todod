@@ -175,7 +175,7 @@ Commands!( State delegate( State, string) ) addStorageCommands(
 			"push", delegate( State state, string parameter ) {
 		try {
 			gitPush( gitRepo );
-		} catch {
+		} catch (Throwable) {
 			writeln( "Git push failed. Did you set up a default remote called origin?" );
 		}
 		return state;

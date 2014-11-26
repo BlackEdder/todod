@@ -83,7 +83,7 @@ unittest {
 	assert( link._child == orig._child );
 }
 
-alias Link[] Dependencies;
+alias Dependencies = Link[];
 
 /// Is given uuid a child of anyone
 bool isAChild( in Dependencies deps, in UUID child ) {

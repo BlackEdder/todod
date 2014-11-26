@@ -30,7 +30,7 @@ import colorize;
 
 /// Manage command line arguments
 struct Commands(COMMAND) {
-	alias string[] delegate( string, string ) Completion;
+	alias Completion = string[] delegate( string, string );
 
 	/// Create commands using the introduction when printing help
 	this( string introduction ) {
