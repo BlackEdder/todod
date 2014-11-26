@@ -124,10 +124,12 @@ auto tagWeightScalar( Tags tags, TagDelta selected,
 			return defaultWeights["deselectedTagWeight"];
 	}
 
-	
 	double scalar = 0;
+	if (tags.length == 0 && selected.add_tags.length == 0 
+			&& defaultWeights["defaultTagWeight"] == 0)
+		scalar = 1;
 	foreach ( tag; tags ) {
-		// If no tags are selected and default weight is zero set tag weight to 1. This means that if nothing is selected we will get
+			// If no tags are selected and default weight is zero set tag weight to 1. This means that if nothing is selected we will get
 		// random normal flags
 		if (selected.add_tags.length == 0 && defaultWeights["defaultTagWeight"] == 0) {
 			scalar = 1;
@@ -145,6 +147,15 @@ auto tagWeightScalar( Tags tags, TagDelta selected,
 		scalar = defaultWeights["defaultTagWeight"];
 
 	return scalar;
+}
+
+unittest {
+	Tags tags;
+	TagDelta selected;
+	size_t[Tag] noTags;
+	assert( tagWeightScalar( tags, selected, 3, noTags, setDefaultWeights ) > 0 );
+	selected.add_tags.add(new Tag("bla"));
+	assert( tagWeightScalar( tags, selected, 3, noTags, setDefaultWeights ) == 0 );
 }
 
 /// Associate a weight to a Todo depending on last progress and todo dates
@@ -221,5 +232,5 @@ unittest {
 	TagDelta selected;
 	Dependencies deps;
 	assert( randomGillespie( ts, ts.allTags, selected, "", deps, 
-				setDefaultWeights() , 2 ).length == 2 );
+				setDefaultWeights(), 2 ).length == 2 );
 }
