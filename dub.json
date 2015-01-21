@@ -6,7 +6,6 @@
 	"license": "GPL-3.0",
 	"libs": ["curl"],
 	"dependencies": {
-		"tested": "~master",
 		"linenoise": "~master",
 		"stochastic": "0.3.0",
 		"libgit2": ">=0.20.1",
