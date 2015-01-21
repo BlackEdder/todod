@@ -6,6 +6,7 @@ before_install:
   - cmake .. -DCMAKE_INSTALL_PREFIX=/usr
   - cmake --build .
   - sudo make install
+  - wget https://raw.githubusercontent.com/antirez/linenoise/master/linenoise.c
   - wget https://raw.githubusercontent.com/antirez/linenoise/master/linenoise.h
   - gcc -c -o linenoise.o linenoise.c
   - ar rcs liblinenoise.a linenoise.o
