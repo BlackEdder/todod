@@ -107,4 +107,4 @@ __habitrpg todos__
 Once you mark a todo as done it will be marked as done on HabitRPG as well. After adding new todos you'll have to issue __habitrpg todos__ again to sync this. This will likely be automated in later versions of todod.
 
 ## Tested compilers
-![dmd-2.066.1](https://img.shields.io/badge/DMD-2.066.1-brightgreen.svg) ![DMD-2.065.0](https://img.shields.io/badge/DMD-2.065.0-brightgreen.svg) ![LDC-0.14.0](https://img.shields.io/badge/LDC-0.14.0-brightgreen.svg) ![LDC-0.15.1](https://img.shields.io/badge/LDC-0.15.1-brightgreen.svg) ![GDC-4.9.0](https://img.shields.io/badge/GDC-4.9.0-brightgreen.svg)
+![dmd-2.066.1](https://img.shields.io/badge/DMD-2.066.1-brightgreen.svg) ![DMD-2.065.0](https://img.shields.io/badge/DMD-2.065.0-brightgreen.svg) ![LDC-0.14.0](https://img.shields.io/badge/LDC-0.14.0-brightgred.svg) ![LDC-0.15.1](https://img.shields.io/badge/LDC-0.15.1-brightred.svg) ![GDC-4.9.0](https://img.shields.io/badge/GDC-4.9.0-brightred.svg)
