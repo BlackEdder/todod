@@ -2,6 +2,11 @@ before_install:
   - sudo add-apt-repository ppa:xav0989/libgit2 -y
   - sudo apt-get update -q
   - sudo apt-get install -y libgit2-dev
+  - wget https://raw.githubusercontent.com/antirez/linenoise/master/linenoise.c
+  - wget https://raw.githubusercontent.com/antirez/linenoise/master/linenoise.h
+  - gcc -c -o linenoise.o linenoise.c
+  - ar rcs liblinenoise.a linenoise.o
+  - sudo mv liblinenoise.a /usr/lib/
 
 language: d
 
