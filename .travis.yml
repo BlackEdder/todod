@@ -16,5 +16,4 @@ before_install:
 language: d
 
 d:
-  - dmd-2.065.0
   - dmd-2.066.1

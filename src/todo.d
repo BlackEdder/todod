@@ -342,6 +342,13 @@ void main( string[] args ) {
 	char *line;
 
 	while(!quit && (line = linenoise("todod> ")) !is null) {
+        // TODO: create a wait for event
+        // that waitForEventActor will add file monitors and linenoise "monitor"
+        // Whichever returns first is acted upon
+        // If file is changed it will send reload ask line.. This should reload 
+        // everything from files
+
+
 		/* Do something with the string. */
 		if (line[0] != '\0') {
 			if ( !strncmp(line,"quit",4) ) {
