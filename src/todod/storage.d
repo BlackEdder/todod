@@ -56,9 +56,9 @@ class MonitoredFile
         monitorActor = spawn( &fileMonitor, thisTid, _path ~ _name );
     }
 
-    bool changed() 
+    bool changed( int timeOut = 0 ) 
     {
-        if( receiveTimeout( 0.msecs, 
+        if( receiveTimeout( timeOut.msecs, 
                 (size_t v) { debug writeln("File was changed"); } ) )
             return true;
         return false;
@@ -100,9 +100,10 @@ unittest
     File file = File( "path/file2", "w" );
     file.writeln( "editting during test" );
     file.close;
-    assert( mFile.changed );
+    assert( mFile.changed( 1000 ) );
  
     // Make sure to clean up
+    rmdirRecurse( "path" );
 }
 
 /// Write string contents to file at the given path
