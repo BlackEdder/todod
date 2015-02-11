@@ -1,26 +1,27 @@
 {
-	"name": "todod",
-	"description": "A command line todo list written in D.",
-	"copyright": "Copyright © 2014, Edwin van Leeuwen",
-	"authors": ["Edwin van Leeuwen"],
-	"license": "GPL-3.0",
-	"libs": ["curl"],
-	"dependencies": {
-		"linenoise": "~master",
-		"stochastic": "0.3.0",
-		"libgit2": ">=0.20.1",
-		"colorize": ">=1.0.5"
-	},
-	"configurations": [ {
-		"name": "shell",
-		"targetType": "executable",
-		"targetPath": "bin",
-		"mainSourceFile": "src/todo.d",
-	},
-	{
-		"name": "todod",
-		"targetType": "library",
-		"excludedSourceFiles": [ "src/todo.d" ],
-	}
-	]
+    "name": "todod",
+    "description": "A command line todo list written in D.",
+    "copyright": "Copyright © 2014, Edwin van Leeuwen",
+    "authors": ["Edwin van Leeuwen"],
+    "license": "GPL-3.0",
+    "libs": ["curl"],
+    "dependencies": {
+        "linenoise": "~master",
+        "stochastic": "0.3.0",
+        "libgit2": ">=0.20.1",
+        "colorize": ">=1.0.5",
+        "dinotify": "~>0.2.1"
+    },
+    "configurations": [ {
+        "name": "shell",
+        "targetType": "executable",
+        "targetPath": "bin",
+        "mainSourceFile": "src/todo.d",
+    },
+    {
+        "name": "todod",
+        "targetType": "library",
+        "excludedSourceFiles": [ "src/todo.d" ],
+    }
+    ]
 }

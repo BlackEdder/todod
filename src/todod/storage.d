@@ -1,6 +1,8 @@
 module todod.storage;
 
+import core.time : msecs;
 import std.algorithm;
+import std.concurrency : spawn, receive, receiveTimeout, send, thisTid, Tid;
 import std.conv;
 import std.exception;
 import std.file;
@@ -10,9 +12,98 @@ import std.string;
 import std.uuid;
 
 import deimos.git2.all;
+//import dinotify : iNotify, INotify, IN_MODIFY;
+import dinotify;
+import core.sys.linux.sys.inotify;
 
 import todod.commandline;
 import todod.state;
+
+void fileMonitor( Tid actor, string file )
+{
+    auto monitor = iNotify();
+    //monitor.add( _path[0..$-1].ptr, IN_CREATE | IN_DELETE );
+    monitor.add( file.toStringz, IN_CLOSE );
+
+    while (true) 
+    {
+        auto events = monitor.read();
+        debug writeln( "Sending events length" );
+        actor.send( events.length );
+    }
+}
+
+/// Interact with a file
+class MonitoredFile
+{
+    this( string path, string name )
+    {
+        _path = path;
+        if (_path[$-1] != '/')
+            _path ~= "/";
+        _name = name;
+
+        // Make sure it exists
+        mkdirRecurse( _path );
+        if( !exists( _path ~ _name ) )
+        {
+            File file = File( _path ~ _name, "w" );
+            file.writeln( "" );
+            file.close;
+        }
+
+        // TODO this fails if other process is already watching the file
+        monitorActor = spawn( &fileMonitor, thisTid, _path ~ _name );
+    }
+
+    bool changed() 
+    {
+        if( receiveTimeout( 0.msecs, 
+                (size_t v) { debug writeln("File was changed"); } ) )
+            return true;
+        return false;
+    }
+
+    void write( string contents )
+    {
+        File file = File( _path ~ _name, "w" );
+        file.writeln( contents );
+        file.close;
+        // Waiting for monitor to find the changed file
+        receive( (size_t v) { debug writeln("File was changed"); } );
+    }
+
+    private:
+        string _path;
+        string _name;
+        Tid monitorActor;
+}
+
+unittest
+{
+    auto mFile = new MonitoredFile( "path/", "file" );
+    assert( mFile._path == "path/" );
+    assert( mFile._name == "file" );
+    // Check path works without trailing /
+    mFile = new MonitoredFile( "path", "file2" );
+    assert( mFile._path == "path/" );
+    assert( mFile._name == "file2" );
+
+    // Check changed is false if file did not exist
+    assert( !mFile.changed );
+
+    // Check changed is false when writing through MonitoredFile.write
+    mFile.write( "bla" );
+    assert( !mFile.changed );
+
+    // Check changed is true if writing in between
+    File file = File( "path/file2", "w" );
+    file.writeln( "editting during test" );
+    file.close;
+    assert( mFile.changed );
+ 
+    // Make sure to clean up
+}
 
 /// Write string contents to file at the given path
 void writeToFile( string path, string name, string contents ) {

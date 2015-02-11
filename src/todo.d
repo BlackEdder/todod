@@ -334,10 +334,10 @@ void main( string[] args ) {
 
 	bool quit = false;
 
- 	// LineNoise setup
-	auto historyFile = dirName ~ "history.txt";
-	linenoiseSetCompletionCallback( &completion );
-  linenoiseHistoryLoad(std.string.toStringz(historyFile)); /* Load the history at startup */
+    // LineNoise setup
+    auto historyFile = dirName ~ "history.txt";
+    linenoiseSetCompletionCallback( &completion );
+    linenoiseHistoryLoad(std.string.toStringz(historyFile)); /* Load the history at startup */
 
 	char *line;
 
