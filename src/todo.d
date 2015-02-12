@@ -290,6 +290,73 @@ State handleMessage( string command, string parameter, State state ) {
 	return state;
 }
 
+void linenoiseActor( Tid actor )
+{
+    char *line;
+    while( (line = linenoise("todod> ")) !is null )
+    {
+        /*import core.thread;
+        Thread.sleep( 1.seconds );*/
+        debug writeln( "sending command ", line.to!string );
+        actor.send( "command", line.to!string.chomp() );
+        free(line);
+    }
+}
+
+// Eventlistener that starts actors and then with each getNextEvent waits
+// for new events to come in
+struct EventListener
+{
+    string[] files; 
+    size_t[string] ignoreEvents;
+
+
+    void start( string path )
+    {
+        files = ["todos.json", "tags.json", "dependencies.json"]; 
+        foreach( file; files )
+        {
+            spawn( &fileActor, thisTid, path, file );
+            ignoreEvents[file] = 0;
+        }
+        spawn( &linenoiseActor, thisTid );
+    }
+
+    string getNextEvent()
+    {
+        string _type;
+        string _info;
+        receive( ( string type, string info ) { _type = type; _info = info; } );
+        if (_type == "command")
+        {
+            foreach( k, v; ignoreEvents )
+            {
+                ignoreEvents[k] += 1;
+            }
+            return _info;
+        }
+        else
+        {
+            assert( _type == "fileEvent" );
+            if (ignoreEvents[_info] > 0)
+            {
+                ignoreEvents[_info] -= 1;
+                return getNextEvent;
+            }
+            else
+            {
+                foreach( k, v; ignoreEvents )
+                {
+                    ignoreEvents[k] += 1;
+                }
+                /*stdin.writeln( "reload ask" );*/
+                return getNextEvent;
+                //return "reload ask";
+            }
+        }
+    }
+}
+
 void main( string[] args ) {
 	auto state = new State;
 
@@ -339,30 +406,41 @@ void main( string[] args ) {
     linenoiseSetCompletionCallback( &completion );
     linenoiseHistoryLoad(std.string.toStringz(historyFile)); /* Load the history at startup */
 
-	char *line;
+    auto listener = new EventListener;
+    listener.start( dirName );
 
-	while(!quit && (line = linenoise("todod> ")) !is null) {
+	//while(!quit && (line = linenoise("todod> ")) !is null) {
+    while( !quit )
+    {
+        auto line = listener.getNextEvent();
         // TODO: create a wait for event
         // that waitForEventActor will add file monitors and linenoise "monitor"
+        // Also save files through this actor
         // Whichever returns first is acted upon
         // If file is changed it will send reload ask line.. This should reload 
         // everything from files
 
 
 		/* Do something with the string. */
-		if (line[0] != '\0') {
-			if ( !strncmp(line,"quit",4) ) {
-				quit = true;
-			} else {
-				auto commands = to!string( line ).chomp().findSplit( " " );
-				state = handleMessage( commands[0], commands[2], state );
-			}
-			linenoiseHistoryAdd(line); /* Add to the history. */
-			linenoiseHistorySave(std.string.toStringz(historyFile)); /* Save the history on disk. */
-		}
-		free(line);
-		writeTodos( state.todos, gitRepo );
-		writeTags( state.tags, gitRepo );
-		writeDependencies( state.dependencies, gitRepo );
-	}
+        debug writeln( "DEBUG: Received line: ", line );
+        if ( line == "quit" ) {
+            quit = true;
+        }
+        else if ( line == "reload ask" )
+        {
+            state = handleMessage( "help", "", state );
+        }
+        else 
+        {
+            auto commands = line.findSplit( " " );
+            state = handleMessage( commands[0], commands[2], state );
+        }
+        linenoiseHistoryAdd(line.toStringz); /* Add to the history. */
+        linenoiseHistorySave(std.string.toStringz(historyFile)); /* Save the history on disk. */
+    }
+    // Need to kill the actors...!
+
+    writeTodos( state.todos, gitRepo );
+    writeTags( state.tags, gitRepo );
+    writeDependencies( state.dependencies, gitRepo );
 }

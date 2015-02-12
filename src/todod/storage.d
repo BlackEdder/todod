@@ -19,6 +19,20 @@ import core.sys.linux.sys.inotify;
 import todod.commandline;
 import todod.state;
 
+void fileActor( Tid actor, string path, string file )
+{
+    auto monitor = iNotify();
+    //monitor.add( _path[0..$-1].ptr, IN_CREATE | IN_DELETE );
+    monitor.add( (path ~ file).toStringz, IN_CLOSE );
+
+    while (true) 
+    {
+        auto events = monitor.read();
+        debug writeln( "Sending events length ", file );
+        actor.send( "fileEvent", file );
+    }
+}
+
 void fileMonitor( Tid actor, string file )
 {
     auto monitor = iNotify();
