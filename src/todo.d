@@ -453,6 +453,10 @@ void main( string[] args ) {
         }
         linenoiseHistoryAdd(line.toStringz); /* Add to the history. */
         linenoiseHistorySave(std.string.toStringz(historyFile)); /* Save the history on disk. */
+        listener.stopFileListeners;
+        writeTodos( state.todos, gitRepo );
+        writeTags( state.tags, gitRepo );
+        writeDependencies( state.dependencies, gitRepo );
     }
     // Need to kill the actors...!
 
