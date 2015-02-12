@@ -284,7 +284,7 @@ void initCommands( State state ) {
 State handleMessage( string command, string parameter, State state ) {
 	if ( commands.exists( command ) ) {
 		state = commands[command]( state, parameter );
-	} else {
+	} else if (command != "") {
 		state = commands["help"]( state, "" );
 	}
 	return state;
@@ -293,14 +293,13 @@ State handleMessage( string command, string parameter, State state ) {
 void linenoiseActor( Tid actor )
 {
     char *line;
-    while( (line = linenoise("todod> ")) !is null )
-    {
+    /*while( (line = linenoise("todod> ")) !is null )
         /*import core.thread;
         Thread.sleep( 1.seconds );*/
-        debug writeln( "sending command ", line.to!string );
-        actor.send( "command", line.to!string.chomp() );
-        free(line);
-    }
+    line = linenoise("todod> ");
+    debug writeln( "sending command: ", line.to!string );
+    actor.send( "command", line.to!string.chomp() );
+    free(line);
 }
 
 // Eventlistener that starts actors and then with each getNextEvent waits
@@ -309,52 +308,89 @@ struct EventListener
 {
     string[] files; 
     size_t[string] ignoreEvents;
+    string path;
 
+    bool restartLine = true;
+    bool[string] restartFile;
 
-    void start( string path )
+    void start( string _path )
     {
         files = ["todos.json", "tags.json", "dependencies.json"]; 
         foreach( file; files )
         {
-            spawn( &fileActor, thisTid, path, file );
-            ignoreEvents[file] = 0;
+            restartFile[file] = true;
         }
-        spawn( &linenoiseActor, thisTid );
+        path = _path;
     }
 
     string getNextEvent()
     {
+        if (restartLine)
+            spawn( &linenoiseActor, thisTid );
+        foreach( file, restart; restartFile )
+        {
+            if (restart)
+            {
+                spawn( &fileActor, thisTid, path, file );
+                restartFile[file] = false;
+            }
+        }
         string _type;
         string _info;
         receive( ( string type, string info ) { _type = type; _info = info; } );
         if (_type == "command")
         {
-            foreach( k, v; ignoreEvents )
-            {
-                ignoreEvents[k] += 1;
-            }
+            restartLine = true;
             return _info;
         }
         else
         {
             assert( _type == "fileEvent" );
-            if (ignoreEvents[_info] > 0)
-            {
-                ignoreEvents[_info] -= 1;
-                return getNextEvent;
-            }
-            else
-            {
-                foreach( k, v; ignoreEvents )
-                {
-                    ignoreEvents[k] += 1;
-                }
-                /*stdin.writeln( "reload ask" );*/
-                return getNextEvent;
-                //return "reload ask";
-            }
+            /*stdin.writeln( "reload ask" );*/
+            //return getNextEvent( false );
+            restartLine = false;
+            restartFile[_info] = true;
+
+            return "reload ask";
         }
     }
+
+    void stopFileListeners()
+    {
+        // Open and close each file we are listening to
+        foreach( file, restart; restartFile )
+        {
+            if (!restart)
+            {
+                File( (path ~ file), "r" ).close;
+                restartFile[file] = true;
+                receive( ( string type, string info ) {
+                        assert( type == "fileEvent" && 
+                            info == file );
+                            } );
+            }
+        }
+     }
+}
+
+void loadState( State state, string dirName, GitRepo gitRepo )
+{
+    state.hrpg = loadHRPG( dirName ~ "habitrpg.json" );
+    state.dependencies = loadDependencies( gitRepo );
+    state.defaultWeights = loadDefaultWeights( dirName ~ "weights.json" );
+
+    state.tags = loadTags( gitRepo );
+    if (state.tags.empty) { // Something went wrong with loading the tag file
+        // This provides backward compatibility
+        state.todos = loadTodos( gitRepo );
+        state.tags = state.todos.allTags;
+    } else
+        state.todos = loadTodos( gitRepo, state.tags );
+
+
+    state.selectedTodos = random( state.todos, state.tags,
+            state.selectedTags, state.searchString, state.dependencies, 
+            state.defaultWeights );
 }
 
 void main( string[] args ) {
@@ -370,32 +406,17 @@ void main( string[] args ) {
 		writeDependencies( state.dependencies, gitRepo );
 	}
 
-	state.hrpg = loadHRPG( dirName ~ "habitrpg.json" );
 	commands = addHabitRPGCommands( commands, dirName );
 	
 	version( assert ) {
 		commands = addStorageCommands( commands, gitRepo );
 	}
 
-	state.dependencies = loadDependencies( gitRepo );
-	state.defaultWeights = loadDefaultWeights( dirName ~ "weights.json" );
-	
-	state.tags = loadTags( gitRepo );
-	if (state.tags.empty) { // Something went wrong with loading the tag file
-													// This provides backward compatibility
-		state.todos = loadTodos( gitRepo );
-		state.tags = state.todos.allTags;
-	} else
-		state.todos = loadTodos( gitRepo, state.tags );
+	commands = addShowCommands( commands );
 
-
-	state.selectedTodos = random( state.todos, state.tags,
-		state.selectedTags, state.searchString, state.dependencies, 
-		state.defaultWeights );
+    loadState( state, dirName, gitRepo );
 
 	initCommands( state );
-
-	commands = addShowCommands( commands );
 
 	handleMessage( "show", "", state );
 
@@ -413,22 +434,17 @@ void main( string[] args ) {
     while( !quit )
     {
         auto line = listener.getNextEvent();
-        // TODO: create a wait for event
-        // that waitForEventActor will add file monitors and linenoise "monitor"
-        // Also save files through this actor
-        // Whichever returns first is acted upon
-        // If file is changed it will send reload ask line.. This should reload 
-        // everything from files
-
 
 		/* Do something with the string. */
-        debug writeln( "DEBUG: Received line: ", line );
+        debug writeln( "Debug: Received line: ", line );
         if ( line == "quit" ) {
             quit = true;
         }
         else if ( line == "reload ask" )
         {
-            state = handleMessage( "help", "", state );
+            listener.stopFileListeners;
+            loadState( state, dirName, gitRepo );
+            handleMessage( "show", "", state );
         }
         else 
         {
@@ -440,7 +456,7 @@ void main( string[] args ) {
     }
     // Need to kill the actors...!
 
-    writeTodos( state.todos, gitRepo );
+    /*writeTodos( state.todos, gitRepo );
     writeTags( state.tags, gitRepo );
-    writeDependencies( state.dependencies, gitRepo );
+    writeDependencies( state.dependencies, gitRepo );*/
 }
