@@ -2,6 +2,7 @@ module todod.storage;
 
 import std.algorithm;
 import std.conv;
+import std.datetime : Clock, SysTime;
 import std.exception;
 import std.file;
 import std.regex;
@@ -13,6 +14,52 @@ import deimos.git2.all;
 
 import todod.commandline;
 import todod.state;
+
+struct FileWatcher
+{
+    this( string path, string file )
+    {
+        _path = path;
+        _file = file;
+
+        if (_path[$-1] != '/')
+            _path ~= "/";
+
+        watchCreated = Clock.currTime();
+    }
+
+    bool changed()
+    {
+        if ( DirEntry( _path ~ _file ).timeLastModified() > watchCreated )
+            return true;
+        return false;
+    }
+
+    private:
+        string _path;
+        string _file;
+        SysTime watchCreated;
+}
+
+unittest
+{
+    // Test that FileWatcher works with path with and without trailing
+    auto fw = FileWatcher( "path/", "file" );
+    assert( fw._path == "path/" && fw._file == "file" );
+    fw = FileWatcher( "path", "file" );
+    assert( fw._path == "path/" && fw._file == "file" );
+    import std.datetime;
+    fw.watchCreated -= 1000.msecs; // Minimum precision is one second
+
+    mkdirRecurse( "path/" );
+    // Change/touch file
+    File( "path/file", "w" ).close;
+    // Check that filewatcher knows it has been changed
+    assert( fw.changed );
+
+    // Cleanup
+    rmdirRecurse( "path" );
+}
 
 /// Write string contents to file at the given path
 void writeToFile( string path, string name, string contents ) {

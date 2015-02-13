@@ -26,6 +26,7 @@ import std.conv;
 import std.file;
 import std.path;
 
+import std.range : array;
 import std.regex;
 import std.stdio;
 import std.string;
@@ -290,6 +291,26 @@ State handleMessage( string command, string parameter, State state ) {
 	return state;
 }
 
+void loadState( State state, GitRepo gitRepo,  string dirName )
+{
+    state.hrpg = loadHRPG( dirName ~ "habitrpg.json" );
+    state.dependencies = loadDependencies( gitRepo );
+    state.defaultWeights = loadDefaultWeights( dirName ~ "weights.json" );
+
+    state.tags = loadTags( gitRepo );
+    if (state.tags.empty) { // Something went wrong with loading the tag file
+        // This provides backward compatibility
+        state.todos = loadTodos( gitRepo );
+        state.tags = state.todos.allTags;
+    } else
+        state.todos = loadTodos( gitRepo, state.tags );
+
+
+    state.selectedTodos = random( state.todos, state.tags,
+            state.selectedTags, state.searchString, state.dependencies, 
+            state.defaultWeights );
+}
+
 void main( string[] args ) {
 	auto state = new State;
 
@@ -303,28 +324,13 @@ void main( string[] args ) {
 		writeDependencies( state.dependencies, gitRepo );
 	}
 
-	state.hrpg = loadHRPG( dirName ~ "habitrpg.json" );
 	commands = addHabitRPGCommands( commands, dirName );
 	
 	version( assert ) {
 		commands = addStorageCommands( commands, gitRepo );
 	}
 
-	state.dependencies = loadDependencies( gitRepo );
-	state.defaultWeights = loadDefaultWeights( dirName ~ "weights.json" );
-	
-	state.tags = loadTags( gitRepo );
-	if (state.tags.empty) { // Something went wrong with loading the tag file
-													// This provides backward compatibility
-		state.todos = loadTodos( gitRepo );
-		state.tags = state.todos.allTags;
-	} else
-		state.todos = loadTodos( gitRepo, state.tags );
-
-
-	state.selectedTodos = random( state.todos, state.tags,
-		state.selectedTags, state.searchString, state.dependencies, 
-		state.defaultWeights );
+    loadState( state, gitRepo, dirName );
 
 	initCommands( state );
 
@@ -336,26 +342,46 @@ void main( string[] args ) {
 
  	// LineNoise setup
 	auto historyFile = dirName ~ "history.txt";
-	linenoiseSetCompletionCallback( &completion );
-  linenoiseHistoryLoad(std.string.toStringz(historyFile)); /* Load the history at startup */
+    linenoiseSetCompletionCallback( &completion );
+    linenoiseHistoryLoad(std.string.toStringz(historyFile)); /* Load the history at startup */
 
 	char *line;
 
+    auto fileWatchers = ["todos.json", "tags.json", "dependencies.json"]
+        .map!( (file) {return FileWatcher( dirName, file );} ).array;
+
 	while(!quit && (line = linenoise("todod> ")) !is null) {
-		/* Do something with the string. */
-		if (line[0] != '\0') {
-			if ( !strncmp(line,"quit",4) ) {
-				quit = true;
-			} else {
-				auto commands = to!string( line ).chomp().findSplit( " " );
-				state = handleMessage( commands[0], commands[2], state );
-			}
-			linenoiseHistoryAdd(line); /* Add to the history. */
-			linenoiseHistorySave(std.string.toStringz(historyFile)); /* Save the history on disk. */
-		}
+        /* Do something with the string. */
+        if ( !strncmp(line,"quit",4) ) {
+            quit = true;
+        } else {
+            bool reload = false;
+            if ( fileWatchers.any!("a.changed") ) {
+                writeln( "Files have changed. Would you like to reload newer data (y/n)?" );
+                writeln( "Warning: This will invalidate your last command");
+                auto answer = stdin.readln;
+                if ( answer[0] == 'y' )
+                    reload = true;
+            }
+            if (reload)
+            {
+                loadState( state, gitRepo, dirName );
+                handleMessage( "reroll", "", state );
+                debug writeln( "Debug: reloaded state" );
+            }
+            else if (line[0] != '\0')
+            {
+                auto commands = to!string( line ).chomp().findSplit( " " );
+                state = handleMessage( commands[0], commands[2], state );
+            }
+            linenoiseHistoryAdd(line); /* Add to the history. */
+            linenoiseHistorySave(std.string.toStringz(historyFile)); /* Save the history on disk. */
+        }
 		free(line);
 		writeTodos( state.todos, gitRepo );
 		writeTags( state.tags, gitRepo );
 		writeDependencies( state.dependencies, gitRepo );
-	}
+        fileWatchers = ["todos.json", "tags.json", "dependencies.json"]
+            .map!( (file) {return FileWatcher( dirName, file );} ).array;
+    }
 }
