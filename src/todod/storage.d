@@ -30,7 +30,8 @@ struct FileWatcher
 
     bool changed()
     {
-        if ( DirEntry( _path ~ _file ).timeLastModified() > watchCreated )
+        if ( exists( _path ~ _file ) 
+                && DirEntry( _path ~ _file ).timeLastModified() > watchCreated )
             return true;
         return false;
     }
