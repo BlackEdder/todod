@@ -33,6 +33,8 @@ import std.container;
 import std.algorithm;
 import std.conv;
 
+import std.typecons : tuple;
+
 import colorize;
 
 import todod.commandline;
@@ -427,7 +429,7 @@ Targets parseTarget( string target ) {
 		auto map_result = (map!(a => to!int( a ))( split( last_term, regex(",")) ));
 		foreach( a; map_result )
 			targets ~= a;
-		targets.sort;
+		std.algorithm.sort( targets );
 	} else if ( last_term == "all" ) {
 		ts.all = true;
 		return ts;
