@@ -126,7 +126,7 @@ void commitChanges( GitRepo gr, string fileName, string message ) {
 	enforce( git_index_add_bypath(my_repo_index,(fileName).toStringz) >= 0 );
 
 	git_signature *sig;
-	enforce( git_signature_default(&sig, repo) >= 0 );
+	enforce( git_signature_default(&sig, repo) >= 0, "Make sure your git signature is setup correctly. See git config user.name and git config user.email" );
 
 
 	git_oid tree_id, commit_id;
