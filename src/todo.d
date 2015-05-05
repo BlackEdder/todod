@@ -347,7 +347,18 @@ void main( string[] args ) {
 
 	char *line;
 
-    auto fileWatchers = ["todos.json", "tags.json", "dependencies.json"]
+    auto fileNames = ["todos.json", "tags.json", "dependencies.json"];
+
+    foreach( fileName; fileNames )
+    {
+        if (!exists( dirName ~ fileName ))
+        {
+            debug writeln( "File does not exist: ", dirName ~ fileName );
+            std.file.write( dirName ~ fileName, "" );
+        }
+    }
+
+    auto fileWatchers = fileNames 
         .map!( (file) {return FileWatcher( dirName, file );} ).array;
 
 	while(!quit && (line = linenoise("todod> ")) !is null) {
