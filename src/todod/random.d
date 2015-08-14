@@ -111,8 +111,10 @@ auto progressWeight( long days ) {
 }
 
 unittest {
-	assert( progressWeight( 0 ) == 0.5 );
-	assert( progressWeight( 7 ) == 1 );
+	assert( progressWeight( 0 ) > 0.49 );
+	assert( progressWeight( 0 ) < 0.51 );
+	assert( progressWeight( 7 ) > 0.99 );
+	assert( progressWeight( 7 ) < 1.01 );
 	assert( progressWeight( 100 ) > 3.5 && progressWeight( 100 ) < 4.0 );
 }
 
