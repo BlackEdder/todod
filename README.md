@@ -48,8 +48,6 @@ Usage command [OPTIONS].
 		
 This todod manager allows you to keep track of large amounts of todos. Todos can be tagged and/or given due dates. A feature specific to this todo manager is that it will show at most 5 todos at a time. Todos that are due or are old have a higher probability of being shown. Limiting the view to the more important todos allows you to focus on high priority todos first.
 
-__habitrpg__ Syncing with HabitRPG. Use habitrpg help for more help.
-
 __git__ Storage and git related commands. Use git help for more help.
 
 __add__ Add a new todo with provided title. One can respectively add tags with +tag and a due date with DYYYY-MM-DD or D+7 for a week from now.
@@ -93,18 +91,6 @@ Todod will at most show you five "random" todos from your todo list. Which todos
 ### Weights
 
 After first run todod will create ~/.config/todod/weights.json which you can use to change the weight of different selection criteria. For example if you set defaultTagWeight to a value higher than 0 (I use 0.5) todos will show up even if they don't contain the tag you have searched for. This means that you will sometimes see todos that you didn't search for, but which are important (due to due date, or lack of progress). I like this behaviour, because it reminds me of important things I need to do even when I am not searching for them.
-
-## HabitRPG
-
-Todod has a limited form of integration with HabitRPG. After first startup todod will create a configuration file for you in
-
-    ~/.config/todod/habitrpg.json
-
-You will need to fill in your user and api key to allow todod to integrate with HabitRPG. Currently, you can sync your todos using
-
-__habitrpg todos__
-
-Once you mark a todo as done it will be marked as done on HabitRPG as well. After adding new todos you'll have to issue __habitrpg todos__ again to sync this. This will likely be automated in later versions of todod.
 
 ## Tested compilers
 ![dmd-2.066.1](https://img.shields.io/badge/DMD-2.066.1-brightgreen.svg) ![DMD-2.065.0](https://img.shields.io/badge/DMD-2.065.0-brightgreen.svg) ![LDC-0.14.0](https://img.shields.io/badge/LDC-0.14.0-brightgred.svg) ![LDC-0.15.1](https://img.shields.io/badge/LDC-0.15.1-brightred.svg) ![GDC-4.9.0](https://img.shields.io/badge/GDC-4.9.0-brightred.svg)
