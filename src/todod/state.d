@@ -23,7 +23,6 @@
 module todod.state;
 
 import todod.dependency;
-import todod.habitrpg;
 import todod.tag;
 import todod.todo;
 
@@ -40,5 +39,4 @@ class State {
 	Dependencies dependencies; /// Dependencies between Todos
 
 	double[string] defaultWeights; /// Default weights used for selecting Todos to show
-	HabitRPG hrpg; /// habitrpg user/api keys
 }

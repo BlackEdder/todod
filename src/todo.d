@@ -39,7 +39,6 @@ import deimos.linenoise;
 import todod.commandline;
 import todod.date;
 import todod.dependency;
-import todod.habitrpg;
 import todod.random;
 import todod.shell;
 import todod.state;
@@ -114,8 +113,6 @@ void initCommands( State state ) {
 		commands.add( 
 				"done", delegate( State state, string parameter ) {
 			auto todo = state.selectedTodos[to!size_t(parameter)];
-			if (state.hrpg)
-				doneTodo( todo, state.hrpg );
 				
 			state.todos.remove( todo );
 			state.dependencies = state.dependencies.removeUUID( todo.id );
@@ -130,7 +127,6 @@ void initCommands( State state ) {
 				writeln( "Please provide a list of todos (1,3,..) or all" );
 			else {
 				targets.apply( delegate( ref Todo t ) { 
-					upHabit( state.hrpg, "productivity" );
 					t.progress ~= Date.now; }, state.selectedTodos );
 				state = commands["show"]( state, "" );
 			}
@@ -293,8 +289,7 @@ State handleMessage( string command, string parameter, State state ) {
 
 void loadState( State state, GitRepo gitRepo,  string dirName )
 {
-    state.hrpg = loadHRPG( dirName ~ "habitrpg.json" );
-    state.dependencies = loadDependencies( gitRepo );
+   state.dependencies = loadDependencies( gitRepo );
     state.defaultWeights = loadDefaultWeights( dirName ~ "weights.json" );
 
     state.tags = loadTags( gitRepo );
@@ -324,8 +319,6 @@ void main( string[] args ) {
 		writeDependencies( state.dependencies, gitRepo );
 	}
 
-	commands = addHabitRPGCommands( commands, dirName );
-	
 	version( assert ) {
 		commands = addStorageCommands( commands, gitRepo );
 	}

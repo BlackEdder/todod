@@ -40,7 +40,7 @@ version (unittest) {
 
 class Tag {
 	string name;
-	UUID id; /// id is mainly used for syncing with habitrpg
+	UUID id;
 
 	this( string tag_name ) {
 		name = tag_name;
