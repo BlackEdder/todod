@@ -51,7 +51,6 @@ double[string] setDefaultWeights() {
 
 double[string] loadDefaultWeights( string fileName ) { 
 	auto weights = setDefaultWeights;
-	/*HabitRPG hrpg;*/
 	bool needUpdate = !exists( fileName );
 	if (!needUpdate) {
 		File file = File( fileName, "r" );

@@ -36,7 +36,8 @@ struct Set(T) {
 			_array ~= element;
 			sort( _array );
 		} else {
-			if (!element.id.empty) // Will automatically cause sync to HabitRPG id
+            // Bit of a hack to make sure we the ids match up
+			if (!element.id.empty)
 				elements[0].id = element.id;
 		}
 	}

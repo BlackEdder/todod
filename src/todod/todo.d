@@ -50,7 +50,7 @@ import todod.tag;
 
 /// A Todo
 class Todo {
-	UUID id; /// id is mainly used for syncing with habitrpg
+	UUID id;
 
 	Date[] progress; /// Keep track of how long/often we've worked on this
 
