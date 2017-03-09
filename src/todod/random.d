@@ -181,7 +181,7 @@ auto weight( Todo t, TagDelta selected, string searchString,
 	Todos with a higher weight (influenced by due date, currently selected tags and
 	last progress) have a higher probability of being drawn.
 	*/
-Todo[] randomGillespie( Todos ts, Tags allTags, TagDelta selected,
+Todo[] randomGillespie(TODOS)(TODOS ts, Tags allTags, TagDelta selected,
 		string searchString,
 		in Dependencies deps,
 		in double[string] defaultWeights,

@@ -114,8 +114,8 @@ void initCommands( State state ) {
 				"done", delegate( State state, string parameter ) {
 			auto todo = state.selectedTodos[to!size_t(parameter)];
 				
-			state.todos.remove( todo );
-			state.dependencies = state.dependencies.removeUUID( todo.id );
+			todo.markDone();
+			//state.dependencies = state.dependencies.removeUUID( todo.id );
 			state = commands["reroll"]( state, "" );
 			return state;
 		}, "Usage done todo_id. Marks Todo specified by id as done." );
@@ -151,7 +151,7 @@ void initCommands( State state ) {
 				
 				state.searchString = tuple[1];
 			}
-			state.selectedTodos = random( state.todos, state.tags, 
+			state.selectedTodos = random( state.todos.filter!((t) => !t.done).array, state.tags, 
 				state.selectedTags, state.searchString, state.dependencies,
 				state.defaultWeights );
 			state = commands["show"]( state, "" );
@@ -160,7 +160,7 @@ void initCommands( State state ) {
 
 		commands.add( 
 				"reroll", delegate( State state, string parameter ) {
-			state.selectedTodos = random( state.todos, state.tags,
+			state.selectedTodos = random(state.todos.filter!((t) => !t.done).array, state.tags,
 				state.selectedTags, state.searchString, 
 				state.dependencies, state.defaultWeights );
 			state = commands["show"]( state, "" );
@@ -301,7 +301,7 @@ void loadState( State state, GitRepo gitRepo,  string dirName )
         state.todos = loadTodos( gitRepo, state.tags );
 
 
-    state.selectedTodos = random( state.todos, state.tags,
+    state.selectedTodos = random(state.todos.filter!((t) => !t.done).array, state.tags,
             state.selectedTags, state.searchString, state.dependencies, 
             state.defaultWeights );
 }
