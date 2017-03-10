@@ -102,22 +102,33 @@ void initCommands( State state ) {
 
 		commands.add( 
 				"del", delegate( State state, string parameter ) {
-			size_t id = to!size_t(parameter);
-			state.todos.remove( state.selectedTodos[id] );
-			state.dependencies = state.dependencies.removeUUID( 
-				state.selectedTodos[id].id );
+			auto targets = parseTarget( parameter );
+			if (targets.empty)
+				writeln( "Please provide a list of todos (1,3,..) or all" );
+			else {
+				targets.apply( delegate( ref Todo t ) { 
+                    state.todos.remove(t);
+                    state.dependencies = state.dependencies.removeUUID(t.id);
+                  }, state.selectedTodos );
+				state = commands["show"]( state, "" );
+			}
 			state = commands["reroll"]( state, "" );
 			return state;
 		}, "Usage del todo_id. Deletes Todo specified by id." );
 
 		commands.add( 
 				"done", delegate( State state, string parameter ) {
-			auto todo = state.selectedTodos[to!size_t(parameter)];
-				
-			todo.markDone(state.tags
-                .filter!((a) => a.name == "done")
-                .front);
-			//state.dependencies = state.dependencies.removeUUID( todo.id );
+			auto targets = parseTarget( parameter );
+			if (targets.empty)
+				writeln( "Please provide a list of todos (1,3,..) or all" );
+			else {
+                auto doneTag = state.tags
+                    .filter!((a) => a.name == "done")
+                    .front;
+				targets.apply( delegate( ref Todo t ) { 
+                    t.markDone(doneTag); }, state.selectedTodos );
+				state = commands["show"]( state, "" );
+			}
 			state = commands["reroll"]( state, "" );
 			return state;
 		}, "Usage done todo_id. Marks Todo specified by id as done." );
