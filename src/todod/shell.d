@@ -287,13 +287,14 @@ string prettyStringState( State state, bool showWeight = false ) {
         doneTodos.map!((t) => t.title).joiner("\n").to!string ~ 
         "\033[0m\n\n";
     str ~= "Tags and number of todos associated with that tag:\n";
-	auto tags = state.todos.tagOccurence( state.tags, state.selectedTags.delete_tags );
-    foreach( tag, count; tags ) {
-        if (state.selectedTags.add_tags.canFind( tag ))
-            str ~= tagColor(tag.name) ~ " (" ~ count.to!string ~ "),  ";
-        else
-            str ~= tag.name ~ " (" ~ count.to!string ~ "),  ";
-    }
+	str ~= state.todos
+        .tagOccurence( state.tags, state.selectedTags.delete_tags )
+        .byKeyValue.map!((kv) {
+            if (state.selectedTags.add_tags.canFind( kv.key ))
+                return tagColor(kv.key.name) ~ " (" ~ kv.value.to!string ~ ")";
+            else
+                return kv.key.name ~ " (" ~ kv.value.to!string ~ ")";
+        }).joiner(", ").to!string;
 	str ~= "\n\n";
 	str ~= prettyStringTodos( state.selectedTodos, state.todos, state.tags, 
 				state.selectedTags, state.searchString, state.dependencies, 
