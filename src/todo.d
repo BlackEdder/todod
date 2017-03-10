@@ -114,7 +114,7 @@ void initCommands( State state ) {
 			}
 			state = commands["reroll"]( state, "" );
 			return state;
-		}, "Usage del todo_id. Deletes Todo specified by id." );
+		}, "Usage del TARGETS. Deletes Todo specified by id. Targets can either be a list of numbers (2,3,4) or all for all shown Todos." );
 
 		commands.add( 
 				"done", delegate( State state, string parameter ) {
@@ -131,7 +131,7 @@ void initCommands( State state ) {
 			}
 			state = commands["reroll"]( state, "" );
 			return state;
-		}, "Usage done todo_id. Marks Todo specified by id as done." );
+		}, "Usage done TARGETS. Marks Todo specified by id as done. Targets can either be a list of numbers (2,3,4) or all for all shown Todos." );
 
 		commands.add( 
 				"progress", delegate( State state, string parameter ) {
