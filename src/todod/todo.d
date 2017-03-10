@@ -58,10 +58,15 @@ class Todo {
 
 	Date creation_date;
 	Date due_date;
+    
+    import std.datetime : SysTime;
+    SysTime done_time;
 
 	double weight = 1; /// Weight/priority of this Todo
 
-	private this() {}
+	private this() {
+        done_time = SysTime(0);
+    }
 
 	this( string tle ) { 
 		auto date_tup = parseAndRemoveDueDate( tle );
@@ -71,6 +76,8 @@ class Todo {
 		mytitle = date_tup[1];
 
 		id = randomUUID;
+
+        done_time = SysTime(0);
 	}
 
 	@property string title() const {
@@ -127,6 +134,7 @@ JSONValue toJSON( Todo t ) {
 	jsonTODO["due_date"] = t.due_date.toStringDate;
 	jsonTODO["id"] = t.id.toString;
 	jsonTODO["weight"] = t.weight;
+    jsonTODO["done_time"] = t.done_time.toISOExtString;
 	return JSONValue( jsonTODO );	
 }
 
@@ -149,6 +157,11 @@ Todo toTodo( const JSONValue json ) {
 		else
 			t.weight = cast(double)(jsonAA["weight"].integer);
 	}
+
+    if ("done_time" in jsonAA) {
+        import std.datetime : SysTime;
+        t.done_time = SysTime.fromISOExtString(jsonAA["done_time"].str);
+    }
 	return t;
 }
 
@@ -175,7 +188,12 @@ Todo toTodo( const JSONValue json, Tags tags ) {
 		else
 			t.weight = cast(double)(jsonAA["weight"].integer);
 	}
-	return t;
+
+    if ("done_time" in jsonAA) {
+        import std.datetime : SysTime;
+        t.done_time = SysTime.fromISOExtString(jsonAA["done_time"].str);
+    }
+    return t;
 }
 
 unittest {
@@ -194,6 +212,20 @@ auto lastProgress( const Todo t ) {
 		return currentDate.substract( t.progress[$-1] );
 	else
 		return currentDate.substract( t.creation_date );
+}
+
+auto markDone(ref Todo t, Tag doneTag) {
+    import std.datetime : Clock;
+    t.tags.add(doneTag);
+    t.done_time = Clock.currTime();
+    return t;
+}
+
+unittest {
+    Todo t = new Todo("test");
+    assert(t.tags.filter!((a) => a.name == "done").empty);
+    t.markDone(new Tag("done"));
+    assert(!t.tags.filter!((a) => a.name == "done").empty);
 }
 
 /**
@@ -222,7 +254,7 @@ unittest {
 /**
 	Select a weighted random set of Todos
 	*/
-Todo[] random( Todos ts, Tags allTags, TagDelta selected, 
+Todo[] random(TODOS)(TODOS ts, Tags allTags, TagDelta selected, 
 		string searchString, 
 		in Dependencies deps, 
 		in double[string] defaultWeights, size_t no = 5 ) {
@@ -271,9 +303,9 @@ unittest {
 /**
 	Number of occurences of each given tag
 	*/
-size_t[Tag] tagOccurence( Todos ts, Tags tags ) {
+size_t[Tag] tagOccurence(TODOS)(TODOS ts, Tags tags, Tags exclude = Tags()) {
 	size_t[Tag] tagsCounts;
-	foreach( t; ts ) {
+	foreach( t; ts.filter!((a) => a.tags.filter!((b) => exclude.canFind(b)).empty)) {
 		foreach( tag; t.tags ) {
 			if (tags.canFind( tag ) ) {
 				tagsCounts[tag]++;
@@ -284,7 +316,6 @@ size_t[Tag] tagOccurence( Todos ts, Tags tags ) {
 	}
 	return tagsCounts;
 }
-
 
 unittest {
 	auto ts = generateSomeTodos();

@@ -277,16 +277,23 @@ string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos, Tags allTags,
 }
 
 string prettyStringState( State state, bool showWeight = false ) {
-	string str = "Tags and number of todos associated with that tag.\n";
-	auto tags = state.todos.tagOccurence( state.tags );
-	foreach( tag, count; tags ) {
-		if (!state.selectedTags.delete_tags.canFind( tag )) {
-			if (state.selectedTags.add_tags.canFind( tag ))
-				str ~= tagColor(tag.name) ~ " (" ~ count.to!string ~ "),  ";
-			else
-				str ~= tag.name ~ " (" ~ count.to!string ~ "),  ";
-		}
-	}
+    import std.datetime : Clock, dur;
+    auto date = Clock.currTime - dur!"days"(3);
+    auto doneTodos = state.todos
+        .filter!((t) => !t.tags.filter!((a) => a.name == "done").empty && t.done_time > date).array
+        .sort!((a,b) => a.done_time < b.done_time)();
+    string str = "Congratulations you have completed these tasks over the last three days:\n";
+    str ~= "\033[9m" ~ 
+        doneTodos.map!((t) => t.title).joiner("\n").to!string ~ 
+        "\033[0m\n\n";
+    str ~= "Tags and number of todos associated with that tag:\n";
+	auto tags = state.todos.tagOccurence( state.tags, state.selectedTags.delete_tags );
+    foreach( tag, count; tags ) {
+        if (state.selectedTags.add_tags.canFind( tag ))
+            str ~= tagColor(tag.name) ~ " (" ~ count.to!string ~ "),  ";
+        else
+            str ~= tag.name ~ " (" ~ count.to!string ~ "),  ";
+    }
 	str ~= "\n\n";
 	str ~= prettyStringTodos( state.selectedTodos, state.todos, state.tags, 
 				state.selectedTags, state.searchString, state.dependencies, 
