@@ -222,8 +222,9 @@ auto lastProgress( const Todo t ) {
 		return currentDate.substract( t.creation_date );
 }
 
-auto markDone(ref Todo t) {
+auto markDone(ref Todo t, Tag doneTag) {
     import std.datetime : Clock;
+    t.tags.add(doneTag);
     t.done = true;
     t.done_time = Clock.currTime();
     return t;
@@ -232,7 +233,7 @@ auto markDone(ref Todo t) {
 unittest {
     Todo t = new Todo("test");
     assert(!t.done);
-    assert(t.markDone.done);
+    assert(t.markDone(new Tag("done")).done);
 }
 
 /**

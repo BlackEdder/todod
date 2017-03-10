@@ -114,7 +114,9 @@ void initCommands( State state ) {
 				"done", delegate( State state, string parameter ) {
 			auto todo = state.selectedTodos[to!size_t(parameter)];
 				
-			todo.markDone();
+			todo.markDone(state.tags
+                .filter!((a) => a.name == "done")
+                .front);
 			//state.dependencies = state.dependencies.removeUUID( todo.id );
 			state = commands["reroll"]( state, "" );
 			return state;
@@ -324,6 +326,13 @@ void main( string[] args ) {
 	}
 
     loadState( state, gitRepo, dirName );
+
+    // Make sure the done tag exists
+    if (state.tags.filter!((a) => a.name == "done").empty) {
+        auto tag = new Tag("done");
+        tag.id = randomUUID;
+        state.tags.add(tag);
+    }
 
 	initCommands( state );
 
