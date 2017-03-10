@@ -61,7 +61,6 @@ class Todo {
     
     import std.datetime : SysTime;
     SysTime done_time;
-    bool done = false;
 
 	double weight = 1; /// Weight/priority of this Todo
 
@@ -135,7 +134,6 @@ JSONValue toJSON( Todo t ) {
 	jsonTODO["due_date"] = t.due_date.toStringDate;
 	jsonTODO["id"] = t.id.toString;
 	jsonTODO["weight"] = t.weight;
-    jsonTODO["done"] = t.done;
     jsonTODO["done_time"] = t.done_time.toISOExtString;
 	return JSONValue( jsonTODO );	
 }
@@ -160,12 +158,9 @@ Todo toTodo( const JSONValue json ) {
 			t.weight = cast(double)(jsonAA["weight"].integer);
 	}
 
-    if ("done" in jsonAA) {
-        if (jsonAA["done"].type == JSON_TYPE.TRUE) {
-            import std.datetime : SysTime;
-            t.done = true;
-            t.done_time = SysTime.fromISOExtString(jsonAA["done_time"].str);
-        }
+    if ("done_time" in jsonAA) {
+        import std.datetime : SysTime;
+        t.done_time = SysTime.fromISOExtString(jsonAA["done_time"].str);
     }
 	return t;
 }
@@ -194,14 +189,11 @@ Todo toTodo( const JSONValue json, Tags tags ) {
 			t.weight = cast(double)(jsonAA["weight"].integer);
 	}
 
-    if ("done" in jsonAA) {
-        if (jsonAA["done"].type == JSON_TYPE.TRUE) {
-            import std.datetime : SysTime;
-            t.done = true;
-            t.done_time = SysTime.fromISOExtString(jsonAA["done_time"].str);
-        }
+    if ("done_time" in jsonAA) {
+        import std.datetime : SysTime;
+        t.done_time = SysTime.fromISOExtString(jsonAA["done_time"].str);
     }
-	return t;
+    return t;
 }
 
 unittest {
@@ -225,15 +217,15 @@ auto lastProgress( const Todo t ) {
 auto markDone(ref Todo t, Tag doneTag) {
     import std.datetime : Clock;
     t.tags.add(doneTag);
-    t.done = true;
     t.done_time = Clock.currTime();
     return t;
 }
 
 unittest {
     Todo t = new Todo("test");
-    assert(!t.done);
-    assert(t.markDone(new Tag("done")).done);
+    assert(t.tags.filter!((a) => a.name == "done").empty);
+    t.markDone(new Tag("done"));
+    assert(!t.tags.filter!((a) => a.name == "done").empty);
 }
 
 /**
@@ -311,9 +303,9 @@ unittest {
 /**
 	Number of occurences of each given tag
 	*/
-size_t[Tag] tagOccurence(TODOS)(TODOS ts, Tags tags ) {
+size_t[Tag] tagOccurence(TODOS)(TODOS ts, Tags tags, Tags exclude = Tags()) {
 	size_t[Tag] tagsCounts;
-	foreach( t; ts ) {
+	foreach( t; ts.filter!((a) => a.tags.filter!((b) => exclude.canFind(b)).empty)) {
 		foreach( tag; t.tags ) {
 			if (tags.canFind( tag ) ) {
 				tagsCounts[tag]++;
@@ -324,7 +316,6 @@ size_t[Tag] tagOccurence(TODOS)(TODOS ts, Tags tags ) {
 	}
 	return tagsCounts;
 }
-
 
 unittest {
 	auto ts = generateSomeTodos();

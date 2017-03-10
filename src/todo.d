@@ -139,21 +139,25 @@ void initCommands( State state ) {
 				"search", delegate( State state, string parameter ) {
 			if ( parameter == "" ) { // Reset search
 				state.selectedTags = TagDelta();
+                state.selectedTags.delete_tags
+                    .add(state.tags.filter!((a) => a.name == "done").front);
 				state.searchString = "";
 			} else {
 				if ( match( parameter, r" all$" ) ) {
 					state.selectedTags = TagDelta();
+                    state.selectedTags.delete_tags
+                        .add(state.tags.filter!((a) => a.name == "done").front);
 					state.searchString = "";
 					parameter = parameter[0..$-4];
 				}
-			  auto tuple = parseAndRemoveTags( parameter );
+			    auto tuple = parseAndRemoveTags( parameter );
 				TagDelta newTags = tuple[0];
 				state.selectedTags.add_tags.add( newTags.add_tags );
 				state.selectedTags.delete_tags.add( newTags.delete_tags );
 				
 				state.searchString = tuple[1];
 			}
-			state.selectedTodos = random( state.todos.filter!((t) => !t.done).array, state.tags, 
+			state.selectedTodos = random( state.todos, state.tags, 
 				state.selectedTags, state.searchString, state.dependencies,
 				state.defaultWeights );
 			state = commands["show"]( state, "" );
@@ -162,7 +166,7 @@ void initCommands( State state ) {
 
 		commands.add( 
 				"reroll", delegate( State state, string parameter ) {
-			state.selectedTodos = random(state.todos.filter!((t) => !t.done).array, state.tags,
+			state.selectedTodos = random(state.todos, state.tags,
 				state.selectedTags, state.searchString, 
 				state.dependencies, state.defaultWeights );
 			state = commands["show"]( state, "" );
@@ -291,7 +295,7 @@ State handleMessage( string command, string parameter, State state ) {
 
 void loadState( State state, GitRepo gitRepo,  string dirName )
 {
-   state.dependencies = loadDependencies( gitRepo );
+    state.dependencies = loadDependencies( gitRepo );
     state.defaultWeights = loadDefaultWeights( dirName ~ "weights.json" );
 
     state.tags = loadTags( gitRepo );
@@ -302,8 +306,17 @@ void loadState( State state, GitRepo gitRepo,  string dirName )
     } else
         state.todos = loadTodos( gitRepo, state.tags );
 
+    // Make sure the done tag exists
+    if (state.tags.filter!((a) => a.name == "done").empty) {
+        auto tag = new Tag("done");
+        tag.id = randomUUID;
+        state.tags.add(tag);
+    }
+    state.selectedTags = TagDelta();
+    state.selectedTags.delete_tags
+        .add(state.tags.filter!((a) => a.name == "done").front);
 
-    state.selectedTodos = random(state.todos.filter!((t) => !t.done).array, state.tags,
+    state.selectedTodos = random(state.todos, state.tags,
             state.selectedTags, state.searchString, state.dependencies, 
             state.defaultWeights );
 }
@@ -326,13 +339,6 @@ void main( string[] args ) {
 	}
 
     loadState( state, gitRepo, dirName );
-
-    // Make sure the done tag exists
-    if (state.tags.filter!((a) => a.name == "done").empty) {
-        auto tag = new Tag("done");
-        tag.id = randomUUID;
-        state.tags.add(tag);
-    }
 
 	initCommands( state );
 
