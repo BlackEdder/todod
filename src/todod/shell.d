@@ -278,14 +278,18 @@ string prettyStringTodos(RANGE)( RANGE ts, Todos allTodos, Tags allTags,
 
 string prettyStringState( State state, bool showWeight = false ) {
     import std.datetime : Clock, dur;
-    auto date = Clock.currTime - dur!"days"(3);
+    auto date = Clock.currTime - dur!"days"(1);
     auto doneTodos = state.todos
         .filter!((t) => !t.tags.filter!((a) => a.name == "done").empty && t.done_time > date).array
         .sort!((a,b) => a.done_time < b.done_time)();
-    string str = "Congratulations you have completed these tasks over the last three days:\n";
-    str ~= "\033[9m" ~ 
-        doneTodos.map!((t) => t.title).joiner("\n").to!string ~ 
-        "\033[0m\n\n";
+
+    string str;
+    if (!doneTodos.empty) {
+        str = "Congratulations you have recently completed these tasks:\n";
+        str ~= "\033[9m" ~ 
+            doneTodos.map!((t) => t.title).joiner("\n").to!string ~ 
+            "\033[0m\n\n";
+    }
     str ~= "Tags and number of todos associated with that tag:\n";
 	str ~= state.todos
         .tagOccurence( state.tags, state.selectedTags.delete_tags )
