@@ -126,7 +126,11 @@ void initCommands( State state ) {
                     .filter!((a) => a.name == "done")
                     .front;
 				targets.apply( delegate( ref Todo t ) { 
-                    t.markDone(doneTag); }, state.selectedTodos );
+                        t.markDone(doneTag); 
+                        // TODO: Should this also move to markDone?
+                        state.dependencies = 
+                            state.dependencies.removeUUID(t.id);
+                    }, state.selectedTodos );
 				state = commands["show"]( state, "" );
 			}
 			state = commands["reroll"]( state, "" );
